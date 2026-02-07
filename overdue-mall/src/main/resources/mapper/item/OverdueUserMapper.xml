@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.overdue.manager.item.mapper.OverdueUserMapper">
+    
+    <resultMap type="com.overdue.manager.item.domain.entity.OverdueUser" id="OverdueUserResult">
+        <result property="id" column="id"/>
+        <result property="openid" column="openid"/>
+        <result property="unionid" column="unionid"/>
+        <result property="nickname" column="nickname"/>
+        <result property="avatarUrl" column="avatar_url"/>
+        <result property="phone" column="phone"/>
+        <result property="gender" column="gender"/>
+        <result property="country" column="country"/>
+        <result property="province" column="province"/>
+        <result property="city" column="city"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="selectOverdueUserVo">
+        select id, openid, unionid, nickname, avatar_url, phone, gender, country, province, city, status, create_time, update_time from overdue_user
+    </sql>
+
+    <select id="selectOverdueUserList" parameterType="com.overdue.manager.item.domain.entity.OverdueUser" resultMap="OverdueUserResult">
+        <include refid="selectOverdueUserVo"/>
+        <where>  
+            <if test="openid != null  and openid != ''"> and openid = #{openid}</if>
+            <if test="nickname != null  and nickname != ''"> and nickname like concat('%', #{nickname}, '%')</if>
+            <if test="phone != null  and phone != ''"> and phone = #{phone}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+        order by create_time desc
+    </select>
+
+    <select id="selectByOpenid" parameterType="String" resultMap="OverdueUserResult">
+        <include refid="selectOverdueUserVo"/>
+        where openid = #{openid}
+        limit 1
+    </select>
+
+</mapper>

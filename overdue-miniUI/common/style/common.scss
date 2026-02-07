@@ -1,0 +1,478 @@
+/* ============================================
+   高级设计系统 - 过期了么小程序
+   风格：Glassmorphism + Flat Design
+   配色：Trust Blue + Accent Contrast
+   ============================================ */
+
+/* ========== 深色模式颜色变量（高级深色） ========== */
+$primary-bg-dark: #0a0e1a;           // 更深的背景，OLED友好
+$secondary-bg-dark: #131827;          // 次要背景
+$card-bg-dark: rgba(19, 24, 39, 0.6); // 玻璃态卡片背景
+$card-bg-solid-dark: #1a1f2e;         // 实心卡片背景
+$card-border-dark: rgba(59, 130, 246, 0.15); // 蓝色边框，更精致
+$text-primary-dark: #f8fafc;          // 主文本，更高对比度
+$text-secondary-dark: #cbd5e1;        // 次要文本
+$text-tertiary-dark: #94a3b8;         // 三级文本
+
+/* ========== 浅色模式颜色变量（高级浅色） ========== */
+$primary-bg-light: #fafbfc;           // 更精致的浅灰背景
+$secondary-bg-light: #f1f5f9;         // 次要背景
+$card-bg-light: rgba(255, 255, 255, 0.85); // 玻璃态卡片，更高不透明度
+$card-bg-solid-light: #ffffff;        // 纯白卡片
+$card-border-light: rgba(59, 130, 246, 0.2); // 蓝色边框，更明显
+$text-primary-light: #0f172a;         // 深色文本，高对比度
+$text-secondary-light: #475569;      // 次要文本
+$text-tertiary-light: #64748b;        // 三级文本
+
+/* ========== 主题色（高级配色方案） ========== */
+// 主色调：信任蓝（Trust Blue）
+$accent-blue: #2563eb;                // 主蓝色，更专业
+$accent-blue-light: #3b82f6;          // 浅蓝色
+$accent-blue-dark: #1e40af;           // 深蓝色
+
+// 强调色：青绿色（Teal）
+$accent-teal: #0d9488;                 // 青绿色，更精致
+$accent-teal-light: #14b8a6;          // 浅青绿
+$accent-teal-dark: #0f766e;            // 深青绿
+
+// 功能色：警告和错误
+$accent-amber: #f59e0b;                // 琥珀色（警告）
+$accent-amber-light: #fbbf24;          // 浅琥珀
+$accent-rose: #e11d48;                 // 玫瑰红（错误），更高级
+$accent-red: #dc2626;                  // 红色（危险）
+$accent-red-light: #ef4444;            // 浅红色
+
+// 功能色：成功和特殊
+$accent-purple: #7c3aed;               // 紫色（特殊功能）
+$accent-purple-light: #8b5cf6;         // 浅紫色
+$accent-green: #059669;                 // 绿色（成功），更专业
+$accent-green-light: #10b981;          // 浅绿色
+
+// 中性色：灰色系
+$neutral-50: #f9fafb;
+$neutral-100: #f3f4f6;
+$neutral-200: #e5e7eb;
+$neutral-300: #d1d5db;
+$neutral-400: #9ca3af;
+$neutral-500: #6b7280;
+$neutral-600: #4b5563;
+$neutral-700: #374151;
+$neutral-800: #1f2937;
+$neutral-900: #111827;
+
+/* ========== 阴影和效果（高级阴影系统） ========== */
+$shadow-sm-dark: rgba(0, 0, 0, 0.4);
+$shadow-md-dark: rgba(0, 0, 0, 0.5);
+$shadow-lg-dark: rgba(0, 0, 0, 0.6);
+$shadow-xl-dark: rgba(0, 0, 0, 0.7);
+
+$shadow-sm-light: rgba(0, 0, 0, 0.05);
+$shadow-md-light: rgba(0, 0, 0, 0.08);
+$shadow-lg-light: rgba(0, 0, 0, 0.12);
+$shadow-xl-light: rgba(0, 0, 0, 0.16);
+
+$modal-overlay-dark: rgba(0, 0, 0, 0.75);
+$modal-overlay-light: rgba(0, 0, 0, 0.55);
+
+// 发光效果（用于强调）
+$glow-blue: rgba(37, 99, 235, 0.4);
+$glow-teal: rgba(13, 148, 136, 0.3);
+$glow-purple: rgba(124, 58, 237, 0.3);
+
+/* ========== 兼容旧的颜色变量 ========== */
+$primary-dark: $primary-bg-dark;
+$secondary-dark: $secondary-bg-dark;
+$text-primary: $text-primary-dark;
+$text-secondary: $text-secondary-dark;
+$glass-bg: $card-bg-dark;
+$glass-border: $card-border-dark;
+
+$primary-color: $accent-blue;
+$primary-light: $accent-blue-light;
+$success-color: $accent-green;
+$warning-color: $accent-amber;
+$danger-color: $accent-rose;
+$text-color: $text-primary;
+$text-light: $text-secondary;
+$text-lighter: $text-tertiary-dark;
+$bg-color: $primary-dark;
+$border-color: $glass-border;
+
+/* ========== 通用工具类 ========== */
+.text-center {
+  text-align: center;
+}
+
+.text-primary {
+  color: $accent-blue;
+}
+
+.text-success {
+  color: $success-color;
+}
+
+.text-warning {
+  color: $warning-color;
+}
+
+.text-danger {
+  color: $danger-color;
+}
+
+.mt-20 {
+  margin-top: 20rpx;
+}
+
+.mb-20 {
+  margin-bottom: 20rpx;
+}
+
+.mt-40 {
+  margin-top: 40rpx;
+}
+
+.mb-40 {
+  margin-bottom: 40rpx;
+}
+
+/* ========== 深浅模式支持 - CSS变量系统 ========== */
+page {
+  /* 深色模式变量（默认） */
+  --primary-bg: #{$primary-bg-dark};
+  --secondary-bg: #{$secondary-bg-dark};
+  --card-bg: #{$card-bg-dark};
+  --card-bg-solid: #{$card-bg-solid-dark};
+  --card-border: #{$card-border-dark};
+  --text-primary: #{$text-primary-dark};
+  --text-secondary: #{$text-secondary-dark};
+  --text-tertiary: #{$text-tertiary-dark};
+  --shadow-color: #{$shadow-md-dark};
+  --shadow-sm: #{$shadow-sm-dark};
+  --shadow-md: #{$shadow-md-dark};
+  --shadow-lg: #{$shadow-lg-dark};
+  --shadow-xl: #{$shadow-xl-dark};
+  --hover-bg: rgba(59, 130, 246, 0.08);
+  --active-bg: rgba(59, 130, 246, 0.15);
+  --modal-overlay: #{$modal-overlay-dark};
+  
+  /* 主题色变量 */
+  --accent-blue: #{$accent-blue};
+  --accent-blue-light: #{$accent-blue-light};
+  --accent-teal: #{$accent-teal};
+  --accent-teal-light: #{$accent-teal-light};
+  --accent-amber: #{$accent-amber};
+  --accent-rose: #{$accent-rose};
+  --accent-red: #{$accent-red};
+  --accent-purple: #{$accent-purple};
+  --accent-green: #{$accent-green};
+  
+  /* 发光效果 */
+  --glow-blue: #{$glow-blue};
+  --glow-teal: #{$glow-teal};
+}
+
+/* 浅色模式变量覆盖 */
+.light-mode {
+  --primary-bg: #{$primary-bg-light};
+  --secondary-bg: #{$secondary-bg-light};
+  --card-bg: #{$card-bg-light};
+  --card-bg-solid: #{$card-bg-solid-light};
+  --card-border: #{$card-border-light};
+  --text-primary: #{$text-primary-light};
+  --text-secondary: #{$text-secondary-light};
+  --text-tertiary: #{$text-tertiary-light};
+  --shadow-color: #{$shadow-md-light};
+  --shadow-sm: #{$shadow-sm-light};
+  --shadow-md: #{$shadow-md-light};
+  --shadow-lg: #{$shadow-lg-light};
+  --shadow-xl: #{$shadow-xl-light};
+  --hover-bg: rgba(59, 130, 246, 0.08);
+  --active-bg: rgba(59, 130, 246, 0.12);
+  --modal-overlay: #{$modal-overlay-light};
+}
+
+/* ========== 高级玻璃态效果卡片 ========== */
+.glass-card {
+  background: var(--card-bg);
+  border-radius: 32rpx;
+  border: 2rpx solid var(--card-border);
+  backdrop-filter: blur(24rpx) saturate(180%);
+  -webkit-backdrop-filter: blur(24rpx) saturate(180%);
+  box-shadow: 
+    0 8rpx 32rpx -8rpx var(--shadow-color),
+    0 0 0 1rpx rgba(255, 255, 255, 0.05) inset;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  
+  /* 微妙的光泽效果 */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1rpx;
+    background: linear-gradient(90deg, 
+      transparent, 
+      rgba(255, 255, 255, 0.1), 
+      transparent
+    );
+    pointer-events: none;
+  }
+  
+  /* 悬停效果 */
+  &:active {
+    transform: translateY(2rpx);
+    box-shadow: 
+      0 4rpx 16rpx -4rpx var(--shadow-color),
+      0 0 0 1rpx rgba(255, 255, 255, 0.05) inset;
+  }
+}
+
+/* 浅色模式下的玻璃卡片 */
+.light-mode .glass-card {
+  background: var(--card-bg);
+  border: 2rpx solid var(--card-border);
+  box-shadow: 
+    0 8rpx 32rpx -8rpx var(--shadow-color),
+    0 0 0 1rpx rgba(255, 255, 255, 0.8) inset;
+  
+  &::before {
+    background: linear-gradient(90deg, 
+      transparent, 
+      rgba(0, 0, 0, 0.03), 
+      transparent
+    );
+  }
+}
+
+/* ========== 高级渐变按钮 ========== */
+.btn-gradient {
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-teal));
+  color: white;
+  font-weight: 600;
+  box-shadow: 
+    0 8rpx 24rpx -8rpx var(--glow-blue),
+    0 4rpx 12rpx -4rpx rgba(0, 0, 0, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:active {
+    transform: translateY(2rpx);
+    box-shadow: 
+      0 4rpx 12rpx -4rpx var(--glow-blue),
+      0 2rpx 6rpx -2rpx rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* ========== 高级统计卡片样式 ========== */
+.stat-card {
+  @extend .glass-card;
+  padding: 48rpx;
+  position: relative;
+  overflow: hidden;
+  
+  /* 顶部渐变条 */
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6rpx;
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent-teal));
+    border-radius: 32rpx 32rpx 0 0;
+  }
+  
+  /* 警告状态 */
+  &.warning::after {
+    background: linear-gradient(90deg, var(--accent-amber), #f97316);
+  }
+  
+  /* 危险状态 */
+  &.danger::after {
+    background: linear-gradient(90deg, var(--accent-rose), #db2777);
+  }
+  
+  /* 共享状态 */
+  &.shared::after {
+    background: linear-gradient(90deg, var(--accent-purple), #a855f7);
+  }
+  
+  /* 微妙的内发光效果 */
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(
+      circle,
+      rgba(59, 130, 246, 0.1) 0%,
+      transparent 70%
+    );
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  &:active::before {
+    opacity: 1;
+  }
+}
+
+/* ========== 高级输入框样式 ========== */
+.input-enhanced {
+  background: var(--card-bg-solid);
+  border: 2rpx solid var(--card-border);
+  border-radius: 20rpx;
+  padding: 24rpx 30rpx;
+  font-size: 32rpx;
+  color: var(--text-primary);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:focus {
+    border-color: var(--accent-blue);
+    background: var(--hover-bg);
+    box-shadow: 
+      0 0 0 4rpx rgba(37, 99, 235, 0.1),
+      0 4rpx 12rpx -4rpx var(--shadow-color);
+    outline: none;
+  }
+}
+
+/* ========== 高级按钮样式 ========== */
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-teal));
+  color: white;
+  font-weight: 600;
+  border-radius: 24rpx;
+  padding: 28rpx 48rpx;
+  box-shadow: 
+    0 8rpx 24rpx -8rpx var(--glow-blue),
+    0 4rpx 12rpx -4rpx var(--shadow-color);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  
+  &:active {
+    transform: translateY(2rpx);
+    box-shadow: 
+      0 4rpx 12rpx -4rpx var(--glow-blue),
+      0 2rpx 6rpx -2rpx var(--shadow-color);
+  }
+}
+
+.btn-secondary {
+  background: var(--card-bg-solid);
+  color: var(--text-primary);
+  border: 2rpx solid var(--card-border);
+  border-radius: 24rpx;
+  padding: 28rpx 48rpx;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:active {
+    background: var(--hover-bg);
+    border-color: var(--accent-blue);
+    transform: translateY(1rpx);
+  }
+}
+
+/* ========== 高级标签/徽章样式 ========== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8rpx 20rpx;
+  border-radius: 40rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  backdrop-filter: blur(10rpx);
+  
+  &.badge-primary {
+    background: rgba(37, 99, 235, 0.15);
+    color: var(--accent-blue);
+    border: 1rpx solid rgba(37, 99, 235, 0.3);
+  }
+  
+  &.badge-success {
+    background: rgba(5, 150, 105, 0.15);
+    color: var(--accent-green);
+    border: 1rpx solid rgba(5, 150, 105, 0.3);
+  }
+  
+  &.badge-warning {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--accent-amber);
+    border: 1rpx solid rgba(245, 158, 11, 0.3);
+  }
+  
+  &.badge-danger {
+    background: rgba(225, 29, 72, 0.15);
+    color: var(--accent-rose);
+    border: 1rpx solid rgba(225, 29, 72, 0.3);
+  }
+}
+
+/* ========== 高级分隔线 ========== */
+.divider {
+  height: 1rpx;
+  background: var(--card-border);
+  margin: 40rpx 0;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 20%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+      var(--accent-blue), 
+      transparent
+    );
+  }
+}
+
+/* ========== 高级加载动画 ========== */
+@keyframes shimmer {
+  0% {
+    background-position: -1000rpx 0;
+  }
+  100% {
+    background-position: 1000rpx 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--card-bg-solid) 0%,
+    var(--hover-bg) 50%,
+    var(--card-bg-solid) 100%
+  );
+  background-size: 1000rpx 100%;
+  animation: shimmer 2s infinite;
+  border-radius: 12rpx;
+}
+
+/* ========== 高级过渡效果 ========== */
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-fast {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-slow {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ========== 响应式工具类 ========== */
+@media (max-width: 750rpx) {
+  .container {
+    padding: 30rpx 20rpx;
+  }
+}

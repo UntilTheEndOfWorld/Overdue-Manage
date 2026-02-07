@@ -1,0 +1,38 @@
+# OSS配置模板
+# 请根据你的实际OSS配置填写以下信息
+
+# 阿里云OSS配置选项1
+aliyun_option1:
+    accessKeyId: YOUR_ACCESS_KEY_ID_1
+    secretAccessKey: YOUR_SECRET_ACCESS_KEY_1
+    oss:
+        endPoint: oss-cn-shenzhen.aliyuncs.com
+        bucketName: YOUR_BUCKET_NAME_1
+        pathPrefix: tea-mall/
+        useHttps: true
+
+# 阿里云OSS配置选项2  
+aliyun_option2:
+    accessKeyId: YOUR_ACCESS_KEY_ID_2
+    secretAccessKey: YOUR_SECRET_ACCESS_KEY_2
+    oss:
+        endPoint: oss-cn-beijing.aliyuncs.com
+        bucketName: YOUR_BUCKET_NAME_2
+        pathPrefix: tea-mall/
+        useHttps: true
+
+# 腾讯云COS配置（如果使用腾讯云）
+tencent_cos:
+    secretId: YOUR_SECRET_ID
+    secretKey: YOUR_SECRET_KEY
+    region: ap-shanghai
+    bucketName: YOUR_BUCKET_NAME
+
+# 七牛云配置（如果使用七牛云）
+qiniu:
+    accessKey: YOUR_ACCESS_KEY
+    secretKey: YOUR_SECRET_KEY
+    bucketName: YOUR_BUCKET_NAME
+    endpoint: YOUR_ENDPOINT
+
+# 请告诉我你要使用哪个配置，我来帮你更新到application-dev.yml中

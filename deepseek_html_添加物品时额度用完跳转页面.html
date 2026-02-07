@@ -1,0 +1,186 @@
+<!-- 将以下代码插入到<body>末尾，与其他模态框并列 -->
+<div id="quota-exceeded-modal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+        <!-- 模态框头部 -->
+        <div style="margin-bottom: 25px; text-align: center;">
+            <div style="width: 70px; height: 70px; margin: 0 auto 15px; border-radius: 50%; background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(245, 158, 11, 0.1)); display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-tag" style="font-size: 1.8rem; color: var(--accent-amber);"></i>
+            </div>
+            <h3 style="font-size: 1.5rem; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">免费额度已用完</h3>
+            <p style="color: var(--text-secondary); line-height: 1.5;">您已用完5个物品的免费管理额度。请选择以下方式继续添加物品：</p>
+        </div>
+
+        <!-- 两个主要选项 -->
+        <div style="display: flex; flex-direction: column; gap: 18px; margin: 25px 0 30px;">
+            <!-- 选项一：观看广告 -->
+            <div class="option-card" id="watch-ad-option" onclick="selectOption('ad')" style="cursor: pointer;">
+                <div style="display: flex; align-items: center; gap: 18px; padding: 5px;">
+                    <div style="width: 60px; height: 60px; border-radius: 14px; background: rgba(59, 130, 246, 0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="fas fa-tv" style="color: var(--accent-blue); font-size: 1.6rem;"></i>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <h4 style="color: var(--text-primary); margin-bottom: 6px; font-weight: 600;">观看广告，免费获得1次额度</h4>
+                            <span style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green); padding: 3px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 500;">推荐</span>
+                        </div>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5;">观看一段15-30秒的视频广告，即可立即添加<b>1个</b>新物品。</p>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
+                            <span style="font-size: 0.8rem; color: var(--accent-green);"><i class="fas fa-bolt"></i> 立即解锁</span>
+                            <span style="font-size: 0.8rem; color: var(--text-tertiary);"><i class="far fa-clock"></i> 约30秒</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 选项二：升级会员 -->
+            <div class="option-card" id="upgrade-member-option" onclick="selectOption('member')" style="cursor: pointer;">
+                <div style="display: flex; align-items: center; gap: 18px; padding: 5px;">
+                    <div style="width: 60px; height: 60px; border-radius: 14px; background: rgba(139, 92, 246, 0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="fas fa-crown" style="color: var(--accent-purple); font-size: 1.6rem;"></i>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <h4 style="color: var(--text-primary); margin-bottom: 6px; font-weight: 600;">升级会员，无限添加</h4>
+                            <span style="background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); padding: 3px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 500;">超值</span>
+                        </div>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5;">解锁无限物品管理、多设备同步、共享空间等<b>全部高级功能</b>。</p>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
+                            <span style="font-size: 0.95rem; font-weight: 600; color: var(--text-primary);">¥6<span style="font-size: 0.8rem; color: var(--text-secondary);">/月起</span></span>
+                            <span style="font-size: 0.8rem; color: var(--accent-green);"><i class="fas fa-check-circle"></i> 永久无限制</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部操作按钮 -->
+        <div class="modal-footer" style="border-top: 1px solid var(--card-border); padding-top: 20px;">
+            <button class="btn btn-secondary" onclick="closeModal('quota-exceeded-modal')" style="flex: 1;">
+                暂时不要
+            </button>
+            <button class="btn btn-primary" id="confirm-action-btn" onclick="confirmSelection()" style="flex: 2;" disabled>
+                请先选择一个选项
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* 为引导模态框添加专属样式 */
+    .option-card {
+        background: var(--card-bg-solid);
+        border: 2px solid var(--card-border);
+        border-radius: 16px;
+        padding: 18px;
+        transition: all 0.3s ease;
+    }
+    
+    .option-card:hover {
+        transform: translateY(-3px);
+        border-color: var(--accent-blue);
+        box-shadow: 0 6px 20px var(--shadow-color);
+    }
+    
+    .option-card.selected {
+        border-color: var(--accent-blue);
+        background: var(--active-bg);
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15);
+    }
+</style>
+
+<script>
+// 选择选项的逻辑
+let selectedOption = null;
+
+function selectOption(option) {
+    selectedOption = option;
+    
+    // 更新视觉状态
+    document.querySelectorAll('.option-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    if (option === 'ad') {
+        document.getElementById('watch-ad-option').classList.add('selected');
+        document.getElementById('confirm-action-btn').innerHTML = '<i class="fas fa-play-circle"></i> 观看广告并继续';
+    } else if (option === 'member') {
+        document.getElementById('upgrade-member-option').classList.add('selected');
+        document.getElementById('confirm-action-btn').innerHTML = '<i class="fas fa-crown"></i> 升级会员';
+    }
+    
+    document.getElementById('confirm-action-btn').disabled = false;
+}
+
+// 确认选择
+function confirmSelection() {
+    if (selectedOption === 'ad') {
+        // 1. 关闭当前模态框
+        closeModal('quota-exceeded-modal');
+        // 2. 调用微信小程序API播放激励视频广告
+        playRewardedVideoAd();
+    } else if (selectedOption === 'member') {
+        // 1. 关闭当前模态框
+        closeModal('quota-exceeded-modal');
+        // 2. 跳转到“我的”页面，并滚动到会员中心
+        switchPage('profile');
+        // 可以添加一个延迟，让页面切换完成后再滚动
+        setTimeout(() => {
+            document.querySelector('.membership-section').scrollIntoView({ behavior: 'smooth' });
+        }, 300);
+    }
+}
+
+// 模拟播放激励视频广告（微信小程序实际代码）
+function playRewardedVideoAd() {
+    // 实际微信小程序代码示例：
+    // const videoAd = wx.createRewardedVideoAd({ adUnitId: '你的广告单元ID' })
+    // videoAd.show()
+    // videoAd.onClose(res => {
+    //   if (res && res.isEnded) {
+    //     // 广告完整播放，发放奖励
+    //     grantAdditionalQuota()
+    //   }
+    // })
+    
+    // 此处为演示：模拟广告播放成功
+    console.log('开始播放激励视频广告...');
+    showToast('广告播放中，请稍候...', 'info');
+    
+    // 模拟3秒后广告播放完成
+    setTimeout(() => {
+        grantAdditionalQuota();
+    }, 3000);
+}
+
+// 发放额外额度
+function grantAdditionalQuota() {
+    // 实际应调用后端API，更新用户额度
+    console.log('发放1次额外物品添加额度');
+    showToast('恭喜！获得1次物品添加额度', 'success');
+    
+    // 刷新页面数据
+    updateQuotaDisplay();
+    
+    // 自动打开添加物品模态框
+    setTimeout(() => {
+        showModal('add-item-modal');
+    }, 1500);
+}
+
+// 更新额度显示
+function updateQuotaDisplay() {
+    // 更新首页显示的额度
+    const freeQuotaCount = document.getElementById('free-quota-count');
+    if (freeQuotaCount) {
+        // 这里应该从服务器获取最新数据，此处为演示
+        const current = parseInt(freeQuotaCount.textContent) || 0;
+        freeQuotaCount.textContent = Math.min(current + 1, 5);
+    }
+}
+
+// 显示提示消息
+function showToast(message, type = 'info') {
+    // 实际微信小程序中使用 wx.showToast
+    alert(message); // 简化演示
+}
+</script>

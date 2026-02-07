@@ -1,0 +1,103 @@
+version: '3.8'
+
+services:
+  # MySQL 数据库
+  mysql:
+    image: mysql:8.0
+    container_name: tea-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 19960429%L
+      MYSQL_DATABASE: grocery_store
+      MYSQL_USER: lyc_root
+      MYSQL_PASSWORD: 19960429%L
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./sql:/docker-entrypoint-initdb.d
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - tea-network
+
+  # Redis 缓存
+  redis:
+    image: redis:7-alpine
+    container_name: tea-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - tea-network
+
+  # 后端服务
+  backend:
+    build:
+      context: ..
+      dockerfile: Dockerfile.backend
+    container_name: tea-backend
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/grocery_store?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8&rewriteBatchedStatements=true
+      - SPRING_DATASOURCE_USERNAME=lyc_root
+      - SPRING_DATASOURCE_PASSWORD=19960429%L
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+    volumes:
+      - ./ruoyi-admin/src/main/resources/application.yml:/app/application.yml
+      - upload_path:/app/uploadPath
+      - /etc/overdue-store-cert:/etc/overdue-store-cert:ro  # 微信支付证书目录（只读）
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - tea-network
+
+  # 前端服务
+  frontend:
+    build:
+      context: ../overdue-mall-vue
+      dockerfile: ruoyi-mall-vue/doc/Dockerfile.frontend
+    container_name: tea-frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - tea-network
+
+  # Nginx 反向代理
+  nginx:
+    image: nginx:alpine
+    container_name: tea-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - tea-network
+
+volumes:
+  mysql_data:
+  redis_data:
+  upload_path:
+  nginx_logs:
+
+networks:
+  tea-network:
+    driver: bridge

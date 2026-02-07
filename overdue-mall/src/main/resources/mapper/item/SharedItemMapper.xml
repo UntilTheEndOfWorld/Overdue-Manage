@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.overdue.manager.item.mapper.SharedItemMapper">
+    
+    <resultMap type="com.overdue.manager.item.domain.entity.SharedItem" id="SharedItemResult">
+        <result property="id" column="id"/>
+        <result property="spaceId" column="space_id"/>
+        <result property="creatorId" column="creator_id"/>
+        <result property="name" column="name"/>
+        <result property="category" column="category"/>
+        <result property="purchaseDate" column="purchase_date"/>
+        <result property="productionDate" column="production_date"/>
+        <result property="shelfLife" column="shelf_life"/>
+        <result property="shelfLifeUnit" column="shelf_life_unit"/>
+        <result property="expiryDate" column="expiry_date"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="selectSharedItemVo">
+        select id, space_id, creator_id, name, category, purchase_date, production_date, shelf_life, shelf_life_unit, expiry_date, status, create_time, update_time from overdue_shared_item
+    </sql>
+
+    <select id="selectSharedItemList" parameterType="com.overdue.manager.item.domain.entity.SharedItem" resultMap="SharedItemResult">
+        <include refid="selectSharedItemVo"/>
+        <where>  
+            <if test="spaceId != null "> and space_id = #{spaceId}</if>
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="category != null  and category != ''"> and category = #{category}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+        order by expiry_date asc, create_time desc
+    </select>
+
+    <select id="selectBySpaceId" parameterType="Long" resultMap="SharedItemResult">
+        <include refid="selectSharedItemVo"/>
+        where space_id = #{spaceId} and status = '0'
+        order by expiry_date asc
+    </select>
+
+    <select id="selectExpiringItems" resultMap="SharedItemResult">
+        <include refid="selectSharedItemVo"/>
+        where space_id = #{spaceId} 
+          and status = '0'
+          and expiry_date between #{startDate} and #{endDate}
+        order by expiry_date asc
+    </select>
+
+    <select id="selectExpiredItems" resultMap="SharedItemResult">
+        <include refid="selectSharedItemVo"/>
+        where space_id = #{spaceId} 
+          and status = '0'
+          and expiry_date &lt;= #{currentDate}
+        order by expiry_date desc
+    </select>
+
+</mapper>

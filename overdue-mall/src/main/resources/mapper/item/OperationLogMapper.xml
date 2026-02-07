@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.overdue.manager.item.mapper.OperationLogMapper">
+    
+    <resultMap type="com.overdue.manager.item.domain.entity.OperationLog" id="OperationLogResult">
+        <result property="id" column="id"/>
+        <result property="spaceId" column="space_id"/>
+        <result property="itemId" column="item_id"/>
+        <result property="itemType" column="item_type"/>
+        <result property="operatorId" column="operator_id"/>
+        <result property="operatorName" column="operator_name"/>
+        <result property="operationType" column="operation_type"/>
+        <result property="operationDesc" column="operation_desc"/>
+        <result property="operationData" column="operation_data"/>
+        <result property="operationTime" column="operation_time"/>
+    </resultMap>
+
+    <sql id="selectOperationLogVo">
+        select id, space_id, item_id, item_type, operator_id, operator_name, operation_type, operation_desc, operation_data, operation_time from overdue_operation_log
+    </sql>
+
+    <select id="selectOperationLogList" parameterType="com.overdue.manager.item.domain.entity.OperationLog" resultMap="OperationLogResult">
+        <include refid="selectOperationLogVo"/>
+        <where>  
+            <if test="spaceId != null "> and space_id = #{spaceId}</if>
+            <if test="itemId != null "> and item_id = #{itemId}</if>
+            <if test="itemType != null  and itemType != ''"> and item_type = #{itemType}</if>
+            <if test="operatorId != null "> and operator_id = #{operatorId}</if>
+            <if test="operationType != null  and operationType != ''"> and operation_type = #{operationType}</if>
+        </where>
+        order by operation_time desc
+    </select>
+
+    <select id="selectBySpaceId" parameterType="Long" resultMap="OperationLogResult">
+        <include refid="selectOperationLogVo"/>
+        where space_id = #{spaceId}
+        order by operation_time desc
+        limit 100
+    </select>
+
+    <select id="selectByItemId" resultMap="OperationLogResult">
+        <include refid="selectOperationLogVo"/>
+        where item_id = #{itemId} and item_type = #{itemType}
+        order by operation_time desc
+    </select>
+
+</mapper>

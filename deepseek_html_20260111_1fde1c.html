@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>过期了么 - 过期物品管理</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+            max-width: 500px;
+            margin: 0 auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            min-height: 100vh;
+        }
+        
+        .container {
+            padding: 20px;
+            padding-bottom: 80px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #6a89cc 0%, #4a69bd 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 0 0 20px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(74, 105, 189, 0.2);
+        }
+        
+        .header h1 {
+            display: flex;
+            align-items: center;
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+        
+        .header h1 i {
+            margin-right: 12px;
+            font-size: 2rem;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.15);
+            padding: 10px 15px;
+            border-radius: 50px;
+            margin-top: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .user-info i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        /* 登录界面 */
+        .login-container {
+            max-width: 400px;
+            margin: 30px auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+        
+        .login-title {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #4a69bd;
+            font-size: 1.5rem;
+        }
+        
+        .login-option {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 2px solid #eef2f7;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .login-option:hover {
+            border-color: #6a89cc;
+            background-color: #f8fafe;
+        }
+        
+        .login-option.selected {
+            border-color: #4a69bd;
+            background-color: #f0f4ff;
+        }
+        
+        .login-option i {
+            font-size: 1.5rem;
+            color: #4a69bd;
+            margin-right: 10px;
+        }
+        
+        .login-option span {
+            font-weight: 600;
+        }
+        
+        .login-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-top: 10px;
+            transition: border-color 0.3s;
+        }
+        
+        .login-input:focus {
+            outline: none;
+            border-color: #6a89cc;
+        }
+        
+        .btn {
+            background: linear-gradient(to right, #6a89cc, #4a69bd);
+            color: white;
+            border: none;
+            padding: 14px;
+            width: 100%;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 15px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 105, 189, 0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        /* 物品列表 */
+        .section-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            color: #4a69bd;
+        }
+        
+        .add-btn {
+            background-color: #4a69bd;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(74, 105, 189, 0.3);
+            transition: all 0.3s;
+        }
+        
+        .add-btn:hover {
+            transform: rotate(90deg);
+        }
+        
+        .item-list {
+            margin-bottom: 30px;
+        }
+        
+        .item-card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            border-left: 5px solid #6a89cc;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .item-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .item-card.near-expiry {
+            border-left-color: #ffbe76;
+        }
+        
+        .item-card.expired {
+            border-left-color: #ff7979;
+        }
+        
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .item-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #2c3e50;
+        }
+        
+        .item-date {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .date-label {
+            color: #7f8c8d;
+            font-size: 0.85rem;
+        }
+        
+        .date-value {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        
+        .expiry-status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+        
+        .status-good {
+            background-color: #d1f7c4;
+            color: #2e7d32;
+        }
+        
+        .status-warning {
+            background-color: #fff4c6;
+            color: #f39c12;
+        }
+        
+        .status-danger {
+            background-color: #ffeaea;
+            color: #e74c3c;
+        }
+        
+        .edit-btn {
+            background-color: transparent;
+            border: none;
+            color: #6a89cc;
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+        
+        .edit-btn:hover {
+            background-color: #f0f4ff;
+        }
+        
+        /* 表单界面 */
+        .form-container {
+            background-color: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+        
+        .form-title {
+            color: #4a69bd;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #6a89cc;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(to right, #95a5a6, #7f8c8d);
+        }
+        
+        /* 底部导航 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.08);
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            z-index: 100;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #7f8c8d;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+            padding: 5px 15px;
+            border-radius: 10px;
+        }
+        
+        .nav-item.active {
+            color: #4a69bd;
+            background-color: #f0f4ff;
+        }
+        
+        .nav-item i {
+            font-size: 1.4rem;
+            margin-bottom: 5px;
+        }
+        
+        /* 提醒样式 */
+        .reminder-container {
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        }
+        
+        .reminder-header {
+            display: flex;
+            align-items: center;
+            color: #e74c3c;
+            margin-bottom: 15px;
+        }
+        
+        .reminder-header i {
+            margin-right: 10px;
+            font-size: 1.3rem;
+        }
+        
+        .reminder-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f1f1;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .reminder-item:last-child {
+            border-bottom: none;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #7f8c8d;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #ddd;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录界面 -->
+    <div id="login-screen" class="container">
+        <div class="header">
+            <h1><i class="fas fa-hourglass-half"></i> 过期了么</h1>
+            <p>智能管理您的物品有效期，及时提醒，避免浪费</p>
+        </div>
+        
+        <div class="login-container">
+            <h2 class="login-title">欢迎使用</h2>
+            
+            <div class="login-option" id="openid-option">
+                <i class="fas fa-key"></i>
+                <span>使用OpenID登录</span>
+                <input type="text" id="openid-input" class="login-input hidden" placeholder="请输入OpenID">
+            </div>
+            
+            <div class="login-option" id="phone-option">
+                <i class="fas fa-mobile-alt"></i>
+                <span>使用手机号登录</span>
+                <input type="text" id="phone-input" class="login-input hidden" placeholder="请输入手机号">
+            </div>
+            
+            <button id="login-btn" class="btn">登录 / 注册</button>
+            
+            <p style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: #7f8c8d;">
+                登录即表示同意我们的服务条款和隐私政策
+            </p>
+        </div>
+    </div>
+    
+    <!-- 主界面 -->
+    <div id="main-screen" class="container hidden">
+        <div class="header">
+            <h1><i class="fas fa-hourglass-half"></i> 过期了么</h1>
+            <p>已管理 <span id="item-count">0</span> 件物品，<span id="expiring-count">0</span> 件即将过期</p>
+            
+            <div class="user-info">
+                <i class="fas fa-user-circle"></i>
+                <span id="user-identifier">用户</span>
+            </div>
+        </div>
+        
+        <!-- 提醒区域 -->
+        <div id="reminder-section" class="reminder-container">
+            <div class="reminder-header">
+                <i class="fas fa-bell"></i>
+                <h3>过期提醒</h3>
+            </div>
+            <div id="reminder-list">
+                <!-- 提醒内容动态生成 -->
+            </div>
+        </div>
+        
+        <!-- 物品列表 -->
+        <div class="section-title">
+            <h2><i class="fas fa-box-open"></i> 我的物品</h2>
+            <button id="add-item-btn" class="add-btn">+</button>
+        </div>
+        
+        <div id="item-list" class="item-list">
+            <!-- 物品列表动态生成 -->
+        </div>
+        
+        <!-- 空状态 -->
+        <div id="empty-state" class="empty-state">
+            <i class="fas fa-box-open"></i>
+            <h3>暂无物品</h3>
+            <p>点击右上角"+"按钮添加您的第一件物品</p>
+        </div>
+        
+        <!-- 底部导航 -->
+        <div class="bottom-nav">
+            <a href="#" class="nav-item active" data-page="home">
+                <i class="fas fa-home"></i>
+                <span>首页</span>
+            </a>
+            <a href="#" class="nav-item" data-page="expiring">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>即将过期</span>
+            </a>
+            <a href="#" class="nav-item" data-page="expired">
+                <i class="fas fa-times-circle"></i>
+                <span>已过期</span>
+            </a>
+            <a href="#" class="nav-item" data-page="profile">
+                <i class="fas fa-user"></i>
+                <span>我的</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- 添加/编辑物品表单 -->
+    <div id="form-screen" class="container hidden">
+        <div class="header">
+            <h1><i class="fas fa-edit"></i> <span id="form-title">添加物品</span></h1>
+            <p>请填写物品信息，系统将自动计算过期日期</p>
+        </div>
+        
+        <div class="form-container">
+            <h3 class="form-title">物品信息</h3>
+            
+            <div class="form-group">
+                <label class="form-label" for="item-name">物品名称 *</label>
+                <input type="text" id="item-name" class="form-input" placeholder="例如：牛奶、药品、罐头">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="purchase-date">购买日期</label>
+                <input type="date" id="purchase-date" class="form-input">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="production-date">生产日期 *</label>
+                <input type="date" id="production-date" class="form-input">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="shelf-life">保质期 (天数) *</label>
+                <input type="number" id="shelf-life" class="form-input" placeholder="例如：30（表示30天）" min="1">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="expiry-date">过期日期 *</label>
+                <input type="date" id="expiry-date" class="form-input">
+                <p style="font-size: 0.85rem; color: #7f8c8d; margin-top: 5px;">根据生产日期和保质期自动计算，可手动调整</p>
+            </div>
+            
+            <div class="btn-group">
+                <button id="cancel-btn" class="btn btn-secondary">取消</button>
+                <button id="save-item-btn" class="btn">保存物品</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 应用状态管理
+        const AppState = {
+            currentUser: null,
+            currentPage: 'home',
+            editingItemId: null,
+            items: [],
+            
+            // 初始化应用
+            init() {
+                this.loadUserFromStorage();
+                this.bindEvents();
+                this.setupDateDefaults();
+                
+                // 如果已登录，显示主界面
+                if (this.currentUser) {
+                    this.showMainScreen();
+                } else {
+                    this.showLoginScreen();
+                }
+            },
+            
+            // 从本地存储加载用户信息
+            loadUserFromStorage() {
+                const user = localStorage.getItem('expiryManagerUser');
+                if (user) {
+                    this.currentUser = JSON.parse(user);
+                    this.loadItemsFromStorage();
+                }
+            },
+            
+            // 从本地存储加载物品列表
+            loadItemsFromStorage() {
+                if (!this.currentUser) return;
+                
+                const itemsKey = `expiryManagerItems_${this.currentUser.id}`;
+                const itemsData = localStorage.getItem(itemsKey);
+                
+                if (itemsData) {
+                    this.items = JSON.parse(itemsData);
+                } else {
+                    this.items = this.getSampleItems();
+                    this.saveItemsToStorage();
+                }
+            },
+            
+            // 保存物品到本地存储
+            saveItemsToStorage() {
+                if (!this.currentUser) return;
+                
+                const itemsKey = `expiryManagerItems_${this.currentUser.id}`;
+                localStorage.setItem(itemsKey, JSON.stringify(this.items));
+            },
+            
+            // 绑定事件
+            bindEvents() {
+                // 登录相关
+                document.getElementById('openid-option').addEventListener('click', () => this.selectLoginOption('openid'));
+                document.getElementById('phone-option').addEventListener('click', () => this.selectLoginOption('phone'));
+                document.getElementById('login-btn').addEventListener('click', () => this.login());
+                
+                // 主界面相关
+                document.getElementById('add-item-btn').addEventListener('click', () => this.showAddForm());
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.switchPage(e.target.closest('.nav-item').dataset.page);
+                    });
+                });
+                
+                // 表单相关
+                document.getElementById('production-date').addEventListener('change', () => this.calculateExpiryDate());
+                document.getElementById('shelf-life').addEventListener('input', () => this.calculateExpiryDate());
+                document.getElementById('expiry-date').addEventListener('change', () => this.validateExpiryDate());
+                document.getElementById('cancel-btn').addEventListener('click', () => this.cancelForm());
+                document.getElementById('save-item-btn').addEventListener('click', () => this.saveItem());
+                
+                // 设置今日为默认日期
+                this.setupDateDefaults();
+            },
+            
+            // 选择登录方式
+            selectLoginOption(type) {
+                const openidOption = document.getElementById('openid-option');
+                const phoneOption = document.getElementById('phone-option');
+                const openidInput = document.getElementById('openid-input');
+                const phoneInput = document.getElementById('phone-input');
+                
+                if (type === 'openid') {
+                    openidOption.classList.add('selected');
+                    phoneOption.classList.remove('selected');
+                    openidInput.classList.remove('hidden');
+                    phoneInput.classList.add('hidden');
+                } else {
+                    phoneOption.classList.add('selected');
+                    openidOption.classList.remove('selected');
+                    phoneInput.classList.remove('hidden');
+                    openidInput.classList.add('hidden');
+                }
+            },
+            
+            // 登录/注册
+            login() {
+                const openidOption = document.getElementById('openid-option');
+                const openidInput = document.getElementById('openid-input');
+                const phoneInput = document.getElementById('phone-input');
+                
+                let userIdentifier = '';
+                
+                if (openidOption.classList.contains('selected')) {
+                    userIdentifier = openidInput.value.trim();
+                    if (!userIdentifier) {
+                        alert('请输入OpenID');
+                        return;
+                    }
+                } else {
+                    userIdentifier = phoneInput.value.trim();
+                    if (!userIdentifier || !/^1[3-9]\d{9}$/.test(userIdentifier)) {
+                        alert('请输入有效的手机号');
+                        return;
+                    }
+                }
+                
+                // 创建用户
+                this.currentUser = {
+                    id: openidOption.classList.contains('selected') ? `openid_${userIdentifier}` : `phone_${userIdentifier}`,
+                    type: openidOption.classList.contains('selected') ? 'openid' : 'phone',
+                    identifier: userIdentifier
+                };
+                
+                // 保存用户信息
+                localStorage.setItem('expiryManagerUser', JSON.stringify(this.currentUser));
+                
+                // 加载用户的物品数据
+                this.loadItemsFromStorage();
+                
+                // 显示主界面
+                this.showMainScreen();
+            },
+            
+            // 显示登录界面
+            showLoginScreen() {
+                document.getElementById('login-screen').classList.remove('hidden');
+                document.getElementById('main-screen').classList.add('hidden');
+                document.getElementById('form-screen').classList.add('hidden');
+            },
+            
+            // 显示主界面
+            showMainScreen() {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('main-screen').classList.remove('hidden');
+                document.getElementById('form-screen').classList.add('hidden');
+                
+                // 更新用户信息
+                document.getElementById('user-identifier').textContent = 
+                    this.currentUser.type === 'openid' ? `OpenID用户` : `用户 ${this.currentUser.identifier}`;
+                
+                // 渲染页面
+                this.renderHomePage();
+            },
+            
+            // 显示表单界面
+            showFormScreen() {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('main-screen').classList.add('hidden');
+                document.getElementById('form-screen').classList.remove('hidden');
+            },
+            
+            // 切换页面
+            switchPage(page) {
+                this.currentPage = page;
+                
+                // 更新导航状态
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    if (item.dataset.page === page) {
+                        item.classList.add('active');
+                    } else {
+                        item.classList.remove('active');
+                    }
+                });
+                
+                // 渲染对应页面
+                if (page === 'home') {
+                    this.renderHomePage();
+                } else if (page === 'expiring') {
+                    this.renderExpiringPage();
+                } else if (page === 'expired') {
+                    this.renderExpiredPage();
+                } else if (page === 'profile') {
+                    this.renderProfilePage();
+                }
+            },
+            
+            // 渲染首页
+            renderHomePage() {
+                this.renderItemList(this.items);
+                this.renderReminders();
+                this.updateStats();
+                
+                // 显示/隐藏空状态
+                const emptyState = document.getElementById('empty-state');
+                if (this.items.length === 0) {
+                    emptyState.classList.remove('hidden');
+                } else {
+                    emptyState.classList.add('hidden');
+                }
+            },
+            
+            // 渲染即将过期页面
+            renderExpiringPage() {
+                const now = new Date();
+                const sevenDaysLater = new Date();
+                sevenDaysLater.setDate(now.getDate() + 7);
+                
+                const expiringItems = this.items.filter(item => {
+                    const expiryDate = new Date(item.expiryDate);
+                    return expiryDate > now && expiryDate <= sevenDaysLater;
+                });
+                
+                this.renderItemList(expiringItems);
+                
+                // 更新标题
+                document.querySelector('.section-title h2').innerHTML = '<i class="fas fa-exclamation-triangle"></i> 即将过期';
+                
+                // 隐藏空状态或显示特定消息
+                const emptyState = document.getElementById('empty-state');
+                if (expiringItems.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    emptyState.innerHTML = `
+                        <i class="fas fa-check-circle"></i>
+                        <h3>暂无即将过期物品</h3>
+                        <p>很好！没有物品在未来7天内过期</p>
+                    `;
+                } else {
+                    emptyState.classList.add('hidden');
+                }
+                
+                // 隐藏提醒区域
+                document.getElementById('reminder-section').classList.add('hidden');
+            },
+            
+            // 渲染已过期页面
+            renderExpiredPage() {
+                const now = new Date();
+                const expiredItems = this.items.filter(item => {
+                    const expiryDate = new Date(item.expiryDate);
+                    return expiryDate <= now;
+                });
+                
+                this.renderItemList(expiredItems);
+                
+                // 更新标题
+                document.querySelector('.section-title h2').innerHTML = '<i class="fas fa-times-circle"></i> 已过期';
+                
+                // 隐藏空状态或显示特定消息
+                const emptyState = document.getElementById('empty-state');
+                if (expiredItems.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    emptyState.innerHTML = `
+                        <i class="fas fa-check-circle"></i>
+                        <h3>暂无过期物品</h3>
+                        <p>很好！所有物品都在有效期内</p>
+                    `;
+                } else {
+                    emptyState.classList.add('hidden');
+                }
+                
+                // 隐藏提醒区域
+                document.getElementById('reminder-section').classList.add('hidden');
+            },
+            
+            // 渲染个人资料页面
+            renderProfilePage() {
+                const now = new Date();
+                const sevenDaysLater = new Date();
+                sevenDaysLater.setDate(now.getDate() + 7);
+                
+                const expiredItems = this.items.filter(item => {
+                    const expiryDate = new Date(item.expiryDate);
+                    return expiryDate <= now;
+                });
+                
+                const expiringItems = this.items.filter(item => {
+                    const expiryDate = new Date(item.expiryDate);
+                    return expiryDate > now && expiryDate <= sevenDaysLater;
+                });
+                
+                const goodItems = this.items.filter(item => {
+                    const expiryDate = new Date(item.expiryDate);
+                    return expiryDate > sevenDaysLater;
+                });
+                
+                // 隐藏物品列表和提醒区域
+                document.getElementById('item-list').classList.add('hidden');
+                document.getElementById('reminder-section').classList.add('hidden');
+                document.getElementById('empty-state').classList.add('hidden');
+                
+                // 更新标题
+                document.querySelector('.section-title h2').innerHTML = '<i class="fas fa-user"></i> 我的账户';
+                
+                // 创建个人资料内容
+                const profileHTML = `
+                    <div class="form-container">
+                        <div class="user-info" style="justify-content: center; margin-bottom: 20px; background-color: #f0f4ff;">
+                            <i class="fas fa-user-circle" style="font-size: 2.5rem;"></i>
+                            <div style="margin-left: 15px;">
+                                <h3>${this.currentUser.type === 'openid' ? 'OpenID用户' : '手机用户'}</h3>
+                                <p>${this.currentUser.identifier}</p>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; text-align: center; margin-bottom: 25px;">
+                            <div>
+                                <div style="font-size: 2rem; color: #4a69bd; font-weight: 600;">${this.items.length}</div>
+                                <div style="color: #7f8c8d; font-size: 0.9rem;">总物品数</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 2rem; color: #2ecc71; font-weight: 600;">${goodItems.length}</div>
+                                <div style="color: #7f8c8d; font-size: 0.9rem;">正常</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 2rem; color: #f39c12; font-weight: 600;">${expiringItems.length}</div>
+                                <div style="color: #7f8c8d; font-size: 0.9rem;">即将过期</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 2rem; color: #e74c3c; font-weight: 600;">${expiredItems.length}</div>
+                                <div style="color: #7f8c8d; font-size: 0.9rem;">已过期</div>
+                            </div>
+                        </div>
+                        
+                        <button id="logout-btn" class="btn" style="margin-top: 10px;">退出登录</button>
+                    </div>
+                `;
+                
+                // 将个人资料内容添加到物品列表容器
+                const itemList = document.getElementById('item-list');
+                itemList.innerHTML = profileHTML;
+                itemList.classList.remove('hidden');
+                
+                // 绑定退出登录按钮事件
+                document.getElementById('logout-btn').addEventListener('click', () => {
+                    if (confirm('确定要退出登录吗？')) {
+                        this.currentUser = null;
+                        localStorage.removeItem('expiryManagerUser');
+                        this.showLoginScreen();
+                    }
+                });
+            },
+            
+            // 渲染物品列表
+            renderItemList(items) {
+                const itemList = document.getElementById('item-list');
+                itemList.classList.remove('hidden');
+                
+                if (items.length === 0) {
+                    itemList.innerHTML = '';
+                    return;
+                }
+                
+                // 按过期日期排序
+                const sortedItems = [...items].sort((a, b) => {
+                    return new Date(a.expiryDate) - new Date(b.expiryDate);
+                });
+                
+                let html = '';
+                const now = new Date();
+                const sevenDaysLater = new Date();
+                sevenDaysLater.setDate(now.getDate() + 7);
+                
+                sortedItems.forEach(item => {
+                    const expiryDate = new Date(item.expiryDate);
+                    const purchaseDate = item.purchaseDate ? new Date(item.purchaseDate).toLocaleDateString() : '未记录';
+                    const productionDate = new Date(item.productionDate).toLocaleDateString();
+                    
+                    // 计算状态
+                    let statusClass, statusText;
+                    if (expiryDate <= now) {
+                        statusClass = 'status-danger';
+                        statusText = '已过期';
+                    } else if (expiryDate <= sevenDaysLater) {
+                        statusClass = 'status-warning';
+                        statusText = '即将过期';
+                    } else {
+                        statusClass = 'status-good';
+                        statusText = '正常';
+                    }
+                    
+                    html += `
+                        <div class="item-card ${expiryDate <= now ? 'expired' : (expiryDate <= sevenDaysLater ? 'near-expiry' : '')}">
+                            <div class="item-header">
+                                <div class="item-name">${item.name}</div>
+                                <button class="edit-btn" data-id="${item.id}">
+                                    <i class="fas fa-edit"></i> 编辑
+                                </button>
+                            </div>
+                            
+                            <div class="item-date">
+                                <div>
+                                    <div class="date-label">购买日期</div>
+                                    <div class="date-value">${purchaseDate}</div>
+                                </div>
+                                <div>
+                                    <div class="date-label">生产日期</div>
+                                    <div class="date-value">${productionDate}</div>
+                                </div>
+                                <div>
+                                    <div class="date-label">过期日期</div>
+                                    <div class="date-value">${expiryDate.toLocaleDateString()}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="expiry-status ${statusClass}">${statusText}</div>
+                        </div>
+                    `;
+                });
+                
+                itemList.innerHTML = html;
+                
+                // 绑定编辑按钮事件
+                document.querySelectorAll('.edit-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const itemId = e.currentTarget.dataset.id;
+                        this.editItem(itemId);
+                    });
+                });
+            },
+            
+            // 渲染提醒
+            renderReminders() {
+                const reminderList = document.getElementById('reminder-list');
+                const now = new Date();
+                const sevenDaysLater = new Date();
+                sevenDaysLater.setDate(now.getDate() + 7);
+                
+                // 获取即将过期和已过期的物品
+                const expiringItems = this.items.filter(item => {
+                    const expiryDate = new Date(item.expiryDate);
+                    return expiryDate > now && expiryDate <= sevenDaysLater;
+                });
+                
+                const expiredItems = this.items.filter(item => {
+                    const expiryDate = new Date(item.expiryDate);
+                    return expiryDate <= now;
+                });
+                
+                let html = '';
+                
+                if (expiredItems.length > 0) {
+                    html += `<div class="reminder-item" style="color: #e74c3c;">
+                        <span><i class="fas fa-times-circle"></i> 有 ${expiredItems.length} 件物品已过期</span>
+                        <span>立即处理</span>
+                    </div>`;
+                }
+                
+                if (expiringItems.length > 0) {
+                    html += `<div class="reminder-item" style="color: #f39c12;">
+                        <span><i class="fas fa-exclamation-triangle"></i> 有 ${expiringItems.length} 件物品即将过期</span>
+                        <span>7天内</span>
+                    </div>`;
+                }
+                
+                if (expiredItems.length === 0 && expiringItems.length === 0) {
+                    html = `<div class="reminder-item">
+                        <span><i class="fas fa-check-circle"></i> 所有物品状态正常</span>
+                        <span>暂无提醒</span>
+                    </div>`;
+                }
+                
+                reminderList.innerHTML = html;
+                
+                // 显示/隐藏提醒区域
+                const reminderSection = document.getElementById('reminder-section');
+                reminderSection.classList.remove('hidden');
+            },
+            
+            // 更新统计信息
+            updateStats() {
+                const now = new Date();
+                const sevenDaysLater = new Date();
+                sevenDaysLater.setDate(now.getDate() + 7);
+                
+                const expiringItems = this.items.filter(item => {
+                    const expiryDate = new Date(item.expiryDate);
+                    return expiryDate > now && expiryDate <= sevenDaysLater;
+                });
+                
+                document.getElementById('item-count').textContent = this.items.length;
+                document.getElementById('expiring-count').textContent = expiringItems.length;
+            },
+            
+            // 显示添加表单
+            showAddForm() {
+                this.editingItemId = null;
+                document.getElementById('form-title').textContent = '添加物品';
+                this.showFormScreen();
+                this.resetForm();
+            },
+            
+            // 编辑物品
+            editItem(itemId) {
+                this.editingItemId = itemId;
+                const item = this.items.find(i => i.id === itemId);
+                
+                if (!item) return;
+                
+                document.getElementById('form-title').textContent = '编辑物品';
+                this.showFormScreen();
+                
+                // 填充表单
+                document.getElementById('item-name').value = item.name;
+                document.getElementById('purchase-date').value = item.purchaseDate || '';
+                document.getElementById('production-date').value = item.productionDate;
+                document.getElementById('shelf-life').value = item.shelfLife;
+                document.getElementById('expiry-date').value = item.expiryDate;
+            },
+            
+            // 取消表单
+            cancelForm() {
+                this.showMainScreen();
+                this.resetForm();
+            },
+            
+            // 重置表单
+            resetForm() {
+                document.getElementById('item-name').value = '';
+                document.getElementById('purchase-date').value = '';
+                document.getElementById('production-date').value = this.getTodayDate();
+                document.getElementById('shelf-life').value = '30';
+                this.calculateExpiryDate();
+            },
+            
+            // 计算过期日期
+            calculateExpiryDate() {
+                const productionDate = document.getElementById('production-date').value;
+                const shelfLife = parseInt(document.getElementById('shelf-life').value) || 0;
+                
+                if (productionDate && shelfLife > 0) {
+                    const expiryDate = new Date(productionDate);
+                    expiryDate.setDate(expiryDate.getDate() + shelfLife);
+                    
+                    document.getElementById('expiry-date').value = this.formatDate(expiryDate);
+                }
+            },
+            
+            // 验证过期日期
+            validateExpiryDate() {
+                const productionDate = document.getElementById('production-date').value;
+                const expiryDate = document.getElementById('expiry-date').value;
+                
+                if (productionDate && expiryDate) {
+                    const prodDate = new Date(productionDate);
+                    const expDate = new Date(expiryDate);
+                    
+                    if (expDate <= prodDate) {
+                        alert('过期日期必须晚于生产日期');
+                        this.calculateExpiryDate(); // 重新计算
+                    }
+                }
+            },
+            
+            // 保存物品
+            saveItem() {
+                // 验证必填字段
+                const name = document.getElementById('item-name').value.trim();
+                const productionDate = document.getElementById('production-date').value;
+                const shelfLife = parseInt(document.getElementById('shelf-life').value);
+                const expiryDate = document.getElementById('expiry-date').value;
+                
+                if (!name) {
+                    alert('请输入物品名称');
+                    return;
+                }
+                
+                if (!productionDate) {
+                    alert('请选择生产日期');
+                    return;
+                }
+                
+                if (!shelfLife || shelfLife <= 0) {
+                    alert('请输入有效的保质期天数');
+                    return;
+                }
+                
+                if (!expiryDate) {
+                    alert('请选择过期日期');
+                    return;
+                }
+                
+                // 创建或更新物品
+                const item = {
+                    id: this.editingItemId || Date.now().toString(),
+                    name,
+                    purchaseDate: document.getElementById('purchase-date').value || null,
+                    productionDate,
+                    shelfLife,
+                    expiryDate,
+                    createdAt: new Date().toISOString()
+                };
+                
+                if (this.editingItemId) {
+                    // 更新现有物品
+                    const index = this.items.findIndex(i => i.id === this.editingItemId);
+                    if (index !== -1) {
+                        this.items[index] = item;
+                    }
+                } else {
+                    // 添加新物品
+                    this.items.push(item);
+                }
+                
+                // 保存到本地存储
+                this.saveItemsToStorage();
+                
+                // 返回主界面
+                this.showMainScreen();
+                this.resetForm();
+                
+                // 显示成功消息
+                alert(`物品"${name}"已保存`);
+            },
+            
+            // 设置默认日期
+            setupDateDefaults() {
+                const today = this.getTodayDate();
+                document.getElementById('production-date').value = today;
+                this.calculateExpiryDate();
+            },
+            
+            // 获取今天日期字符串 (YYYY-MM-DD)
+            getTodayDate() {
+                const now = new Date();
+                return now.toISOString().split('T')[0];
+            },
+            
+            // 格式化日期为 YYYY-MM-DD
+            formatDate(date) {
+                return date.toISOString().split('T')[0];
+            },
+            
+            // 获取示例数据
+            getSampleItems() {
+                const now = new Date();
+                const pastDate = new Date();
+                pastDate.setDate(now.getDate() - 5);
+                
+                const futureDate1 = new Date();
+                futureDate1.setDate(now.getDate() + 3);
+                
+                const futureDate2 = new Date();
+                futureDate2.setDate(now.getDate() + 30);
+                
+                return [
+                    {
+                        id: '1',
+                        name: '纯牛奶',
+                        purchaseDate: this.formatDate(pastDate),
+                        productionDate: this.formatDate(new Date(pastDate.getTime() - 5 * 24 * 60 * 60 * 1000)),
+                        shelfLife: 21,
+                        expiryDate: this.formatDate(futureDate1),
+                        createdAt: this.formatDate(pastDate)
+                    },
+                    {
+                        id: '2',
+                        name: '维生素C片',
+                        purchaseDate: this.formatDate(new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)),
+                        productionDate: this.formatDate(new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)),
+                        shelfLife: 365,
+                        expiryDate: this.formatDate(futureDate2),
+                        createdAt: this.formatDate(new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000))
+                    },
+                    {
+                        id: '3',
+                        name: '番茄酱',
+                        purchaseDate: this.formatDate(new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000)),
+                        productionDate: this.formatDate(new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000)),
+                        shelfLife: 180,
+                        expiryDate: this.formatDate(new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000)),
+                        createdAt: this.formatDate(new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000))
+                    }
+                ];
+            }
+        };
+        
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            AppState.init();
+        });
+    </script>
+</body>
+</html>

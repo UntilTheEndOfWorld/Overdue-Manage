@@ -1,0 +1,266 @@
+<!-- 替换之前“我的”页面中的会员套餐部分 -->
+<div style="background: var(--card-bg-solid); border-radius: 20px; padding: 25px; border: 1px solid var(--card-border); margin-top: 20px; box-shadow: 0 4px 8px var(--shadow-color);" class="membership-section">
+    <h3 style="margin-bottom: 20px; font-size: 1.2rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+        <i class="fas fa-crown" style="color: var(--accent-amber);"></i> 会员中心
+    </h3>
+    
+    <!-- 当前状态 -->
+    <div id="current-membership-status" style="padding: 20px; background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1)); border-radius: 15px; margin-bottom: 25px; border: 1px solid rgba(139, 92, 246, 0.3);">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h4 style="color: var(--text-primary); margin-bottom: 5px; font-size: 1.1rem;">免费用户</h4>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">您有 <strong style="color: var(--accent-blue);">5</strong> 个物品的免费管理额度，已使用 <strong style="color: var(--accent-red);" id="used-quota">3</strong> 个，剩余 <strong style="color: var(--accent-green);" id="remaining-quota">2</strong> 个。</p>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">推荐升级</div>
+                <button class="btn btn-primary" style="padding: 8px 16px; font-size: 0.9rem;" onclick="showModal('upgrade-plan-modal')">
+                    <i class="fas fa-gem"></i> 升级会员
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 会员特权 -->
+    <div style="margin-bottom: 25px;">
+        <h4 style="color: var(--text-primary); margin-bottom: 15px; font-size: 1.1rem;">会员特权</h4>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+            <div style="padding: 15px; background: var(--hover-bg); border-radius: 12px; border: 1px solid var(--card-border);">
+                <i class="fas fa-infinity" style="color: var(--accent-blue); font-size: 1.3rem; margin-bottom: 10px;"></i>
+                <div style="font-weight: 600; color: var(--text-primary); font-size: 0.95rem;">无限物品</div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 5px;">无限制添加</div>
+            </div>
+            <div style="padding: 15px; background: var(--hover-bg); border-radius: 12px; border: 1px solid var(--card-border);">
+                <i class="fas fa-users" style="color: var(--accent-purple); font-size: 1.3rem; margin-bottom: 10px;"></i>
+                <div style="font-weight: 600; color: var(--text-primary); font-size: 0.95rem;">共享空间</div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 5px;">多人协作管理</div>
+            </div>
+            <div style="padding: 15px; background: var(--hover-bg); border-radius: 12px; border: 1px solid var(--card-border);">
+                <i class="fas fa-bell" style="color: var(--accent-teal); font-size: 1.3rem; margin-bottom: 10px;"></i>
+                <div style="font-weight: 600; color: var(--text-primary); font-size: 0.95rem;">高级提醒</div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 5px;">多渠道通知</div>
+            </div>
+            <div style="padding: 15px; background: var(--hover-bg); border-radius: 12px; border: 1px solid var(--card-border);">
+                <i class="fas fa-cloud-upload-alt" style="color: var(--accent-green); font-size: 1.3rem; margin-bottom: 10px;"></i>
+                <div style="font-weight: 600; color: var(--text-primary); font-size: 0.95rem;">云端备份</div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 5px;">数据永不丢失</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 会员升级模态框 -->
+<div id="upgrade-plan-modal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+        <div style="margin-bottom: 25px;">
+            <h3 style="font-size: 1.5rem; font-weight: 600; color: var(--text-primary);">升级会员计划</h3>
+            <p style="color: var(--text-secondary); margin-top: 8px;">选择适合您的套餐，解锁无限物品管理功能</p>
+        </div>
+        
+        <!-- 套餐选择 -->
+        <div style="display: flex; flex-direction: column; gap: 12px; margin: 20px 0;">
+            <div class="plan-option" data-plan="monthly" onclick="selectPlan('monthly')">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h4 style="color: var(--text-primary); font-weight: 600; margin-bottom: 5px;">月度会员</h4>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">灵活选择，随时取消</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 1.3rem; font-weight: 700; color: var(--text-primary);">¥6<span style="font-size: 0.9rem; color: var(--text-secondary);">/月</span></div>
+                        <div style="font-size: 0.8rem; color: var(--accent-green);">首月¥3尝鲜</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="plan-option selected" data-plan="quarterly" onclick="selectPlan('quarterly')">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                            <h4 style="color: var(--text-primary); font-weight: 600;">季度会员</h4>
+                            <span style="background: rgba(34, 197, 94, 0.15); color: var(--accent-green); padding: 2px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: 500;">最受欢迎</span>
+                        </div>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">性价比高，省心省力</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 1.3rem; font-weight: 700; color: var(--text-primary);">¥15<span style="font-size: 0.9rem; color: var(--text-secondary);">/季</span></div>
+                        <div style="font-size: 0.8rem; color: var(--accent-green);">月均仅¥5，立省33%</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="plan-option" data-plan="yearly" onclick="selectPlan('yearly')">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                            <h4 style="color: var(--text-primary); font-weight: 600;">年度会员</h4>
+                            <span style="background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); padding: 2px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: 500;">超级划算</span>
+                        </div>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">一年无忧，极致优惠</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 1.3rem; font-weight: 700; color: var(--text-primary);">¥50<span style="font-size: 0.9rem; color: var(--text-secondary);">/年</span></div>
+                        <div style="font-size: 0.8rem; color: var(--accent-green);">月均仅¥4.2，立省58%</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="plan-option" data-plan="lifetime" onclick="selectPlan('lifetime')">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                            <h4 style="color: var(--text-primary); font-weight: 600;">终身会员</h4>
+                            <span style="background: rgba(139, 92, 246, 0.15); color: var(--accent-purple); padding: 2px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: 500;">一次购买</span>
+                        </div>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">永久使用，绝版优惠</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 1.3rem; font-weight: 700; color: var(--text-primary);">¥188</div>
+                        <div style="font-size: 0.8rem; color: var(--accent-green);">一次购买，永久免费</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 支付摘要 -->
+        <div style="background: var(--hover-bg); border-radius: 12px; padding: 18px; margin: 25px 0;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span style="color: var(--text-secondary);">选择的套餐:</span>
+                <span style="font-weight: 600; color: var(--text-primary);" id="selected-plan-name">季度会员</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span style="color: var(--text-secondary);">价格:</span>
+                <span style="font-weight: 600; color: var(--text-primary);" id="selected-plan-price">¥15</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 1.1rem;">
+                <span style="color: var(--text-primary); font-weight: 600;">总计:</span>
+                <span style="font-weight: 700; color: var(--accent-blue);" id="total-price">¥15</span>
+            </div>
+        </div>
+        
+        <!-- 支付按钮 -->
+        <div style="display: flex; gap: 15px;">
+            <button class="btn btn-secondary" onclick="closeModal('upgrade-plan-modal')" style="flex: 1;">
+                取消
+            </button>
+            <button class="btn btn-primary" onclick="processPayment()" style="flex: 2;">
+                <i class="fas fa-lock"></i> 安全支付
+            </button>
+        </div>
+        
+        <!-- 支付安全提示 -->
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--card-border);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-shield-alt" style="color: var(--accent-green);"></i>
+                <span style="font-size: 0.85rem; color: var(--text-secondary);">支付安全由微信支付保障 · 可随时取消续订 · 7天无忧退款</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* 套餐选项样式 */
+.plan-option {
+    background: var(--card-bg-solid);
+    border: 2px solid var(--card-border);
+    border-radius: 14px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.plan-option:hover {
+    border-color: var(--accent-blue);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--shadow-color);
+}
+
+.plan-option.selected {
+    border-color: var(--accent-blue);
+    background: var(--active-bg);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15);
+}
+</style>
+
+<script>
+// 会员套餐选择逻辑
+let selectedPlan = 'quarterly'; // 默认选择季度套餐
+
+function selectPlan(plan) {
+    selectedPlan = plan;
+    
+    // 更新视觉状态
+    document.querySelectorAll('.plan-option').forEach(option => {
+        option.classList.remove('selected');
+    });
+    document.querySelector(`.plan-option[data-plan="${plan}"]`).classList.add('selected');
+    
+    // 更新支付摘要
+    const planDetails = {
+        'monthly': { name: '月度会员', price: '¥6', total: '¥6' },
+        'quarterly': { name: '季度会员', price: '¥15', total: '¥15' },
+        'yearly': { name: '年度会员', price: '¥50', total: '¥50' },
+        'lifetime': { name: '终身会员', price: '¥188', total: '¥188' }
+    };
+    
+    const detail = planDetails[plan];
+    document.getElementById('selected-plan-name').textContent = detail.name;
+    document.getElementById('selected-plan-price').textContent = detail.price;
+    document.getElementById('total-price').textContent = detail.total;
+}
+
+// 处理支付
+function processPayment() {
+    console.log(`开始处理${selectedPlan}会员套餐支付...`);
+    
+    // 实际微信小程序中应调用微信支付API
+    // wx.requestPayment({ ... })
+    
+    // 模拟支付成功
+    showToast('支付成功！正在为您开通会员...', 'success');
+    closeModal('upgrade-plan-modal');
+    
+    // 更新用户状态
+    setTimeout(() => {
+        upgradeToMember(selectedPlan);
+    }, 1500);
+}
+
+// 升级为会员
+function upgradeToMember(planType) {
+    // 更新当前状态显示
+    const statusDiv = document.getElementById('current-membership-status');
+    const planNames = {
+        'monthly': '月度会员',
+        'quarterly': '季度会员', 
+        'yearly': '年度会员',
+        'lifetime': '终身会员'
+    };
+    
+    statusDiv.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h4 style="color: var(--text-primary); margin-bottom: 5px; font-size: 1.1rem;">${planNames[planType]} <i class="fas fa-crown" style="color: var(--accent-amber);"></i></h4>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">您现在可以无限制添加物品，享受所有会员特权！</p>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 0.8rem; color: var(--accent-green); margin-bottom: 5px;">会员有效期至: 2024-12-31</div>
+                <button class="btn" style="padding: 8px 16px; font-size: 0.9rem; background: rgba(139, 92, 246, 0.1); color: var(--accent-purple);" onclick="showModal('manage-subscription-modal')">
+                    管理订阅
+                </button>
+            </div>
+        </div>
+    `;
+    
+    // 更新首页的会员状态显示
+    const membershipStatusLabel = document.getElementById('membership-status');
+    if (membershipStatusLabel) {
+        membershipStatusLabel.innerHTML = `<i class="fas fa-crown" style="color: var(--accent-amber);"></i> ${planNames[planType]} · 无限额度`;
+    }
+    
+    showToast('会员开通成功！现在您可以无限添加物品了。', 'success');
+}
+
+// 页面加载时初始化默认选中的套餐
+window.addEventListener('DOMContentLoaded', function() {
+    selectPlan('quarterly');
+});
+</script>

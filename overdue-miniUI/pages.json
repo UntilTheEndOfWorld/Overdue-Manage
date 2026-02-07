@@ -1,0 +1,212 @@
+{
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "过期了么",
+        "navigationBarBackgroundColor": "#6a89cc",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/personal/personal",
+      "style": {
+        "navigationBarTitleText": "个人空间",
+        "navigationBarBackgroundColor": "#6a89cc",
+        "navigationBarTextStyle": "white",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/personal/add-item",
+      "style": {
+        "navigationBarTitleText": "添加物品",
+        "navigationBarBackgroundColor": "#6a89cc",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/personal/edit-item",
+      "style": {
+        "navigationBarTitleText": "编辑物品",
+        "navigationBarBackgroundColor": "#6a89cc",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/shared/list",
+      "style": {
+        "navigationBarTitleText": "共享空间",
+        "navigationBarBackgroundColor": "#6a89cc",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/shared/detail",
+      "style": {
+        "navigationBarTitleText": "空间详情",
+        "navigationBarBackgroundColor": "#6a89cc",
+        "navigationBarTextStyle": "white",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/shared/create",
+      "style": {
+        "navigationBarTitleText": "创建共享空间",
+        "navigationBarBackgroundColor": "#6a89cc",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/shared/invite",
+      "style": {
+        "navigationBarTitleText": "邀请成员",
+        "navigationBarBackgroundColor": "#6a89cc",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/shared/logs",
+      "style": {
+        "navigationBarTitleText": "操作日志",
+        "navigationBarBackgroundColor": "#6a69bd",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/shared/join",
+      "style": {
+        "navigationBarTitleText": "加入共享空间",
+        "navigationBarBackgroundColor": "#0f172a",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/auth/login",
+      "style": {
+        "navigationBarTitleText": "登录",
+        "navigationBarBackgroundColor": "#0f172a",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/personal/logs",
+      "style": {
+        "navigationBarTitleText": "操作日志",
+        "navigationBarBackgroundColor": "#0f172a",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/profile/profile",
+      "style": {
+        "navigationBarTitleText": "我的",
+        "navigationBarBackgroundColor": "#6a89cc",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/member/member",
+      "style": {
+        "navigationBarTitleText": "会员中心",
+        "navigationBarBackgroundColor": "#6a89cc",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/member/upgrade",
+      "style": {
+        "navigationBarTitleText": "升级会员",
+        "navigationBarBackgroundColor": "#6a89cc",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/member/ad",
+      "style": {
+        "navigationBarTitleText": "观看广告",
+        "navigationBarBackgroundColor": "#6a89cc",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/member/purchase",
+      "style": {
+        "navigationBarTitleText": "确认购买",
+        "navigationBarBackgroundColor": "#6a89cc",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/calendar/calendar",
+      "style": {
+        "navigationBarTitleText": "过期日历",
+        "navigationBarBackgroundColor": "#6a89cc",
+        "navigationBarTextStyle": "white",
+        "enablePullDownRefresh": true
+      }
+    }
+  ],
+  "tabBar": {
+    "color": "#94a3b8",
+    "selectedColor": "#3b82f6",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "static/tabbar/home.png",
+        "selectedIconPath": "static/tabbar/home-active.png"
+      },
+      {
+        "pagePath": "pages/personal/personal",
+        "text": "个人",
+        "iconPath": "static/tabbar/personal.png",
+        "selectedIconPath": "static/tabbar/personal-active.png"
+      },
+      {
+        "pagePath": "pages/shared/list",
+        "text": "共享",
+        "iconPath": "static/tabbar/shared.png",
+        "selectedIconPath": "static/tabbar/shared-active.png"
+      },
+      {
+        "pagePath": "pages/calendar/calendar",
+        "text": "日历",
+        "iconPath": "static/tabbar/calendar.png",
+        "selectedIconPath": "static/tabbar/calendar-active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "static/tabbar/profile.png",
+        "selectedIconPath": "static/tabbar/profile-active.png"
+      }
+    ]
+  },
+  "easycom": {
+    "autoscan": true,
+    "custom": {
+      "^add-item-modal$": "@/components/add-item-modal/add-item-modal.vue",
+      "^item-card$": "@/components/item-card/item-card.vue",
+      "^filter-bar$": "@/components/filter-bar/filter-bar.vue"
+    }
+  },
+  "globalStyle": {
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "过期了么",
+    "navigationBarBackgroundColor": "#6a89cc",
+    "backgroundColor": "#f8f9fa"
+  },
+  "condition": {
+    "current": 0,
+    "list": [
+      {
+        "name": "首页",
+        "path": "pages/index/index"
+      }
+    ]
+  }
+}

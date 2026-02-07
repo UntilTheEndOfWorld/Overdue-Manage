@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.overdue.manager.item.mapper.AdWatchRecordMapper">
+
+    <resultMap type="com.overdue.manager.item.domain.entity.AdWatchRecord" id="AdWatchRecordResult">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="watchCount" column="watch_count"/>
+        <result property="usedCount" column="used_count"/>
+        <result property="lastWatchTime" column="last_watch_time"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="selectAdWatchRecordVo">
+        select id, user_id, watch_count, used_count, last_watch_time, create_time, update_time
+        from overdue_ad_watch_record
+    </sql>
+
+    <select id="selectAdWatchRecordList" parameterType="com.overdue.manager.item.domain.entity.AdWatchRecord" resultMap="AdWatchRecordResult">
+        <include refid="selectAdWatchRecordVo"/>
+        <where>
+            <if test="userId != null">
+                and user_id = #{userId}
+            </if>
+            <if test="params.beginTime != null and params.beginTime != ''">
+                and last_watch_time &gt;= #{params.beginTime}
+            </if>
+            <if test="params.endTime != null and params.endTime != ''">
+                and last_watch_time &lt;= #{params.endTime}
+            </if>
+        </where>
+        order by last_watch_time desc
+    </select>
+
+    <select id="selectByUserId" resultMap="AdWatchRecordResult">
+        <include refid="selectAdWatchRecordVo"/>
+        where user_id = #{userId}
+        limit 1
+    </select>
+
+    <select id="sumWatchCount" resultType="java.lang.Integer">
+        select COALESCE(sum(watch_count), 0) from overdue_ad_watch_record
+    </select>
+
+    <select id="sumUsedCount" resultType="java.lang.Integer">
+        select COALESCE(sum(used_count), 0) from overdue_ad_watch_record
+    </select>
+
+    <select id="selectStatsByDate" resultType="java.util.Map">
+        select DATE(last_watch_time) as date, 
+               COUNT(*) as recordCount, 
+               COALESCE(SUM(watch_count), 0) as watchCount,
+               COALESCE(SUM(used_count), 0) as usedCount
+        from overdue_ad_watch_record
+        <where>
+            <if test="startDate != null and startDate != ''">
+                and DATE(last_watch_time) &gt;= #{startDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                and DATE(last_watch_time) &lt;= #{endDate}
+            </if>
+        </where>
+        group by DATE(last_watch_time)
+        order by date desc
+    </select>
+</mapper>

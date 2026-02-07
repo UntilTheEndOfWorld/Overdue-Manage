@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.overdue.manager.pms.mapper.MerchantMapper">
+    
+    <resultMap type="Merchant" id="MerchantResult">
+        <result property="id" column="id"/>
+        <result property="merchantName" column="merchant_name"/>
+        <result property="merchantCode" column="merchant_code"/>
+        <result property="description" column="description"/>
+        <result property="address" column="address"/>
+        <result property="phone" column="phone"/>
+        <result property="email" column="email"/>
+        <result property="logo" column="logo"/>
+        <result property="coverImage" column="cover_image"/>
+        <result property="businessLicense" column="business_license"/>
+        <result property="status" column="status"/>
+        <result property="sort" column="sort"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="remark" column="remark"/>
+        <result property="delFlag" column="del_flag"/>
+    </resultMap>
+
+    <sql id="selectMerchantVo">
+        select id, merchant_name, merchant_code, description, address, phone, email, logo, cover_image, business_license, status, sort, create_by, create_time, update_by, update_time, remark, del_flag from pms_merchant
+    </sql>
+
+    <select id="selectMerchantList" parameterType="Merchant" resultMap="MerchantResult">
+        <include refid="selectMerchantVo"/>
+        <where>  
+            <if test="merchantName != null  and merchantName != ''"> and merchant_name like concat('%', #{merchantName}, '%')</if>
+            <if test="merchantCode != null  and merchantCode != ''"> and merchant_code = #{merchantCode}</if>
+            <if test="description != null  and description != ''"> and description like concat('%', #{description}, '%')</if>
+            <if test="address != null  and address != ''"> and address like concat('%', #{address}, '%')</if>
+            <if test="phone != null  and phone != ''"> and phone = #{phone}</if>
+            <if test="email != null  and email != ''"> and email = #{email}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="delFlag != null  and delFlag != ''"> and del_flag = #{delFlag}</if>
+        </where>
+        order by sort asc, create_time desc
+    </select>
+    
+    <select id="selectMerchantById" parameterType="Long" resultMap="MerchantResult">
+        <include refid="selectMerchantVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectMerchantByCode" parameterType="String" resultMap="MerchantResult">
+        <include refid="selectMerchantVo"/>
+        where merchant_code = #{merchantCode} and del_flag = '0'
+    </select>
+        
+    <insert id="insertMerchant" parameterType="Merchant" useGeneratedKeys="true" keyProperty="id">
+        insert into pms_merchant
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="merchantName != null and merchantName != ''">merchant_name,</if>
+            <if test="merchantCode != null and merchantCode != ''">merchant_code,</if>
+            <if test="description != null">description,</if>
+            <if test="address != null">address,</if>
+            <if test="phone != null">phone,</if>
+            <if test="email != null">email,</if>
+            <if test="logo != null">logo,</if>
+            <if test="coverImage != null">cover_image,</if>
+            <if test="businessLicense != null">business_license,</if>
+            <if test="status != null">status,</if>
+            <if test="sort != null">sort,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+            <if test="delFlag != null">del_flag,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="merchantName != null and merchantName != ''">#{merchantName},</if>
+            <if test="merchantCode != null and merchantCode != ''">#{merchantCode},</if>
+            <if test="description != null">#{description},</if>
+            <if test="address != null">#{address},</if>
+            <if test="phone != null">#{phone},</if>
+            <if test="email != null">#{email},</if>
+            <if test="logo != null">#{logo},</if>
+            <if test="coverImage != null">#{coverImage},</if>
+            <if test="businessLicense != null">#{businessLicense},</if>
+            <if test="status != null">#{status},</if>
+            <if test="sort != null">#{sort},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+         </trim>
+    </insert>
+
+    <update id="updateMerchant" parameterType="Merchant">
+        update pms_merchant
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="merchantName != null and merchantName != ''">merchant_name = #{merchantName},</if>
+            <if test="merchantCode != null and merchantCode != ''">merchant_code = #{merchantCode},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="logo != null">logo = #{logo},</if>
+            <if test="coverImage != null">cover_image = #{coverImage},</if>
+            <if test="businessLicense != null">business_license = #{businessLicense},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="sort != null">sort = #{sort},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <update id="updateMerchantStatus" parameterType="Merchant">
+        update pms_merchant set status = #{status}, update_time = now() where id = #{id}
+    </update>
+
+    <delete id="deleteMerchantById" parameterType="Long">
+        update pms_merchant set del_flag = '2' where id = #{id}
+    </delete>
+
+    <delete id="deleteMerchantByIds" parameterType="String">
+        update pms_merchant set del_flag = '2' where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

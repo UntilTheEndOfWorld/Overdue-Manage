@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.overdue.manager.item.mapper.PersonalItemMapper">
+    
+    <resultMap type="com.overdue.manager.item.domain.entity.PersonalItem" id="PersonalItemResult">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="name" column="name"/>
+        <result property="category" column="category"/>
+        <result property="purchaseDate" column="purchase_date"/>
+        <result property="productionDate" column="production_date"/>
+        <result property="shelfLife" column="shelf_life"/>
+        <result property="shelfLifeUnit" column="shelf_life_unit"/>
+        <result property="expiryDate" column="expiry_date"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="selectPersonalItemVo">
+        select id, user_id, name, category, purchase_date, production_date, shelf_life, shelf_life_unit, expiry_date, status, create_time, update_time from overdue_personal_item
+    </sql>
+
+    <select id="selectPersonalItemList" parameterType="com.overdue.manager.item.domain.entity.PersonalItem" resultMap="PersonalItemResult">
+        <include refid="selectPersonalItemVo"/>
+        <where>  
+            <if test="userId != null "> and user_id = #{userId}</if>
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="category != null  and category != ''"> and category = #{category}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+        order by expiry_date asc, create_time desc
+    </select>
+
+    <select id="selectByUserId" parameterType="Long" resultMap="PersonalItemResult">
+        <include refid="selectPersonalItemVo"/>
+        where user_id = #{userId} and status = '0'
+        order by expiry_date asc
+    </select>
+
+    <select id="selectExpiringItems" resultMap="PersonalItemResult">
+        <include refid="selectPersonalItemVo"/>
+        where user_id = #{userId} 
+          and status = '0'
+          and expiry_date between #{startDate} and #{endDate}
+        order by expiry_date asc
+    </select>
+
+    <select id="selectExpiredItems" resultMap="PersonalItemResult">
+        <include refid="selectPersonalItemVo"/>
+        where user_id = #{userId} 
+          and status = '0'
+          and expiry_date &lt;= #{currentDate}
+        order by expiry_date desc
+    </select>
+
+</mapper>

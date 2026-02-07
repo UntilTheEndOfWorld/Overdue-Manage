@@ -1,0 +1,89 @@
+package com.overdue.wechat;
+
+import cn.hutool.crypto.PemUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.Base64Utils;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.*;
+import java.util.*;
+
+public class WechatPayUtil {
+
+    private static final String SYMBOLS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    private static final Random RANDOM = new SecureRandom();
+
+    public static String getSign(String signatureStr, String privateKey)
+            throws InvalidKeyException, NoSuchAlgorithmException, SignatureException, IOException, URISyntaxException {
+        // replace 根据实际情况，不一定都需要
+        String replace = privateKey.replace("\\n", "\n");
+
+        InputStream certStream;
+        // 尝试从classpath加载证书文件
+        try {
+            certStream = WechatPayUtil.class.getClassLoader().getResourceAsStream(privateKey);
+            if (certStream == null) {
+                // 如果classpath中没有找到，尝试从文件系统加载
+                certStream = Files.newInputStream(Paths.get(privateKey));
+            }
+        } catch (Exception e) {
+            // 如果都失败了，抛出异常
+            throw new IOException("无法加载证书文件: " + privateKey, e);
+        }
+
+        PrivateKey merchantPrivateKey = PemUtil.readPemPrivateKey(certStream);
+        Signature sign = Signature.getInstance("SHA256withRSA");
+        sign.initSign(merchantPrivateKey);
+        sign.update(signatureStr.getBytes(StandardCharsets.UTF_8));
+        return Base64Utils.encodeToString(sign.sign());
+    }
+
+    /**
+     * 获取随机字符串 Nonce Str
+     *
+     * @return String 随机字符串
+     */
+    public static String generateNonceStr() {
+        char[] nonceChars = new char[32];
+        for (int index = 0; index < nonceChars.length; ++index) {
+            nonceChars[index] = SYMBOLS.charAt(RANDOM.nextInt(SYMBOLS.length()));
+        }
+        return new String(nonceChars);
+    }
+
+    /**
+     * 日志
+     * 
+     * @return
+     */
+    public static Logger getLogger() {
+        Logger logger = LoggerFactory.getLogger("wxpay java sdk");
+        return logger;
+    }
+
+    /**
+     * 获取当前时间戳，单位秒
+     * 
+     * @return
+     */
+    public static long getCurrentTimestamp() {
+        return System.currentTimeMillis() / 1000;
+    }
+
+    /**
+     * 获取当前时间戳，单位毫秒
+     * 
+     * @return
+     */
+    public static long getCurrentTimestampMs() {
+        return System.currentTimeMillis();
+    }
+
+}

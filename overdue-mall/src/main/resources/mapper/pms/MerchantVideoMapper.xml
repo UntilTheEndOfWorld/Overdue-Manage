@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.overdue.manager.pms.mapper.MerchantVideoMapper">
+    
+    <resultMap type="MerchantVideo" id="MerchantVideoResult">
+        <result property="id" column="id"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="videoUrl" column="video_url"/>
+        <result property="videoCover" column="video_cover"/>
+        <result property="videoTitle" column="video_title"/>
+        <result property="videoDescription" column="video_description"/>
+        <result property="videoDuration" column="video_duration"/>
+        <result property="videoSize" column="video_size"/>
+        <result property="sort" column="sort"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="delFlag" column="del_flag"/>
+    </resultMap>
+
+    <sql id="selectMerchantVideoVo">
+        select id, merchant_id, video_url, video_cover, video_title, video_description, video_duration, video_size, sort, create_by, create_time, update_by, update_time, del_flag from pms_merchant_video
+    </sql>
+
+    <select id="selectMerchantVideoList" parameterType="MerchantVideo" resultMap="MerchantVideoResult">
+        <include refid="selectMerchantVideoVo"/>
+        <where>  
+            <if test="merchantId != null "> and merchant_id = #{merchantId}</if>
+            <if test="videoUrl != null  and videoUrl != ''"> and video_url = #{videoUrl}</if>
+            <if test="videoTitle != null  and videoTitle != ''"> and video_title like concat('%', #{videoTitle}, '%')</if>
+            <if test="delFlag != null  and delFlag != ''"> and del_flag = #{delFlag}</if>
+        </where>
+        order by sort asc, create_time desc
+    </select>
+
+    <select id="selectMerchantVideoListByMerchantId" parameterType="Long" resultMap="MerchantVideoResult">
+        <include refid="selectMerchantVideoVo"/>
+        where merchant_id = #{merchantId} and del_flag = '0'
+        order by sort asc, create_time desc
+    </select>
+    
+    <select id="selectMerchantVideoById" parameterType="Long" resultMap="MerchantVideoResult">
+        <include refid="selectMerchantVideoVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertMerchantVideo" parameterType="MerchantVideo" useGeneratedKeys="true" keyProperty="id">
+        insert into pms_merchant_video
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="merchantId != null">merchant_id,</if>
+            <if test="videoUrl != null and videoUrl != ''">video_url,</if>
+            <if test="videoCover != null">video_cover,</if>
+            <if test="videoTitle != null">video_title,</if>
+            <if test="videoDescription != null">video_description,</if>
+            <if test="videoDuration != null">video_duration,</if>
+            <if test="videoSize != null">video_size,</if>
+            <if test="sort != null">sort,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="delFlag != null">del_flag,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="merchantId != null">#{merchantId},</if>
+            <if test="videoUrl != null and videoUrl != ''">#{videoUrl},</if>
+            <if test="videoCover != null">#{videoCover},</if>
+            <if test="videoTitle != null">#{videoTitle},</if>
+            <if test="videoDescription != null">#{videoDescription},</if>
+            <if test="videoDuration != null">#{videoDuration},</if>
+            <if test="videoSize != null">#{videoSize},</if>
+            <if test="sort != null">#{sort},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+         </trim>
+    </insert>
+
+    <update id="updateMerchantVideo" parameterType="MerchantVideo">
+        update pms_merchant_video
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="merchantId != null">merchant_id = #{merchantId},</if>
+            <if test="videoUrl != null and videoUrl != ''">video_url = #{videoUrl},</if>
+            <if test="videoCover != null">video_cover = #{videoCover},</if>
+            <if test="videoTitle != null">video_title = #{videoTitle},</if>
+            <if test="videoDescription != null">video_description = #{videoDescription},</if>
+            <if test="videoDuration != null">video_duration = #{videoDuration},</if>
+            <if test="videoSize != null">video_size = #{videoSize},</if>
+            <if test="sort != null">sort = #{sort},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteMerchantVideoById" parameterType="Long">
+        update pms_merchant_video set del_flag = '2' where id = #{id}
+    </delete>
+
+    <delete id="deleteMerchantVideoByIds" parameterType="String">
+        update pms_merchant_video set del_flag = '2' where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="deleteMerchantVideoByMerchantId" parameterType="Long">
+        update pms_merchant_video set del_flag = '2' where merchant_id = #{merchantId}
+    </delete>
+</mapper>

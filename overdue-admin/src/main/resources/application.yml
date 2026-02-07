@@ -1,0 +1,398 @@
+# 项目相关配置
+ruoyi:
+  # 名称
+  name: RuoYi
+  # 版本
+  version: 3.7.0
+  # 版权年份
+  copyrightYear: 2022
+  # 实例演示开关
+  demoEnabled: false
+  # 文件路径 示例（ Windows配置D:/ruoyi/uploadPath，Linux配置 /home/ruoyi/uploadPath）
+  profile: /home/ruoyi/uploadPath
+  # 获取ip地址开关
+  addressEnabled: true
+  # 验证码类型 math 数组计算 char 字符验证
+  captchaType: math
+  # 前端请求的 跟踪 header name
+  traceIdName: x-web-trace-id
+
+# 开发环境配置
+server:
+  # 服务器的HTTP端口，默认为8080
+  port: 8080
+  servlet:
+    # 应用的访问路径
+    context-path: /
+  tomcat:
+    # tomcat的URI编码
+    uri-encoding: UTF-8
+    # tomcat最大线程数，默认为200
+    max-threads: 800
+    # Tomcat启动初始化的线程数，默认值25
+    min-spare-threads: 30
+    # 最大连接数
+    max-connections: 8192
+    # 接受连接队列大小
+    accept-count: 100
+    # 连接超时时间
+    connection-timeout: 20000
+    # 启用严格的URL解析
+    relaxed-query-chars: "|,{,},[,],\\"
+    # 启用严格的路径解析
+    relaxed-path-chars: "|,{,},[,],\\"
+    # 最大HTTP头部大小
+    # 最大POST大小
+    max-http-post-size: 2097152
+    # 启用压缩
+    compression: on
+    compression-min-size: 2048
+    # 错误处理
+    error-whitelabel-enabled: false
+
+# 日志配置
+logging:
+  level:
+    com.overdue: info
+    org.springframework: warn
+
+# Spring配置
+spring:
+  # 资源信息
+  messages:
+    # 国际化资源文件路径
+    basename: i18n/messages
+  profiles: 
+    active: @spring.profiles.active@
+  # 文件上传
+  servlet:
+     multipart:
+       # 单个文件大小
+       max-file-size:  10MB
+       # 设置总上传的文件大小
+       max-request-size:  20MB
+  # 服务模块
+  # devtools:
+  #   restart:
+  #     # 热部署开关
+  #     enabled: true
+
+# token配置
+token:
+    # 令牌自定义标识
+    header: Authorization
+    # 令牌密钥
+#    secret: abcdefghijkomnopqrstuvwxyx
+    secret: abcdefghijkShanLiRenXiaoPuomnopqrstuvwxyx
+    # 令牌有效期（默认30分钟）-> 修改为2小时，解决发货时Token过期问题
+    expireTime: 120
+    # 会员令牌有效期（默认7天）
+    memberExpireTime: 7
+# mybatis-plus 配置
+mybatis-plus:
+  # 搜索指定包别名
+  typeAliasesPackage: com.lyc.**.domain, com.overdue.common.core.domain.entity,  com.overdue.**.domain
+  # 配置mapper的扫描，找到所有的mapper.xml映射文件
+  mapperLocations: classpath*:mapper/**/*Mapper.xml
+  # 加载全局的配置文件
+  configLocation: classpath:mybatis/mybatis-config.xml
+  global-config:
+    db-config:
+      id-type: auto
+      update-strategy: ignored
+pagehelper:
+  helperDialect: mysql
+  supportMethodsArguments: true
+  params: count=countSql 
+
+# Swagger配置
+swagger:
+  # 是否开启swagger
+  enabled: false
+  # 请求前缀
+  pathMapping: /dev-api
+
+# 防止XSS攻击
+xss: 
+  # 过滤开关
+  enabled: true
+  # 排除链接（多个用逗号分隔）
+  excludes: /system/notice
+  # 匹配链接
+  urlPatterns: /system/*,/monitor/*,/tool/*
+
+extra:
+  wx:
+    appid: wxappid
+    secret: wxsecret
+    redirect: ""
+scheduling:
+  enabled: false
+
+# 阿里云OSS配置
+aliyun:
+  # 阿里云访问密钥ID
+  accessKeyId: LTAI5t7iQEnUDQyWqBT7FjxS
+  # 阿里云访问密钥Secret
+  secretAccessKey: 47TsKhJfugxtyj3YwoVTiBos6DHqro
+  # OSS配置
+  oss:
+    # OSS服务端点
+    endPoint: oss-cn-shenzhen.aliyuncs.com
+    # OSS存储桶名称
+    bucketName: slrxp
+    # 自定义域名（可选）
+    customDomain: 
+    # 文件访问路径前缀
+    pathPrefix: shanliren-mall/
+    # 是否使用HTTPS
+    useHttps: true
+    # 连接超时时间（毫秒）
+    connectionTimeout: 10000
+    # 最大连接数
+    maxConnections: 100
+
+# 微信配置
+wechat:
+  enabled: true  # 启用微信支付
+  #    appId: 你的微信服务号信息（h5的时候需要，小程序的时候不需要）
+  #    secret: 你的微信服务号信息（h5的时候需要，小程序的时候不需要）
+  #    appId: wxaa6fe110ab7240ab
+  #    secret: 3365f1cfcf7b91c57ecc910eccc5c96d
+  #    merchantId: 微信支付商户号
+  #    privateKeyPath: 微信支付密钥地址相对地址
+  #    merchantSerialNumber: 微信支付密钥对应的序列号
+  #    apiV3key: 微信支付apiV3key
+  #    notifyUrl: 微信支付回调地址
+  #    miniProgramAppId: 小程序apppid（h5的时候不需要）
+  #    miniProgramSecret: 小程序Secret（h5的时候不需要）
+
+  appId: wxa85710ed36a99375
+  secret: fb08a43241c39352c465ac17df70a8d7
+  miniProgramAppId: wxa85710ed36a99375
+  miniProgramSecret: fb08a43241c39352c465ac17df70a8d7
+  # 商户号
+  merchantId: 1725285819
+  # 公钥
+  publicKeyId: PUB_KEY_ID_0117252858192025082600292340000601
+  publicKeyPath: /etc/grocery-store-cert/pub_key.pem
+  privateKeyPath: /etc/grocery-store-cert/apiclient_key.pem
+  merchantSerialNumber: 2FA3C6F325380E7FE64FA0E9771542263A7EF566
+  apiV3key: jxSLRdlxLXlycLYC199604293397JXsl
+  notifyUrl: https://lycc.ltd/jx_slr_api/no-auth/wechat/notify
+# 短信配置
+sms:
+  enabled: true
+  endpoint: dysmsapi.aliyuncs.com
+  accessKeyId: 你的accessKeyId #阿里云短信服务控制台查看
+  accessKeySecret: 你的accessKeySecret #同上
+  signName: 签名
+  templateId: 模板id
+  # 腾讯专用
+  sdkAppId:
+
+# AES加密配置
+aes:
+  # aes的密钥(长度只能是16或24或32位)
+  key: 1111111111111111
+http-pool:
+  connection-request-timeout: 10000
+  connection-timeout: 10000
+  socket-timeout: 10000
+  max-per-route: 200
+  max-total: 200
+gen:
+  # 作者
+  author: zcc
+  # 默认生成包路径 system 需改成自己的模块名称 如 system monitor tool
+  packageName: com.lyc.mall
+  # 自动去除表前缀，默认是false
+  autoRemovePre: true
+  # 表前缀（生成类名不会包含表前缀，多个用逗号分隔）
+  tablePrefix: mall_
+  # 一级权限名
+  rootPermission: mall
+  # 模板根路径
+  templateRootPath: vm
+  # 路径
+  path:
+    # 后端根目录
+    backPath: D:\java_project\mall\ruoyi-mall
+    # 后端 service 模块名
+    serviceModule: mall
+    # 后端 api 模块名, 默认与 service 一致
+    apiModule: mall
+    # 前端根目录
+    frontPath: D:\java_project\mall\ruoyi-mall-vue
+    # 前端 api 目录
+    frontApiPath: src/api/mall
+    # 前端 view 目录
+    frontViewPath: src/views/mall
+    # sql 目录
+    sql: sql
+  # 环境变量
+  env:
+    # 审计 的 基类（创建者，创建时间，更新者，更新时间）
+    baseAudit: com.overdue.common.core.domain.BaseAudit
+    # 树 的 基类
+    baseTree: com.overdue.common.core.domain.TreeEntity
+  # 对于新增的模板，如果没有默认值，在这里进行配置
+  fileMap:
+    "api.js.vm": "${frontPath}/${frontApiPath}/${className}.js"
+    "controller.java.vm": "${backPath}/${serviceModule}/${MAIN_JAVA}/${packageName}/controller/${ClassName}Controller.java"
+    "service.java.vm": "${backPath}/${serviceModule}/${MAIN_JAVA}/${packageName}/service/${ClassName}Service.java"
+    "mapper.java.vm": "${backPath}/${serviceModule}/${MAIN_JAVA}/${packageName}/mapper/${ClassName}Mapper.java"
+    "convert.java.vm": "${backPath}/${serviceModule}/${MAIN_JAVA}/${packageName}/convert/${ClassName}Convert.java"
+    "example.java.vm": "${backPath}/${serviceModule}/${MAIN_JAVA}/${packageName}/pojo/example/${ClassName}Example.java"
+    "query.java.vm": "${backPath}/${serviceModule}/${MAIN_JAVA}/${packageName}/pojo/query/${ClassName}Query.java"
+    "dto.java.vm": "${backPath}/${serviceModule}/${MAIN_JAVA}/${packageName}/pojo/dto/${ClassName}DTO.java"
+    "vo.java.vm": "${backPath}/${serviceModule}/${MAIN_JAVA}/${packageName}/pojo/vo/${ClassName}VO.java"
+    "domain.java.vm": "${backPath}/${apiModule}/${MAIN_JAVA}/${packageName}/domain/${ClassName}.java"
+    "mapper.xml.vm": "${backPath}/${serviceModule}/${MAIN_RESOURCES}/mapper/${ClassName}Mapper.xml"
+    "sql.vm": "${backPath}/sql/${className}.sql"
+    "h2.sql.vm": "${backPath}/${serviceModule}/${MAIN_JAVA}/db/${tableName}-h2.sql"
+    "add.vue.vm": "${frontPath}/${frontViewPath}/Add${ClassName}.vue"
+    "index.vue.vm": "${frontPath}/${frontViewPath}/${className}/index.vue"
+    "index-tree.vue.vm": "${frontPath}/${frontViewPath}/index.vue"
+    "sub-domain.java.vm": "${frontPath}/${frontViewPath}/Sub${ClassName}.vue"
+  templates:
+    - vm/js/api.js.vm
+    - vm/java/controller.java.vm
+    - vm/java/service.java.vm
+    - vm/java/mapper.java.vm
+    - vm/java/convert.java.vm
+    - vm/java/query.java.vm
+    - vm/java/dto.java.vm
+    - vm/java/vo.java.vm
+    - vm/java/domain.java.vm
+    - vm/xml/mapper.xml.vm
+    - vm/sql/sql.vm
+  testTemplates:
+  #    - vm/sql/h2.sql.vm
+  crudTemplates:
+    #    - vm/vue/add.vue.vm
+    - vm/vue/index.vue.vm
+  treeTemplates:
+  #    - vm/vue/index-tree.vue.vm
+  subTemplates:
+  #    - vm/vue/index.vue.vm
+  #    - vm/java/sub-domain.java.vm
+  type2component:
+    "String": "a-input("
+    "LocalDate": "a-date-picker("
+    "LocalDateTime": "a-date-picker(format=\"YYYY-MM-DD HH:mm\""
+
+
+#pinygou:
+#  # 开发者应该设置成自己的wx相关信息
+#  wx:
+#    app-id: wx4a756da5b782b597
+#    app-secret: 780989bd218f556c20559ee95938a6fe
+#    mch-id: 1606621612
+#    #    mch-key: gzyxh888
+#    mch-key: 66guangzhouyouxianghuikejigongsi
+#    notify-url: http://pyg.693712.com/wx/order/pay-notify
+#    # 商户证书文件路径
+#    # 请参考"商户证书"一节 https://pay.weixin.qq.com/wiki/doc/api/wxa/wxa_api.php?chapter=4_3
+#    key-path: ../../../pyg/cert/
+#
+#  #通知相关配置
+#  notify:
+#    mail:
+#      # 邮件通知配置,邮箱一般用于接收业务通知例如收到新的订单，sendto 定义邮件接收者，通常为商城运营人员
+#      enable: true
+#      host: gzyxhwlkjyxgs@163.com
+#      username: gzyxhwlkjyxgs@163.com
+#      password: gzyxh888
+#      sendfrom: ex@ex.com.cn
+#      sendto: gzyxhwlkjyxgs@163.com
+#      port: 465
+#    # 短消息模版通知配置
+#    # 短信息用于通知客户，例如发货短信通知，注意配置格式；template-name，template-templateId 请参考 NotifyType 枚举值
+#    sms:
+#      enable: false
+#      # 如果是腾讯云短信，则设置active的值tencent
+#      # 如果是阿里云短信，则设置active的值aliyun
+#      active: tencent
+#      sign: pinygou
+#      template:
+#        - name: paySucceed
+#          templateId: 156349
+#        - name: captcha
+#          templateId: 156433
+#        - name: ship
+#          templateId: 158002
+#        - name: refund
+#          templateId: 159447
+#      tencent:
+#        appid: 111111111
+#        appkey: xxxxxxxxxxxxxx
+#      aliyun:
+#        regionId: xxx
+#        accessKeyId: xxx
+#        accessKeySecret: xxx
+#
+#  # 快鸟物流查询配置
+#  express:
+#    enable: false
+#    appId: "test1709991"
+#    appKey: "50694ad2-c60a-4f74-9c38-4e3d34f5da3e"
+#    #    appId: "1709991"
+#    #    appKey: "bef928ef-a5de-47f8-b33f-a13ee181ee7e"
+#    vendors:
+#      - code: "ZTO"
+#        name: "中通快递"
+#      - code: "YTO"
+#        name: "圆通速递"
+#      - code: "YD"
+#        name: "韵达速递"
+#      - code: "YZPY"
+#        name: "邮政快递包裹"
+#      - code: "EMS"
+#        name: "EMS"
+#      - code: "DBL"
+#        name: "德邦快递"
+#      - code: "FAST"
+#        name: "快捷快递"
+#      - code: "ZJS"
+#        name: "宅急送"
+#      - code: "TNT"
+#        name: "TNT快递"
+#      - code: "UPS"
+#        name: "UPS"
+#      - code: "DHL"
+#        name: "DHL"
+#      - code: "FEDEX"
+#        name: "FEDEX联邦(国内件)"
+#      - code: "FEDEX_GJ"
+#        name: "FEDEX联邦(国际件)"
+#
+#  # 对象存储配置
+#  storage:
+#    # 当前工作的对象存储模式，分别是local、aliyun、tencent、qiniu
+#    active: aliyun
+#    # 本地对象存储配置信息
+#    local:
+#      storagePath: storage
+#      # 这个地方应该是wx模块的WxStorageController的fetch方法对应的地址
+#      #address: http://localhost:8080/wx/storage/fetch/
+#      address: http://39.108.152.201:8083/mydata/imagesData/
+#    # 阿里云对象存储配置信息
+#    aliyun:
+#      endpoint: oss-cn-shenzhen.aliyuncs.com
+#      accessKeyId: LTAI5t7iQEnUDQyWqBT7FjxS
+#      accessKeySecret: 47TsKhJfugxtyj3YwoVTiBos6DHqro
+#      bucketName: pyg-yxhkj
+#    # 腾讯对象存储配置信息
+#    # 请参考 https://cloud.tencent.com/document/product/436/6249
+#    tencent:
+#      secretId: AKIDOccMr856uoU1Tsa2MQL5aqseBUWRrb5i
+#      secretKey: XqtgEhIdrupTs4ygaWlkUUXv3w3FiwuD
+#      region: ap-shanghai
+#      bucketName: vytech-1300096589
+#    # 七牛云对象存储配置信息
+#    qiniu:
+#      endpoint: http://pd5cb6ulu.bkt.clouddn.com
+#      accessKey: 111111
+#      secretKey: xxxxxx
+#      bucketName: PinYGou

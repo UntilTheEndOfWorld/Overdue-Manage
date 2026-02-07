@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.overdue.manager.pms.mapper.PointsProductMapper">
+    
+    <resultMap type="PointsProduct" id="PointsProductResult">
+        <result property="id" column="id"/>
+        <result property="brandId" column="brand_id"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="outProductId" column="out_product_id"/>
+        <result property="name" column="name"/>
+        <result property="pic" column="pic"/>
+        <result property="albumPics" column="album_pics"/>
+        <result property="publishStatus" column="publish_status"/>
+        <result property="sort" column="sort"/>
+        <result property="points" column="points"/>
+        <result property="originalPrice" column="original_price"/>
+        <result property="unit" column="unit"/>
+        <result property="weight" column="weight"/>
+        <result property="detailHtml" column="detail_html"/>
+        <result property="detailMobileHtml" column="detail_mobile_html"/>
+        <result property="brandName" column="brand_name"/>
+        <result property="productCategoryName" column="product_category_name"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="productAttr" column="product_attr"/>
+        <result property="hotness" column="hotness"/>
+        <result property="isBanner" column="is_banner"/>
+        <result property="bannerTitle" column="banner_title"/>
+        <result property="supportExpress" column="support_express"/>
+        <result property="productType" column="product_type"/>
+        <result property="exchangeLimit" column="exchange_limit"/>
+        <result property="totalStock" column="total_stock"/>
+        <result property="exchangedCount" column="exchanged_count"/>
+        <result property="activityStartTime" column="activity_start_time"/>
+        <result property="activityEndTime" column="activity_end_time"/>
+        <result property="isLimitedTime" column="is_limited_time"/>
+        <result property="description" column="description"/>
+        <result property="remark" column="remark"/>
+        <result property="delFlag" column="del_flag"/>
+    </resultMap>
+
+    <sql id="selectPointsProductVo">
+        select id, brand_id, category_id, out_product_id, name, pic, album_pics, publish_status, sort, points, original_price, unit, weight, detail_html, detail_mobile_html, brand_name, product_category_name, product_attr, hotness, is_banner, banner_title, support_express, product_type, exchange_limit, total_stock, exchanged_count, activity_start_time, activity_end_time, is_limited_time, description, remark, del_flag, create_by, create_time, update_by, update_time from pms_points_product
+    </sql>
+
+    <select id="selectByEntity" parameterType="PointsProduct" resultMap="PointsProductResult">
+        <include refid="selectPointsProductVo"/>
+        <where>  
+            <if test="brandId != null "> and brand_id = #{brandId}</if>
+            <if test="categoryId != null "> and category_id = #{categoryId}</if>
+            <if test="outProductId != null  and outProductId != ''"> and out_product_id = #{outProductId}</if>
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="pic != null  and pic != ''"> and pic = #{pic}</if>
+            <if test="albumPics != null  and albumPics != ''"> and album_pics = #{albumPics}</if>
+            <if test="publishStatus != null "> and publish_status = #{publishStatus}</if>
+            <if test="sort != null "> and sort = #{sort}</if>
+            <if test="points != null "> and points = #{points}</if>
+            <if test="originalPrice != null "> and original_price = #{originalPrice}</if>
+            <if test="unit != null  and unit != ''"> and unit = #{unit}</if>
+            <if test="weight != null "> and weight = #{weight}</if>
+            <if test="detailHtml != null  and detailHtml != ''"> and detail_html = #{detailHtml}</if>
+            <if test="detailMobileHtml != null  and detailMobileHtml != ''"> and detail_mobile_html = #{detailMobileHtml}</if>
+            <if test="brandName != null  and brandName != ''"> and brand_name like concat('%', #{brandName}, '%')</if>
+            <if test="productCategoryName != null  and productCategoryName != ''"> and product_category_name like concat('%', #{productCategoryName}, '%')</if>
+            <if test="productAttr != null  and productAttr != ''"> and product_attr = #{productAttr}</if>
+            <if test="hotness != null "> and hotness = #{hotness}</if>
+            <if test="isBanner != null "> and is_banner = #{isBanner}</if>
+            <if test="bannerTitle != null  and bannerTitle != ''"> and banner_title like concat('%', #{bannerTitle}, '%')</if>
+            <if test="supportExpress != null "> and support_express = #{supportExpress}</if>
+            <if test="productType != null "> and product_type = #{productType}</if>
+            <if test="exchangeLimit != null "> and exchange_limit = #{exchangeLimit}</if>
+            <if test="totalStock != null "> and total_stock = #{totalStock}</if>
+            <if test="exchangedCount != null "> and exchanged_count = #{exchangedCount}</if>
+            <if test="isLimitedTime != null "> and is_limited_time = #{isLimitedTime}</if>
+            <if test="description != null  and description != ''"> and description like concat('%', #{description}, '%')</if>
+        </where>
+    </select>
+
+    <!-- 增加积分商品热度值 -->
+    <update id="increaseHotness">
+        update pms_points_product
+        set hotness = hotness + #{quantity},
+            update_time = now()
+        where id = #{productId}
+    </update>
+
+    <!-- 查询轮播图积分商品列表 -->
+    <select id="selectBannerProducts" resultMap="PointsProductResult">
+        <include refid="selectPointsProductVo"/>
+        where is_banner = 1 
+          and publish_status = 1
+        order by sort desc, create_time desc
+        <if test="limit != null and limit > 0">
+            limit #{limit}
+        </if>
+    </select>
+
+    <!-- 增加兑换数量 -->
+    <update id="increaseExchangedCount">
+        update pms_points_product
+        set exchanged_count = exchanged_count + #{quantity},
+            update_time = now()
+        where id = #{productId}
+    </update>
+</mapper>
