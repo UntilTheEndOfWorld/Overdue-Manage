@@ -8,6 +8,7 @@
 import storage from '@/common/utils/storage.js'
 import inviteUtil from '@/common/utils/invite.js'
 import themeUtil from '@/common/utils/theme.js'
+import { isLoggedIn } from '@/common/utils/auth.js'
 
 export default {
   onLaunch: function(options) {
@@ -23,6 +24,8 @@ export default {
   },
   onShow: function(options) {
     console.log('App Show', options)
+    // 每次显示时检查登录状态
+    this.checkAuth()
     // 处理邀请链接
     this.handleInviteLink(options)
   },
@@ -30,12 +33,30 @@ export default {
     console.log('App Hide')
   },
   methods: {
+    // 检查登录状态，未登录跳转登录页
+    checkAuth() {
+      // 获取当前页面路径
+      var pages = getCurrentPages()
+      if (!pages || pages.length === 0) return
+      var currentPage = pages[pages.length - 1]
+      var currentPath = currentPage ? currentPage.route : ''
+
+      // 登录页本身不需要拦截，避免死循环
+      if (currentPath === 'pages/auth/login') return
+
+      if (!isLoggedIn()) {
+        console.log('[App] 用户未登录，跳转登录页')
+        uni.reLaunch({
+          url: '/pages/auth/login'
+        })
+      }
+    },
     // 应用主题到所有页面
     applyThemeToPages(theme) {
       // 在uni-app中，主题通过CSS变量自动应用
       // 这里主要确保storage中的主题值是最新的
-      const pages = getCurrentPages()
-      pages.forEach(page => {
+      var pages = getCurrentPages()
+      pages.forEach(function(page) {
         if (page && page.$vm && page.$vm.isLightMode !== undefined) {
           page.$vm.isLightMode = theme === 'light'
         }
@@ -46,13 +67,18 @@ export default {
       inviteUtil.cleanExpiredInvites()
       
       // 检查登录状态
-      const userInfo = uni.getStorageSync('userInfo')
-      if (!userInfo) {
+      if (!isLoggedIn()) {
         // 未登录，检查是否有邀请链接
         if (options && options.query && options.query.inviteCode) {
           // 有邀请码，保存起来，登录后使用
           storage.set('pendingInviteCode', options.query.inviteCode)
         }
+        // 跳转到登录页
+        console.log('[App] 启动时未登录，跳转登录页')
+        uni.reLaunch({
+          url: '/pages/auth/login'
+        })
+        return
       }
     },
     

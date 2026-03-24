@@ -6,7 +6,7 @@ spring:
         druid:
 #            # 主库数据源
             master:
-                url: jdbc:mysql://localhost:3306/tea_mall?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8&rewriteBatchedStatements=true
+                url: jdbc:mysql://localhost:3306/overdue_manage?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8&rewriteBatchedStatements=true
                 username: root
                 password: 19960429%l
             # 主库数据源

@@ -96,29 +96,11 @@ Vue.use(Element, {
 
 Vue.config.productionTip = false
 
-// 初始化WebSocket连接
-import webSocketManager from '@/utils/websocket';
-import { getToken } from '@/utils/auth';
-
-// 在Vue实例创建后初始化WebSocket
-const initWebSocket = () => {
-  const token = getToken();
-  if (token) {
-    webSocketManager.init(token);
-  }
-};
-
 new Vue({
   el: '#app',
   router,
   store,
-  render: h => h(App),
-  mounted() {
-    // 在Vue实例挂载后初始化WebSocket
-    this.$nextTick(() => {
-      initWebSocket();
-    });
-  }
+  render: h => h(App)
 })
 
 var _hmt = _hmt || [];

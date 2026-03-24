@@ -1,6 +1,6 @@
 <template>
   <view class="container" :class="themeClass">
-    <!-- ???? -->
+    <!-- 筛选栏 -->
     <view class="filter-container">
       <view class="filter-bar">
         <view 
@@ -8,53 +8,53 @@
           :class="{ active: filterType === 'all' }"
           @click="setFilter('all')"
         >
-          ???
+          全部
         </view>
         <view 
           class="filter-item" 
           :class="{ active: filterType === 'personal' }"
           @click="setFilter('personal')"
         >
-          ????
+          个人物品
         </view>
         <view 
           class="filter-item" 
           :class="{ active: filterType === 'shared' }"
           @click="setFilter('shared')"
         >
-          ????
+          共享物品
         </view>
       </view>
     </view>
 
-    <!-- ??????? -->
+    <!-- 日历容器 -->
     <view class="calendar-container">
-      <!-- ??????? -->
+      <!-- 月份导航栏 -->
       <view class="month-nav">
         <view class="nav-btn" @click="prevMonth">
-          <text class="nav-icon">?</text>
+          <text class="nav-icon">&lt;</text>
         </view>
-        <view class="month-text">{{ currentYear }}??{{ currentMonth }}??</view>
+        <view class="month-text">{{ currentYear }}年{{ currentMonth }}月</view>
         <view class="nav-btn" @click="nextMonth">
-          <text class="nav-icon">?</text>
+          <text class="nav-icon">&gt;</text>
         </view>
       </view>
 
-      <!-- ??????? -->
+      <!-- 星期标题行 -->
       <view class="weekdays">
         <view class="weekday" v-for="day in weekdays" :key="day">{{ day }}</view>
       </view>
 
-      <!-- ???????? -->
+      <!-- 日历日期网格 -->
       <view class="calendar-grid">
-        <!-- ?????? -->
+        <!-- 月初空白占位 -->
         <view 
           class="calendar-day empty" 
           v-for="n in firstDayOfMonth" 
           :key="'empty-' + n"
         ></view>
         
-        <!-- ???????? -->
+        <!-- 每一天的日期格 -->
         <view 
           class="calendar-day" 
           :class="{
@@ -86,11 +86,11 @@
       </view>
     </view>
 
-    <!-- ??????????????? -->
+    <!-- 选中日期的物品列表 -->
     <view class="items-section" v-if="selectedDate">
       <view class="section-header">
         <text class="section-title">{{ formatSelectedDate() }} 的过期物品</text>
-        <text class="item-count-text">?? {{ selectedDateItems.length }} ??</text>
+        <text class="item-count-text">共 {{ selectedDateItems.length }} 件</text>
       </view>
       
       <view class="items-list" v-if="selectedDateItems.length > 0">
@@ -104,7 +104,7 @@
       </view>
       
       <view class="empty-state" v-else>
-        <text class="empty-text">???????????????</text>
+        <text class="empty-text">该日期没有到期的物品</text>
       </view>
     </view>
   </view>
@@ -115,7 +115,8 @@ import storage from '@/common/utils/storage.js'
 import itemUtil from '@/common/utils/item.js'
 import ItemCard from '@/components/item-card/item-card.vue'
 import themeMixin from '@/common/mixins/theme.js'
-import { userAPI } from '@/common/utils/api.js'
+import api from '@/common/utils/api.js'
+import { isLoggedIn } from '@/common/utils/auth.js'
 
 export default {
   mixins: [themeMixin],
@@ -128,11 +129,11 @@ export default {
       currentYear: new Date().getFullYear(),
       currentMonth: new Date().getMonth() + 1,
       selectedDate: null, // { year, month, day }
-      itemsByDate: {}, // ????????????? { '2024-01-15': [item1, item2] }
+      itemsByDate: {}, // 按日期分组的物品集合 { '2024-01-15': [item1, item2] }
       personalItems: [],
       sharedItems: [],
-      weekdays: ['??', '?', '??', '??', '??', '??', '??'],
-      useMockData: true
+      weekdays: ['日', '一', '二', '三', '四', '五', '六'],
+      loading: false
     }
   },
   computed: {
@@ -150,7 +151,7 @@ export default {
     },
     selectedDateItems() {
       if (!this.selectedDate) return []
-      const dateKey = `${this.selectedDate.year}-${String(this.selectedDate.month).padStart(2, '0')}-${String(this.selectedDate.day).padStart(2, '0')}`
+      const dateKey = this.buildDateKey(this.selectedDate.year, this.selectedDate.month, this.selectedDate.day)
       return this.itemsByDate[dateKey] || []
     }
   },
@@ -167,63 +168,112 @@ export default {
     }, 500)
   },
   methods: {
-    loadData() {
-      if (this.useMockData) {
-        this.loadMockData()
-      } else {
-        this.loadApiData()
-      }
+    buildDateKey(year, month, day) {
+      return year + '-' + String(month).padStart(2, '0') + '-' + String(day).padStart(2, '0')
     },
-    loadMockData() {
-      // ??????????
+
+    loadData() {
+      if (!isLoggedIn()) {
+        // 未登录则使用本地缓存数据
+        this.loadLocalData()
+        return
+      }
+      this.loadApiData()
+    },
+
+    loadLocalData() {
+      // 从本地存储加载数据作为兜底
       this.personalItems = storage.get('personalItems', [])
-      
-      // ??????????
-      const allSharedItems = storage.get('sharedItems', [])
-      this.sharedItems = allSharedItems
-      
-      // ?????????
+      this.sharedItems = storage.get('sharedItems', [])
       this.groupItemsByDate()
     },
+
     async loadApiData() {
+      if (this.loading) return
+      this.loading = true
       try {
-        // TODO: ????API??????????
-        // const personalItems = await userAPI.getPersonalItems()
-        // const sharedItems = await userAPI.getSharedItems()
-        // this.personalItems = personalItems
-        // this.sharedItems = sharedItems
-        // this.groupItemsByDate()
+        // 计算当前月份的起止日期
+        var startDate = this.buildDateKey(this.currentYear, this.currentMonth, 1)
+        var lastDay = new Date(this.currentYear, this.currentMonth, 0).getDate()
+        var endDate = this.buildDateKey(this.currentYear, this.currentMonth, lastDay)
+
+        var res = await api.getItemsByDate({
+          type: this.filterType,
+          startDate: startDate,
+          endDate: endDate
+        })
+
+        if (res && res.code === 200 && res.data) {
+          // 后端直接返回按日期分组的数据
+          if (res.data.itemsByDate) {
+            this.itemsByDate = res.data.itemsByDate
+          } else if (res.data.personalItems || res.data.sharedItems) {
+            // 后端返回个人和共享物品列表，前端分组
+            this.personalItems = res.data.personalItems || []
+            this.sharedItems = res.data.sharedItems || []
+            this.groupItemsByDate()
+          } else if (Array.isArray(res.data)) {
+            // 后端返回物品数组，前端按日期分组
+            this.itemsByDate = {}
+            res.data.forEach(function(item) {
+              if (!item.expiryDate) return
+              var dateKey = item.expiryDate
+              if (!this.itemsByDate[dateKey]) {
+                this.itemsByDate[dateKey] = []
+              }
+              this.itemsByDate[dateKey].push(item)
+            }.bind(this))
+          } else {
+            // 数据格式不确定，尝试当作列表处理
+            this.itemsByDate = res.data
+          }
+        } else {
+          // API 返回异常，兜底使用本地数据
+          this.loadLocalData()
+        }
       } catch (error) {
-        console.error('???????????:', error)
-        uni.showToast({ title: '???????????', icon: 'none' })
+        console.error('加载日历数据失败:', error)
+        // 出错时使用本地缓存
+        this.loadLocalData()
+        uni.showToast({ title: '加载数据失败，使用缓存', icon: 'none' })
+      } finally {
+        this.loading = false
       }
     },
+
     groupItemsByDate() {
       this.itemsByDate = {}
-      const allItems = []
+      var allItems = []
       
       if (this.filterType === 'all' || this.filterType === 'personal') {
-        allItems.push(...this.personalItems.map(item => ({ ...item, type: 'personal' })))
+        allItems.push.apply(allItems, this.personalItems.map(function(item) {
+          return Object.assign({}, item, { type: 'personal' })
+        }))
       }
       
       if (this.filterType === 'all' || this.filterType === 'shared') {
-        allItems.push(...this.sharedItems.map(item => ({ ...item, type: 'shared' })))
+        allItems.push.apply(allItems, this.sharedItems.map(function(item) {
+          return Object.assign({}, item, { type: 'shared' })
+        }))
       }
       
-      allItems.forEach(item => {
+      var self = this
+      allItems.forEach(function(item) {
         if (!item.expiryDate) return
-        const dateKey = item.expiryDate
-        if (!this.itemsByDate[dateKey]) {
-          this.itemsByDate[dateKey] = []
+        var dateKey = item.expiryDate
+        if (!self.itemsByDate[dateKey]) {
+          self.itemsByDate[dateKey] = []
         }
-        this.itemsByDate[dateKey].push(item)
+        self.itemsByDate[dateKey].push(item)
       })
     },
+
     setFilter(type) {
       this.filterType = type
-      this.groupItemsByDate()
       this.selectedDate = null
+      this.loadData()
     },
+
     prevMonth() {
       if (this.currentMonth === 1) {
         this.currentMonth = 12
@@ -231,7 +281,9 @@ export default {
       } else {
         this.currentMonth--
       }
+      this.loadData()
     },
+
     nextMonth() {
       if (this.currentMonth === 12) {
         this.currentMonth = 1
@@ -239,69 +291,80 @@ export default {
       } else {
         this.currentMonth++
       }
+      this.loadData()
     },
+
     isToday(year, month, day) {
-      const today = new Date()
+      var today = new Date()
       return year === today.getFullYear() && 
              month === today.getMonth() + 1 && 
              day === today.getDate()
     },
+
     isSelected(year, month, day) {
       if (!this.selectedDate) return false
       return this.selectedDate.year === year && 
              this.selectedDate.month === month && 
              this.selectedDate.day === day
     },
+
     hasItems(year, month, day) {
-      const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      var dateKey = this.buildDateKey(year, month, day)
       return this.itemsByDate[dateKey] && this.itemsByDate[dateKey].length > 0
     },
+
     hasExpiredItems(year, month, day) {
-      const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-      const items = this.itemsByDate[dateKey] || []
-      const today = new Date()
+      var dateKey = this.buildDateKey(year, month, day)
+      var items = this.itemsByDate[dateKey] || []
+      var today = new Date()
       today.setHours(0, 0, 0, 0)
-      return items.some(item => {
-        const expiryDate = new Date(item.expiryDate)
+      return items.some(function(item) {
+        var expiryDate = new Date(item.expiryDate)
         expiryDate.setHours(0, 0, 0, 0)
         return expiryDate < today
       })
     },
+
     hasExpiringItems(year, month, day) {
-      const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-      const items = this.itemsByDate[dateKey] || []
-      const today = new Date()
+      var dateKey = this.buildDateKey(year, month, day)
+      var items = this.itemsByDate[dateKey] || []
+      var today = new Date()
       today.setHours(0, 0, 0, 0)
-      const sevenDaysLater = new Date(today)
+      var sevenDaysLater = new Date(today)
       sevenDaysLater.setDate(sevenDaysLater.getDate() + 7)
-      return items.some(item => {
-        const expiryDate = new Date(item.expiryDate)
+      return items.some(function(item) {
+        var expiryDate = new Date(item.expiryDate)
         expiryDate.setHours(0, 0, 0, 0)
         return expiryDate >= today && expiryDate <= sevenDaysLater
       })
     },
+
     getItemCount(year, month, day) {
-      const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      var dateKey = this.buildDateKey(year, month, day)
       return this.itemsByDate[dateKey] ? this.itemsByDate[dateKey].length : 0
     },
+
     selectDate(year, month, day) {
-      this.selectedDate = { year, month, day }
+      this.selectedDate = { year: year, month: month, day: day }
     },
+
     formatSelectedDate() {
       if (!this.selectedDate) return ''
-      return `${this.selectedDate.year}年${this.selectedDate.month}月${this.selectedDate.day}日`
+      return this.selectedDate.year + '年' + this.selectedDate.month + '月' + this.selectedDate.day + '日'
     },
+
     goToItemDetail(item) {
       if (item.type === 'shared') {
         uni.navigateTo({
-          url: `/pages/personal/edit-item?id=${item.id}&spaceId=${item.spaceId}&type=shared`
+          url: '/pages/personal/edit-item?id=' + item.id + '&spaceId=' + item.spaceId + '&type=shared'
         })
       } else {
         uni.navigateTo({
-          url: `/pages/personal/edit-item?id=${item.id}`
+          url: '/pages/personal/edit-item?id=' + item.id
         })
       }
     },
+
     editItem(item) {
       this.goToItemDetail(item)
     }
@@ -320,7 +383,7 @@ export default {
   transition: background-color 0.3s ease;
 }
 
-/* ???? */
+/* 筛选栏 */
 .filter-container {
   margin-bottom: 30rpx;
 }
@@ -356,7 +419,7 @@ export default {
   }
 }
 
-/* ???????? */
+/* 日历容器 */
 .calendar-container {
   background: var(--card-bg-solid);
   border-radius: 24rpx;
@@ -366,7 +429,7 @@ export default {
   box-shadow: 0 8rpx 24rpx var(--shadow-color);
 }
 
-/* ??????? */
+/* 月份导航 */
 .month-nav {
   display: flex;
   align-items: center;
@@ -388,7 +451,6 @@ export default {
   position: relative;
   overflow: hidden;
   
-  /* ?????? */
   &::before {
     content: '';
     position: absolute;
@@ -434,7 +496,7 @@ export default {
   -webkit-text-fill-color: transparent;
 }
 
-/* ??????? */
+/* 星期标题 */
 .weekdays {
   display: flex;
   margin-bottom: 20rpx;
@@ -448,7 +510,7 @@ export default {
   font-weight: 500;
 }
 
-/* ???????? */
+/* 日历网格 */
 .calendar-grid {
   display: flex;
   flex-wrap: wrap;
@@ -582,7 +644,7 @@ export default {
   margin-top: 4rpx;
 }
 
-/* ??????????? */
+/* 物品列表区域 */
 .items-section {
   background: var(--card-bg-solid);
   border-radius: 24rpx;
@@ -624,7 +686,7 @@ export default {
   color: var(--text-secondary);
 }
 
-/* ???? */
+/* 浅色模式 */
 .light-mode .filter-item.active {
   background: linear-gradient(135deg, #3b82f6, #14b8a6) !important;
 }

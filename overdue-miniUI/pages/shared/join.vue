@@ -44,6 +44,8 @@
 import storage from '@/common/utils/storage.js'
 import inviteUtil from '@/common/utils/invite.js'
 import themeMixin from '@/common/mixins/theme.js'
+import api from '@/common/utils/api.js'
+import { isLoggedIn } from '@/common/utils/auth.js'
 
 export default {
   mixins: [themeMixin],
@@ -70,73 +72,60 @@ export default {
       this.error = ''
       
       try {
-        // 验证邀请码
-        const inviteInfo = inviteUtil.getInviteInfo(this.inviteCode)
-        
-        if (!inviteInfo) {
-          this.error = '邀请码不存在或已过期'
+        // 优先从后端获取邀请信息
+        var res = await api.getInviteInfo(this.inviteCode)
+        if (res && res.code === 200 && res.data) {
+          this.spaceInfo = res.data.space || res.data
+          this.inviterName = res.data.inviterName || '未知'
           return
         }
-
-        // 检查是否已过期
-        const now = new Date()
-        const expireTime = new Date(inviteInfo.expireTime)
-        if (now > expireTime) {
-          this.error = '邀请码已过期'
-          inviteUtil.removeInvite(this.inviteCode)
-          return
-        }
-
-        // 获取空间信息
-        const spaces = storage.get('sharedSpaces', [])
-        const space = spaces.find(s => s.id === inviteInfo.spaceId)
-        
-        if (!space) {
-          this.error = '共享空间不存在'
-          return
-        }
-
-        // 检查是否已经是成员
-        const userInfo = storage.get('userInfo', {})
-        if (space.members && space.members.some(m => m.userId === userInfo.openid)) {
-          uni.showModal({
-            title: '提示',
-            content: '您已经是该空间的成员了',
-            showCancel: false,
-            success: () => {
-              uni.navigateTo({
-                url: `/pages/shared/detail?id=${space.id}`
-              })
-            }
-          })
-          return
-        }
-
-        this.spaceInfo = space
-        this.inviterName = inviteInfo.inviterName || '未知'
+        this.error = '邀请码无效或已过期'
       } catch (error) {
         console.error('加载邀请信息失败:', error)
-        this.error = '加载失败，请重试'
+        // 兜底尝试本地验证
+        try {
+          var inviteInfo = inviteUtil.getInviteInfo(this.inviteCode)
+          if (!inviteInfo) {
+            this.error = '邀请码不存在或已过期'
+            return
+          }
+          var now = new Date()
+          var expireTime = new Date(inviteInfo.expireTime)
+          if (now > expireTime) {
+            this.error = '邀请码已过期'
+            return
+          }
+          this.inviterName = inviteInfo.inviterName || '未知'
+          // 尝试从后端获取空间信息
+          try {
+            var spaceRes = await api.getSharedSpaceDetail(inviteInfo.spaceId)
+            if (spaceRes && spaceRes.code === 200 && spaceRes.data) {
+              this.spaceInfo = spaceRes.data
+            }
+          } catch (e2) {
+            this.spaceInfo = { name: '共享空间', id: inviteInfo.spaceId }
+          }
+        } catch (localError) {
+          this.error = '加载失败，请重试'
+        }
       }
     },
 
     // 加入空间
     async joinSpace() {
       if (this.joining) return
-
       this.joining = true
 
       try {
-        const userInfo = storage.get('userInfo', {})
-        
-        if (!userInfo || !userInfo.openid) {
+        if (!isLoggedIn()) {
+          var self = this
           uni.showModal({
             title: '提示',
             content: '请先登录',
             showCancel: false,
-            success: () => {
+            success: function() {
               uni.navigateTo({
-                url: '/pages/auth/login?inviteCode=' + this.inviteCode
+                url: '/pages/auth/login?inviteCode=' + self.inviteCode
               })
             }
           })
@@ -144,49 +133,21 @@ export default {
           return
         }
 
-        // TODO: 实际项目中应该调用后端API
-        // await api.joinSpace({ inviteCode: this.inviteCode })
-
-        // 添加到空间成员列表
-        const spaces = storage.get('sharedSpaces', [])
-        const spaceIndex = spaces.findIndex(s => s.id === this.spaceInfo.id)
-        
-        if (spaceIndex !== -1) {
-          if (!spaces[spaceIndex].members) {
-            spaces[spaceIndex].members = []
-          }
-          
-          // 检查是否已存在
-          const exists = spaces[spaceIndex].members.some(m => m.userId === userInfo.openid)
-          if (!exists) {
-            spaces[spaceIndex].members.push({
-              userId: userInfo.openid,
-              userName: userInfo.nickName,
-              role: 'member',
-              joinedAt: new Date().toISOString()
-            })
-            
-            // 更新成员数量
-            spaces[spaceIndex].memberCount = spaces[spaceIndex].members.length
-            
-            storage.set('sharedSpaces', spaces)
-          }
-        }
-
-        // 标记邀请码为已使用
-        inviteUtil.markInviteAsUsed(this.inviteCode)
+        // 调用后端API加入空间
+        var res = await api.joinSpace(this.inviteCode)
 
         uni.showToast({ title: '加入成功', icon: 'success' })
 
-        // 跳转到空间详情
-        setTimeout(() => {
+        var spaceId = this.spaceInfo.id
+        setTimeout(function() {
           uni.navigateTo({
-            url: `/pages/shared/detail?id=${this.spaceInfo.id}`
+            url: '/pages/shared/detail?id=' + spaceId
           })
         }, 1500)
       } catch (error) {
         console.error('加入空间失败:', error)
-        uni.showToast({ title: '加入失败，请重试', icon: 'none' })
+        uni.showToast({ title: error.message || '加入失败，请重试', icon: 'none' })
+      } finally {
         this.joining = false
       }
     },
@@ -198,7 +159,7 @@ export default {
 
     // 获取空间类型文本
     getSpaceTypeText(type) {
-      const typeMap = {
+      var typeMap = {
         'family': '家庭',
         'office': '办公室',
         'roommate': '室友',

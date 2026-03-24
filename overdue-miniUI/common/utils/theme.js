@@ -4,7 +4,7 @@
 export default {
   // 获取当前主题
   getTheme() {
-    return uni.getStorageSync('theme') || 'dark'
+    return uni.getStorageSync('theme') || 'light'
   },
   
   // 设置主题

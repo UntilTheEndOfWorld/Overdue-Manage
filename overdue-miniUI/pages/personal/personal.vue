@@ -69,6 +69,8 @@ import storage from '@/common/utils/storage.js'
 import itemUtil from '@/common/utils/item.js'
 import ItemCard from '@/components/item-card/item-card.vue'
 import themeMixin from '@/common/mixins/theme.js'
+import api from '@/common/utils/api.js'
+import { isLoggedIn } from '@/common/utils/auth.js'
 
 export default {
   mixins: [themeMixin],
@@ -79,17 +81,16 @@ export default {
     return {
       items: [],
       filter: 'all',
-      searchKeyword: ''
+      searchKeyword: '',
+      loading: false
     }
   },
   computed: {
     filteredItems() {
-      let result = this.items
-      // 先搜索
+      var result = this.items
       if (this.searchKeyword) {
         result = itemUtil.searchItems(result, this.searchKeyword)
       }
-      // 再筛选
       return itemUtil.filterItems(result, this.filter)
     }
   },
@@ -101,13 +102,29 @@ export default {
   },
   onPullDownRefresh() {
     this.loadItems()
-    setTimeout(() => {
+    setTimeout(function() {
       uni.stopPullDownRefresh()
     }, 500)
   },
   methods: {
-    loadItems() {
-      this.items = storage.get('personalItems', [])
+    async loadItems() {
+      if (!isLoggedIn()) return
+      if (this.loading) return
+      this.loading = true
+      try {
+        var res = await api.getPersonalItems()
+        if (res && res.code === 200 && res.data) {
+          this.items = Array.isArray(res.data) ? res.data : (res.data.rows || res.data.list || [])
+          // 同步到本地缓存
+          storage.set('personalItems', this.items)
+        }
+      } catch (error) {
+        console.error('加载个人物品失败:', error)
+        // 兜底使用本地缓存
+        this.items = storage.get('personalItems', [])
+      } finally {
+        this.loading = false
+      }
     },
     setFilter(type) {
       this.filter = type

@@ -113,8 +113,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .permitAll()
                 .antMatchers("/h5/**").permitAll()
                 .antMatchers("/no-auth/**").permitAll()
-                .antMatchers("/jx_slr_api/websocket/**").permitAll()
-                .antMatchers("/websocket/**").permitAll()
                 .antMatchers("/common/download**").anonymous()
                 .antMatchers("/common/download/resource**").anonymous()
                 .antMatchers("/swagger-ui.html").anonymous()

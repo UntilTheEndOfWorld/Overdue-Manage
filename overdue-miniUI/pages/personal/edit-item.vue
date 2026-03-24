@@ -59,6 +59,7 @@ import dateUtil from '@/common/utils/date.js'
 import logger from '@/common/utils/logger.js'
 import validator from '@/common/utils/validator.js'
 import themeMixin from '@/common/mixins/theme.js'
+import api from '@/common/utils/api.js'
 
 export default {
   mixins: [themeMixin],
@@ -89,23 +90,31 @@ export default {
     this.loadItem()
   },
   methods: {
-    loadItem() {
-      if (this.itemType === 'shared') {
-        const items = storage.get('sharedItems', [])
-        const item = items.find(i => i.id === this.itemId && i.spaceId === this.spaceId)
-        if (item) {
-          this.form = { ...item }
-          this.categoryIndex = this.categories.indexOf(item.category)
-          this.unitIndex = this.shelfLifeUnits.indexOf(item.unit || '天')
+    async loadItem() {
+      try {
+        var res
+        var item
+        if (this.itemType === 'shared') {
+          res = await api.getSharedItemDetail(this.spaceId, this.itemId)
+          if (res && res.code === 200 && res.data) {
+            item = res.data
+          }
+        } else {
+          res = await api.getPersonalItemDetail(this.itemId)
+          if (res && res.code === 200 && res.data) {
+            item = res.data
+          }
         }
-      } else {
-        const items = storage.get('personalItems', [])
-        const item = items.find(i => i.id === this.itemId)
         if (item) {
-          this.form = { ...item }
+          this.form = Object.assign({}, item)
           this.categoryIndex = this.categories.indexOf(item.category)
+          if (this.categoryIndex < 0) this.categoryIndex = 0
           this.unitIndex = this.shelfLifeUnits.indexOf(item.unit || '天')
+          if (this.unitIndex < 0) this.unitIndex = 0
         }
+      } catch (error) {
+        console.error('加载物品详情失败:', error)
+        uni.showToast({ title: '加载失败', icon: 'none' })
       }
     },
     onCategoryChange(e) {
@@ -137,120 +146,56 @@ export default {
         )
       }
     },
-    save() {
+    async save() {
       // 表单验证
-      const validation = validator.validateItemForm(this.form)
+      var validation = validator.validateItemForm(this.form)
       if (!validator.showErrors(validation.errors)) {
         return
       }
 
-      const userInfo = storage.get('userInfo', {})
-      
-      if (this.itemType === 'shared') {
-        const items = storage.get('sharedItems', [])
-        const index = items.findIndex(i => i.id === this.itemId && i.spaceId === this.spaceId)
-        if (index !== -1) {
-          const oldItem = items[index]
-          items[index] = { ...this.form, id: this.itemId, spaceId: this.spaceId }
-          storage.set('sharedItems', items)
-
-          // 记录操作日志 - 记录修改的字段
-          const changes = {}
-          if (oldItem.name !== this.form.name) changes.name = this.form.name
-          if (oldItem.category !== this.form.category) changes.category = this.form.category
-          if (oldItem.expiryDate !== this.form.expiryDate) changes.expiryDate = this.form.expiryDate
-          if (oldItem.productionDate !== this.form.productionDate) changes.productionDate = this.form.productionDate
-          
-          logger.logOperation(
-            this.spaceId,
-            userInfo.openid || '',
-            userInfo.nickName || '用户',
-            'update',
-            this.itemId,
-            this.form.name,
-            changes
-          )
-        }
-      } else {
-        const items = storage.get('personalItems', [])
-        const index = items.findIndex(i => i.id === this.itemId)
-        if (index !== -1) {
-          const oldItem = items[index]
-          items[index] = { ...this.form, id: this.itemId }
-          storage.set('personalItems', items)
-
-          // 记录操作日志 - 记录修改的字段
-          const changes = {}
-          if (oldItem.name !== this.form.name) changes.name = this.form.name
-          if (oldItem.category !== this.form.category) changes.category = this.form.category
-          if (oldItem.expiryDate !== this.form.expiryDate) changes.expiryDate = this.form.expiryDate
-          if (oldItem.productionDate !== this.form.productionDate) changes.productionDate = this.form.productionDate
-          
-          logger.logOperation(
-            'personal',
-            userInfo.openid || '',
-            userInfo.nickName || '我',
-            'update',
-            this.itemId,
-            this.form.name,
-            changes
-          )
-        }
+      var updateData = {
+        name: this.form.name,
+        category: this.form.category,
+        purchaseDate: this.form.purchaseDate || null,
+        productionDate: this.form.productionDate,
+        shelfLife: this.form.shelfLife,
+        unit: this.form.unit,
+        expiryDate: this.form.expiryDate
       }
 
-      uni.showToast({ title: '保存成功', icon: 'success' })
-      setTimeout(() => {
-        uni.navigateBack()
-      }, 1500)
+      try {
+        if (this.itemType === 'shared') {
+          await api.updateSharedItem(this.spaceId, this.itemId, updateData)
+        } else {
+          await api.updatePersonalItem(this.itemId, updateData)
+        }
+        uni.showToast({ title: '保存成功', icon: 'success' })
+        setTimeout(function() { uni.navigateBack() }, 1500)
+      } catch (error) {
+        console.error('保存物品失败:', error)
+        uni.showToast({ title: error.message || '保存失败', icon: 'none' })
+      }
     },
     deleteItem() {
+      var self = this
       uni.showModal({
         title: '确认删除',
         content: '确定要删除这个物品吗？',
-        success: (res) => {
+        success: function(res) {
           if (res.confirm) {
-            const userInfo = storage.get('userInfo', {})
-            
-            if (this.itemType === 'shared') {
-              const items = storage.get('sharedItems', [])
-              const item = items.find(i => i.id === this.itemId && i.spaceId === this.spaceId)
-              const newItems = items.filter(i => !(i.id === this.itemId && i.spaceId === this.spaceId))
-              storage.set('sharedItems', newItems)
-
-              // 记录操作日志
-              if (item) {
-                logger.logOperation(
-                  this.spaceId,
-                  userInfo.openid || '',
-                  userInfo.nickName || '用户',
-                  'delete',
-                  this.itemId,
-                  item.name
-                )
-              }
+            var deletePromise
+            if (self.itemType === 'shared') {
+              deletePromise = api.deleteSharedItem(self.spaceId, self.itemId)
             } else {
-              const items = storage.get('personalItems', [])
-              const item = items.find(i => i.id === this.itemId)
-              const newItems = items.filter(i => i.id !== this.itemId)
-              storage.set('personalItems', newItems)
-
-              // 记录操作日志
-              if (item) {
-                logger.logOperation(
-                  'personal',
-                  userInfo.openid || '',
-                  userInfo.nickName || '我',
-                  'delete',
-                  this.itemId,
-                  item.name
-                )
-              }
+              deletePromise = api.deletePersonalItem(self.itemId)
             }
-
-            uni.showToast({ title: '删除成功', icon: 'success' })
-            setTimeout(() => {
-              uni.navigateBack()
-            }, 1500)
+            deletePromise.then(function() {
+              uni.showToast({ title: '删除成功', icon: 'success' })
+              setTimeout(function() { uni.navigateBack() }, 1500)
+            }).catch(function(error) {
+              console.error('删除物品失败:', error)
+              uni.showToast({ title: error.message || '删除失败', icon: 'none' })
+            })
           }
         }
       })

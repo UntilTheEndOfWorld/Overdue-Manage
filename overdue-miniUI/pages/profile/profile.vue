@@ -105,7 +105,8 @@ import dateUtil from '@/common/utils/date.js'
 import themeUtil from '@/common/utils/theme.js'
 import themeMixin from '@/common/mixins/theme.js'
 import memberUtil from '@/common/utils/member.js'
-import { clearLoginData } from '@/common/utils/auth.js'
+import { clearLoginData, isLoggedIn as checkLoggedIn } from '@/common/utils/auth.js'
+import api from '@/common/utils/api.js'
 
 export default {
   mixins: [themeMixin],
@@ -150,11 +151,23 @@ export default {
         duration: 1500
       })
     },
-    loadData() {
+    async loadData() {
       this.userInfo = storage.get('userInfo', {})
-      this.isLoggedIn = !!this.userInfo.openid
+      this.isLoggedIn = checkLoggedIn()
 
-      const items = storage.get('personalItems', []) || []
+      var items = []
+      try {
+        if (this.isLoggedIn) {
+          var res = await api.getPersonalItems()
+          if (res && res.code === 200 && res.data) {
+            items = Array.isArray(res.data) ? res.data : (res.data.rows || res.data.list || [])
+          }
+        }
+      } catch (error) {
+        console.error('加载个人物品统计失败:', error)
+        items = storage.get('personalItems', []) || []
+      }
+
       this.totalCount = items.length
 
       if (items.length === 0) {
@@ -162,21 +175,21 @@ export default {
         this.nearCount = 0
         this.expiredCount = 0
       } else {
-        const now = new Date()
+        var now = new Date()
         now.setHours(0, 0, 0, 0)
-        const sevenDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+        var sevenDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
 
-        this.expiredCount = items.filter(item => {
+        this.expiredCount = items.filter(function(item) {
           if (!item.expiryDate) return false
-          const expiry = new Date(item.expiryDate)
+          var expiry = new Date(item.expiryDate)
           expiry.setHours(0, 0, 0, 0)
           return expiry < now
         }).length
 
-        this.nearCount = items.filter(item => {
+        this.nearCount = items.filter(function(item) {
           if (!item.expiryDate) return false
           try {
-            const expiry = new Date(item.expiryDate)
+            var expiry = new Date(item.expiryDate)
             expiry.setHours(0, 0, 0, 0)
             return expiry >= now && expiry <= sevenDaysLater
           } catch (e) {
@@ -185,8 +198,6 @@ export default {
         }).length
 
         this.normalCount = this.totalCount - this.expiredCount - this.nearCount
-        
-        // 确保数值不为负数
         if (this.normalCount < 0) {
           this.normalCount = 0
         }
@@ -197,7 +208,6 @@ export default {
       this.usedQuota = memberUtil.getUsedQuota()
       this.remainingQuota = memberUtil.getRemainingQuota()
       
-      // 强制更新视图
       this.$forceUpdate()
     },
     goToMember() {

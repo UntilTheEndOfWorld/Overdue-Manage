@@ -157,6 +157,8 @@ import ItemCard from '@/components/item-card/item-card.vue'
 import AddItemModal from '@/components/add-item-modal/add-item-modal.vue'
 import themeMixin from '@/common/mixins/theme.js'
 import memberUtil from '@/common/utils/member.js'
+import api from '@/common/utils/api.js'
+import { isLoggedIn } from '@/common/utils/auth.js'
 
 export default {
   mixins: [themeMixin],
@@ -166,7 +168,7 @@ export default {
   },
   data() {
     return {
-      memberUtil,
+      memberUtil: memberUtil,
       FREE_QUOTA: 5,
       usedQuota: 0,
       userInfo: {},
@@ -176,203 +178,56 @@ export default {
       sharedCount: 0,
       reminders: [],
       recentItems: [],
-      // 是否使用模拟数据（对接接口后改为 false）
-      useMockData: true,
-      // 是否显示添加物品弹窗
       showAddModal: false,
-      // 当前激活的TAB：'personal' 或 'shared'
       activeTab: 'personal',
-      // 共享空间列表
-      sharedSpaces: []
+      sharedSpaces: [],
+      loading: false
     }
   },
   onLoad() {
-    this.checkLogin()
+    this.loadData()
   },
   onShow() {
     this.loadData()
   },
   methods: {
-    checkLogin() {
-      const userInfo = storage.get('userInfo')
-      if (!userInfo || !userInfo.openid) {
-        // 未登录，尝试微信登录
-        this.wxLogin()
-      } else {
-        this.loadData()
-      }
-    },
-    wxLogin() {
-      uni.login({
-        provider: 'weixin',
-        success: (res) => {
-          // 获取用户信息
-          uni.getUserProfile({
-            desc: '用于完善用户资料',
-            success: (userRes) => {
-              // 保存用户信息
-              const userInfo = {
-                openid: res.code, // 实际应该从后端获取
-                nickName: userRes.userInfo.nickName,
-                avatarUrl: userRes.userInfo.avatarUrl
-              }
-              storage.set('userInfo', userInfo)
-              this.loadData()
-            },
-            fail: () => {
-              // 用户拒绝授权，使用默认信息
-              const userInfo = {
-                openid: res.code,
-                nickName: '用户',
-                avatarUrl: ''
-              }
-              storage.set('userInfo', userInfo)
-              this.loadData()
-            }
-          })
-        },
-        fail: () => {
-          uni.showToast({ title: '登录失败', icon: 'none' })
-        }
-      })
-    },
     loadData() {
-      // ========== 模拟数据开始 ==========
-      // TODO: 对接接口后，将 useMockData 改为 false，并取消注释下面的接口调用代码
-      
-      if (this.useMockData) {
-        // 模拟用户信息
-        const mockUserInfo = {
-          openid: 'mock_openid_123',
-          nickName: '张三',
-          avatarUrl: ''
+      if (!isLoggedIn()) return
+      this.loadApiData()
+    },
+    async loadApiData() {
+      if (this.loading) return
+      this.loading = true
+      try {
+        // 加载用户信息
+        this.userInfo = storage.get('userInfo', {})
+
+        // 从后端获取个人物品
+        var personalRes = await api.getPersonalItems()
+        var items = []
+        if (personalRes && personalRes.code === 200 && personalRes.data) {
+          items = Array.isArray(personalRes.data) ? personalRes.data : (personalRes.data.rows || personalRes.data.list || [])
         }
-        
-        // 模拟物品数据
-        const now = new Date()
-        const mockItems = [
-          {
-            id: '1',
-            name: '纯牛奶',
-            category: '食品',
-            purchaseDate: this.formatDateForMock(new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000)),
-            productionDate: this.formatDateForMock(new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000)),
-            shelfLife: 30,
-            unit: '天',
-            expiryDate: this.formatDateForMock(new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000)), // 3天后过期
-            createdAt: new Date().toISOString()
-          },
-          {
-            id: '2',
-            name: '维生素C片',
-            category: '药品',
-            purchaseDate: this.formatDateForMock(new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)),
-            productionDate: this.formatDateForMock(new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)),
-            shelfLife: 365,
-            unit: '天',
-            expiryDate: this.formatDateForMock(new Date(now.getTime() + 45 * 24 * 60 * 60 * 1000)), // 45天后过期
-            createdAt: new Date().toISOString()
-          },
-          {
-            id: '3',
-            name: '番茄酱',
-            category: '食品',
-            purchaseDate: this.formatDateForMock(new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)),
-            productionDate: this.formatDateForMock(new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)),
-            shelfLife: 180,
-            unit: '天',
-            expiryDate: this.formatDateForMock(new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000)), // 已过期5天
-            createdAt: new Date().toISOString()
-          },
-          {
-            id: '4',
-            name: '止痛药',
-            category: '药品',
-            purchaseDate: this.formatDateForMock(new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000)),
-            productionDate: this.formatDateForMock(new Date(now.getTime() - 40 * 24 * 60 * 60 * 1000)),
-            shelfLife: 730,
-            unit: '天',
-            expiryDate: this.formatDateForMock(new Date(now.getTime() + 120 * 24 * 60 * 60 * 1000)), // 120天后过期
-            createdAt: new Date().toISOString()
-          },
-          {
-            id: '5',
-            name: '酸奶',
-            category: '食品',
-            purchaseDate: this.formatDateForMock(new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000)),
-            productionDate: this.formatDateForMock(new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000)),
-            shelfLife: 14,
-            unit: '天',
-            expiryDate: this.formatDateForMock(new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)), // 7天后过期
-            createdAt: new Date().toISOString()
-          },
-          {
-            id: '6',
-            name: '面包',
-            category: '食品',
-            purchaseDate: this.formatDateForMock(new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000)),
-            productionDate: this.formatDateForMock(new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000)),
-            shelfLife: 5,
-            unit: '天',
-            expiryDate: this.formatDateForMock(new Date(now.getTime() + 10 * 24 * 60 * 60 * 1000)), // 10天后过期
-            createdAt: new Date().toISOString()
-          }
-        ]
-        
-        // 如果没有存储数据，使用模拟数据
-        let items = storage.get('personalItems', [])
-        if (items.length === 0) {
-          items = mockItems
-          storage.set('personalItems', items)
-        }
-        
-        // 如果没有用户信息，使用模拟数据
-        let userInfo = storage.get('userInfo', {})
-        if (!userInfo || !userInfo.nickName) {
-          userInfo = mockUserInfo
-          storage.set('userInfo', userInfo)
-        }
-        this.userInfo = userInfo
-        
-        // 模拟共享空间数量
-        this.sharedCount = 2
-        
+
+        // 计算统计数据
         this.calculateStats(items)
+
         // 加载共享空间列表
         this.loadSharedSpaces()
-        return
+
+        // 更新额度信息
+        this.updateQuota()
+      } catch (error) {
+        console.error('加载首页数据失败:', error)
+        // 兜底：从本地缓存加载
+        var cachedItems = storage.get('personalItems', [])
+        this.userInfo = storage.get('userInfo', {})
+        this.calculateStats(cachedItems)
+        this.loadSharedSpaces()
+        this.updateQuota()
+      } finally {
+        this.loading = false
       }
-      
-      // ========== 模拟数据结束 ==========
-      
-      // ========== 接口调用代码（对接接口后取消注释） ==========
-      // try {
-      //   // 获取用户信息
-      //   this.userInfo = await api.getUserInfo()
-      //   
-      //   // 获取物品列表
-      //   const items = await api.getPersonalItems()
-      //   
-      //   // 获取共享空间数量
-      //   this.sharedCount = await api.getSharedSpacesCount()
-      //   
-      //   // 计算统计数据
-      //   this.calculateStats(items)
-      // } catch (error) {
-      //   console.error('加载数据失败:', error)
-      //   uni.showToast({ title: '加载数据失败', icon: 'none' })
-      // }
-      // ========== 接口调用代码结束 ==========
-      
-      // 如果未使用模拟数据且没有接口，则从存储中加载
-      const items = storage.get('personalItems', [])
-      this.userInfo = storage.get('userInfo', {})
-      this.sharedCount = 0
-      this.calculateStats(items)
-      // 加载共享空间列表
-      this.loadSharedSpaces()
-      // 更新额度信息
-      this.updateQuota()
     },
     // 更新额度信息
     updateQuota() {
@@ -422,13 +277,6 @@ export default {
         .sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate))
         .slice(0, 5)
     },
-    // 格式化日期为 YYYY-MM-DD 格式（用于模拟数据）
-    formatDateForMock(date) {
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      return `${year}-${month}-${day}`
-    },
     goToItemDetail(item) {
       uni.navigateTo({
         url: `/pages/personal/edit-item?id=${item.id}`
@@ -463,44 +311,22 @@ export default {
       }
     },
     // 加载共享空间列表
-    loadSharedSpaces() {
-      // ========== 模拟数据开始 ==========
-      if (this.useMockData) {
-        // 模拟共享空间数据
-        const mockSpaces = [
-          {
-            id: '1',
-            name: '家庭药箱',
-            memberCount: 3,
-            itemCount: 8,
-            role: 'creator'
-          },
-          {
-            id: '2',
-            name: '厨房食品',
-            memberCount: 2,
-            itemCount: 12,
-            role: 'member'
-          }
-        ]
-        
-        // 优先使用存储数据
-        let spaces = storage.get('sharedSpaces', [])
-        if (spaces.length === 0) {
-          spaces = mockSpaces
+    async loadSharedSpaces() {
+      try {
+        var res = await api.getSharedSpaces()
+        if (res && res.code === 200 && res.data) {
+          var spaces = Array.isArray(res.data) ? res.data : (res.data.rows || res.data.list || [])
+          this.sharedSpaces = spaces
+          this.sharedCount = spaces.length
+          // 缓存到本地
           storage.set('sharedSpaces', spaces)
         }
-        this.sharedSpaces = spaces
-        return
+      } catch (error) {
+        console.error('加载共享空间失败:', error)
+        // 兜底使用缓存
+        this.sharedSpaces = storage.get('sharedSpaces', [])
+        this.sharedCount = this.sharedSpaces.length
       }
-      // ========== 模拟数据结束 ==========
-      
-      // TODO: 对接接口后，使用以下代码
-      // const spaces = await api.getSharedSpaces()
-      // this.sharedSpaces = spaces
-      
-      // 如果未使用模拟数据，从存储中加载
-      this.sharedSpaces = storage.get('sharedSpaces', [])
     },
     // 跳转到创建共享空间
     goToCreateSpace() {

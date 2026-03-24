@@ -22,6 +22,7 @@
 <script>
 import storage from '@/common/utils/storage.js'
 import themeMixin from '@/common/mixins/theme.js'
+import api from '@/common/utils/api.js'
 
 export default {
   mixins: [themeMixin],
@@ -30,44 +31,32 @@ export default {
       form: {
         name: '',
         description: ''
-      }
+      },
+      submitting: false
     }
   },
   methods: {
-    create() {
+    async create() {
       if (!this.form.name) {
         uni.showToast({ title: '请输入空间名称', icon: 'none' })
         return
       }
+      if (this.submitting) return
+      this.submitting = true
 
-      const userInfo = storage.get('userInfo')
-      const spaces = storage.get('sharedSpaces', [])
-      
-      const newSpace = {
-        id: Date.now().toString(),
-        name: this.form.name,
-        description: this.form.description,
-        creatorId: userInfo?.openid || 'user_' + Date.now(),
-        creatorName: userInfo?.nickName || '我',
-        role: 'creator',
-        memberCount: 1,
-        itemCount: 0,
-        createdAt: new Date().toISOString(),
-        members: [{
-          userId: userInfo?.openid || 'user_' + Date.now(),
-          userName: userInfo?.nickName || '我',
-          role: 'creator',
-          joinedAt: new Date().toISOString()
-        }]
+      try {
+        var res = await api.createSharedSpace({
+          name: this.form.name,
+          description: this.form.description
+        })
+        uni.showToast({ title: '创建成功', icon: 'success' })
+        setTimeout(function() { uni.navigateBack() }, 1500)
+      } catch (error) {
+        console.error('创建共享空间失败:', error)
+        uni.showToast({ title: error.message || '创建失败', icon: 'none' })
+      } finally {
+        this.submitting = false
       }
-      
-      spaces.push(newSpace)
-      storage.set('sharedSpaces', spaces)
-
-      uni.showToast({ title: '创建成功', icon: 'success' })
-      setTimeout(() => {
-        uni.navigateBack()
-      }, 1500)
     },
     cancel() {
       uni.navigateBack()

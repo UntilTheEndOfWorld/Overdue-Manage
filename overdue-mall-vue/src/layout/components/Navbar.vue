@@ -9,9 +9,6 @@
       <template v-if="device!=='mobile'">
         <div class="right-menu-item"></div>
 
-        <!-- 语音播报组件 -->
-        <voice-notification class="right-menu-item hover-effect" />
-
         <!-- <search id="header-search" class="right-menu-item" />
 
         <el-tooltip content="源码地址" effect="dark" placement="bottom">
@@ -61,7 +58,6 @@ import SizeSelect from '@/components/SizeSelect'
 import Search from '@/components/HeaderSearch'
 import RuoYiGit from '@/components/RuoYi/Git'
 import RuoYiDoc from '@/components/RuoYi/Doc'
-import VoiceNotification from '@/components/VoiceNotification'
 
 export default {
   components: {
@@ -72,8 +68,7 @@ export default {
     SizeSelect,
     Search,
     RuoYiGit,
-    RuoYiDoc,
-    VoiceNotification
+    RuoYiDoc
   },
   computed: {
     ...mapGetters([

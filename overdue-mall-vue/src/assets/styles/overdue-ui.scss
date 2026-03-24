@@ -1,0 +1,380 @@
+/**
+ * ============================================================
+ * Overdue Admin — Design System UI Overrides
+ * Based on ui-ux-pro-max generated design system
+ *
+ * Palette:
+ *   Primary    #1E40AF   (deep blue)
+ *   Secondary  #3B82F6   (blue)
+ *   Accent     #F59E0B   (amber)
+ *   Background #F8FAFC   (light)
+ *   Text       #1E3A8A   (dark blue)
+ *
+ * Shadow depths:
+ *   sm  0 1px 2px rgba(0,0,0,.05)
+ *   md  0 4px 6px rgba(0,0,0,.07)
+ *   lg  0 10px 15px rgba(0,0,0,.1)
+ * ============================================================
+ */
+
+/* ── Design tokens ─────────────────────────────────────── */
+:root {
+  --od-primary: #1E40AF;
+  --od-secondary: #3B82F6;
+  --od-accent: #F59E0B;
+  --od-bg: #F8FAFC;
+  --od-text: #1E3A8A;
+  --od-text-secondary: #64748B;
+  --od-border: #E2E8F0;
+  --od-radius: 12px;
+  --od-radius-sm: 8px;
+  --od-shadow-sm: 0 1px 2px rgba(0,0,0,.05);
+  --od-shadow-md: 0 4px 6px rgba(0,0,0,.07);
+  --od-shadow-lg: 0 10px 15px rgba(0,0,0,.1);
+  --od-transition: 200ms ease;
+}
+
+/* ── Page container ──────────────────────────────────── */
+.app-container {
+  background: var(--od-bg);
+  min-height: calc(100vh - 84px);
+  padding: 24px !important;
+}
+
+/* ── Search form card ───────────────────────────────── */
+.app-container > .el-form {
+  background: #fff;
+  padding: 18px 20px 8px;
+  border-radius: var(--od-radius);
+  box-shadow: var(--od-shadow-sm);
+  margin-bottom: 16px;
+  border: 1px solid var(--od-border);
+}
+
+.app-container .el-form .el-form-item {
+  margin-bottom: 10px;
+}
+
+.app-container .el-form .el-input__inner,
+.app-container .el-form .el-select .el-input__inner {
+  border-radius: var(--od-radius-sm);
+  border-color: var(--od-border);
+  transition: border-color var(--od-transition), box-shadow var(--od-transition);
+}
+
+.app-container .el-form .el-input__inner:focus,
+.app-container .el-form .el-select .el-input.is-focus .el-input__inner {
+  border-color: var(--od-secondary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, .1);
+}
+
+/* ── Toolbar ─────────────────────────────────────────── */
+.app-container > .el-row.mb8 {
+  margin-bottom: 14px !important;
+}
+
+/* ── Table ───────────────────────────────────────────── */
+.app-container .el-table {
+  border-radius: var(--od-radius);
+  overflow: hidden;
+  box-shadow: var(--od-shadow-sm);
+  border: 1px solid var(--od-border);
+}
+
+.app-container .el-table::before { display: none; }
+
+.app-container .el-table th.el-table__cell {
+  background: #F1F5F9 !important;
+  color: var(--od-text);
+  font-weight: 600;
+  font-size: 13px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--od-border) !important;
+}
+
+.app-container .el-table td.el-table__cell {
+  padding: 10px 0;
+  font-size: 13px;
+  color: #334155;
+  border-bottom-color: #F1F5F9 !important;
+  transition: background var(--od-transition);
+}
+
+.app-container .el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell {
+  background: #EFF6FF !important;
+}
+
+.app-container .el-table--border .el-table__cell {
+  border-right-color: #F1F5F9 !important;
+}
+
+.app-container .el-table__fixed-right::before { display: none; }
+
+/* Stripe rows */
+.app-container .el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell {
+  background: #FAFBFE !important;
+}
+
+/* Row action buttons */
+.app-container .el-table .el-button--text {
+  padding: 4px 8px;
+  border-radius: var(--od-radius-sm);
+  transition: background var(--od-transition), color var(--od-transition);
+  cursor: pointer;
+}
+
+.app-container .el-table .el-button--text:hover {
+  background: rgba(30, 64, 175, .06);
+}
+
+/* ── Tags ────────────────────────────────────────────── */
+.app-container .el-tag {
+  border-radius: 6px;
+  border: none;
+  font-weight: 500;
+  letter-spacing: .2px;
+}
+
+.app-container .el-tag--success { background: #ECFDF5; color: #059669; }
+.app-container .el-tag--warning { background: #FFFBEB; color: #D97706; }
+.app-container .el-tag--danger  { background: #FEF2F2; color: #DC2626; }
+.app-container .el-tag--info    { background: #F1F5F9; color: #64748B; }
+
+.app-container .el-tag:not(.el-tag--success):not(.el-tag--warning):not(.el-tag--danger):not(.el-tag--info) {
+  background: #EFF6FF;
+  color: var(--od-primary);
+}
+
+.app-container .el-tag.el-tag--dark { color: #fff; }
+.app-container .el-tag--dark.el-tag--success { background: #059669; }
+.app-container .el-tag--dark.el-tag--warning { background: #D97706; }
+.app-container .el-tag--dark.el-tag--danger  { background: #DC2626; }
+.app-container .el-tag--dark.el-tag--info    { background: #64748B; }
+
+/* ── Pagination ──────────────────────────────────────── */
+.app-container .pagination-container {
+  padding: 16px 0 !important;
+  margin-top: 16px;
+}
+
+.app-container .el-pagination .el-pager li {
+  border-radius: 6px;
+  min-width: 30px;
+  font-weight: 500;
+}
+
+.app-container .el-pagination .el-pager li.active {
+  background: var(--od-primary);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(30, 64, 175, .3);
+}
+
+.app-container .el-pagination .btn-prev,
+.app-container .el-pagination .btn-next {
+  border-radius: 6px;
+}
+
+/* ── Dialog ──────────────────────────────────────────── */
+.el-dialog {
+  border-radius: 14px !important;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .12) !important;
+}
+
+.el-dialog__header {
+  background: #F8FAFC;
+  padding: 18px 24px !important;
+  border-bottom: 1px solid var(--od-border);
+}
+
+.el-dialog__title {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: var(--od-text) !important;
+}
+
+.el-dialog__headerbtn {
+  top: 18px !important;
+  right: 20px !important;
+  font-size: 18px !important;
+}
+
+.el-dialog__body { padding: 20px 24px !important; }
+
+.el-dialog__footer {
+  padding: 12px 24px 20px !important;
+  border-top: 1px solid #F1F5F9;
+}
+
+/* ── Descriptions ────────────────────────────────────── */
+.el-descriptions { border-radius: var(--od-radius-sm); overflow: hidden; }
+
+.el-descriptions .el-descriptions-item__label {
+  font-weight: 600;
+  color: var(--od-text-secondary);
+  background: #F8FAFC !important;
+}
+
+.el-descriptions .el-descriptions-item__content { color: #1E293B; }
+
+/* ── Avatar ──────────────────────────────────────────── */
+.app-container .el-avatar {
+  box-shadow: var(--od-shadow-sm);
+  border: 2px solid #fff;
+}
+
+/* ── Buttons ─────────────────────────────────────────── */
+.app-container .el-button--primary {
+  border-radius: var(--od-radius-sm);
+  background: var(--od-primary);
+  border-color: var(--od-primary);
+  box-shadow: 0 2px 4px rgba(30, 64, 175, .2);
+  transition: all var(--od-transition);
+  cursor: pointer;
+}
+
+.app-container .el-button--primary:hover {
+  background: #1E3A8A;
+  border-color: #1E3A8A;
+  box-shadow: 0 4px 8px rgba(30, 64, 175, .3);
+  transform: translateY(-1px);
+}
+
+.app-container .el-button--warning { border-radius: var(--od-radius-sm); cursor: pointer; }
+.app-container .el-button--mini { border-radius: 6px; cursor: pointer; }
+
+/* ── Tabs ────────────────────────────────────────────── */
+.el-tabs__nav-wrap::after { background: var(--od-border) !important; }
+.el-tabs__item.is-active { font-weight: 600; color: var(--od-primary); }
+.el-tabs__active-bar {
+  height: 3px !important;
+  border-radius: 3px;
+  background: var(--od-primary) !important;
+}
+
+/* ── Select dropdown ─────────────────────────────────── */
+.el-select-dropdown {
+  border-radius: var(--od-radius-sm) !important;
+  box-shadow: var(--od-shadow-lg) !important;
+  border: 1px solid var(--od-border) !important;
+}
+
+/* ── Card ────────────────────────────────────────────── */
+.app-container .el-card {
+  border-radius: var(--od-radius);
+  border: 1px solid var(--od-border);
+  box-shadow: var(--od-shadow-sm);
+  transition: transform var(--od-transition), box-shadow var(--od-transition);
+  cursor: pointer;
+}
+
+.app-container .el-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--od-shadow-md);
+}
+
+/* ── Page header ─────────────────────────────────────── */
+.overdue-page-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--od-border);
+}
+
+.overdue-page-header__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--od-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 20px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, .1);
+}
+
+.overdue-page-header__text h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--od-text);
+}
+
+.overdue-page-header__text p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--od-text-secondary);
+}
+
+/* ── Stat cards (for ad watch etc.) ──────────────────── */
+.overdue-stat-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.overdue-stat-card {
+  background: #fff;
+  border-radius: var(--od-radius);
+  padding: 20px;
+  text-align: center;
+  box-shadow: var(--od-shadow-sm);
+  border: 1px solid var(--od-border);
+  transition: transform var(--od-transition), box-shadow var(--od-transition);
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+}
+
+.overdue-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+}
+
+.overdue-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--od-shadow-md);
+}
+
+.overdue-stat-card__value {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.overdue-stat-card__label {
+  font-size: 13px;
+  color: var(--od-text-secondary);
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* ── Empty / loading ─────────────────────────────────── */
+.app-container .el-table__empty-text { line-height: 80px; color: #94A3B8; font-size: 13px; }
+.app-container .el-loading-mask { border-radius: var(--od-radius); }
+.app-container .el-divider { border-top-color: #F1F5F9; }
+
+/* ── Entrance animations (subtle) ────────────────────── */
+@keyframes od-fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .app-container > * {
+    animation: od-fade-up .3s ease-out both;
+  }
+  .app-container > *:nth-child(1) { animation-delay: 0s; }
+  .app-container > *:nth-child(2) { animation-delay: .04s; }
+  .app-container > *:nth-child(3) { animation-delay: .08s; }
+  .app-container > *:nth-child(4) { animation-delay: .12s; }
+  .app-container > *:nth-child(5) { animation-delay: .16s; }
+}

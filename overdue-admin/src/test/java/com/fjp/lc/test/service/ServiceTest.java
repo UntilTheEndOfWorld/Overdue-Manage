@@ -8,7 +8,6 @@ import cn.hutool.crypto.symmetric.AES;
 import com.alibaba.fastjson.JSON;
 import com.overdue.h5.domain.dto.PayNotifyMessageDTO;
 import com.overdue.h5.service.H5OrderService;
-import com.overdue.job.OrderJob;
 import com.overdue.manager.act.service.IntegralHistoryService;
 import com.overdue.manager.oms.service.AftersaleService;
 import com.overdue.manager.ums.service.MemberCartService;
@@ -54,14 +53,6 @@ public class ServiceTest {
 
     @Autowired
     private IntegralHistoryService integralHistoryService;
-    @Autowired
-    private OrderJob orderJob;
-
-    @Test
-    public void testOrderJob() {
-        orderJob.batchCompleteOrder();
-    }
-
     @Test
     public void test12() {
         integralHistoryService.handleIntegral(5405053175810048L, new BigDecimal("2.89"), 29L);

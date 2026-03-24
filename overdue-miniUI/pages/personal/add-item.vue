@@ -59,6 +59,7 @@ import logger from '@/common/utils/logger.js'
 import validator from '@/common/utils/validator.js'
 import themeMixin from '@/common/mixins/theme.js'
 import memberUtil from '@/common/utils/member.js'
+import api from '@/common/utils/api.js'
 
 export default {
   mixins: [themeMixin],
@@ -152,66 +153,37 @@ export default {
         }
       }
 
-      const items = storage.get('personalItems', [])
-      const userInfo = storage.get('userInfo', {})
-      const newItem = {
-        id: Date.now().toString(),
+      var userInfo = storage.get('userInfo', {})
+      var newItem = {
         name: this.form.name,
         category: this.form.category,
         purchaseDate: this.form.purchaseDate || null,
         productionDate: this.form.productionDate,
         shelfLife: this.form.shelfLife,
         unit: this.form.unit,
-        expiryDate: this.form.expiryDate,
-        createdAt: new Date().toISOString()
+        expiryDate: this.form.expiryDate
       }
-      items.push(newItem)
-      storage.set('personalItems', items)
 
-      // 记录操作日志
+      var self = this
       if (this.spaceId && this.itemType === 'shared') {
-        // 共享空间物品日志
-        // 保存到共享物品列表
-        const sharedItems = storage.get('sharedItems', [])
-        sharedItems.push({
-          ...newItem,
-          spaceId: this.spaceId,
-          creatorId: userInfo.openid || '',
-          creatorName: userInfo.nickName || '用户'
+        // 共享空间物品 - 调用后端API
+        api.addSharedItem(this.spaceId, newItem).then(function(res) {
+          uni.showToast({ title: '添加成功', icon: 'success' })
+          setTimeout(function() { uni.navigateBack() }, 1500)
+        }).catch(function(error) {
+          console.error('添加共享物品失败:', error)
+          uni.showToast({ title: error.message || '添加失败', icon: 'none' })
         })
-        storage.set('sharedItems', sharedItems)
-
-        // 记录操作日志
-        logger.logOperation(
-          this.spaceId,
-          userInfo.openid || '',
-          userInfo.nickName || '用户',
-          'add',
-          newItem.id,
-          newItem.name,
-          { category: newItem.category, expiryDate: newItem.expiryDate }
-        )
       } else {
-        // 个人物品日志
-        logger.logOperation(
-          'personal',
-          userInfo.openid || '',
-          userInfo.nickName || '我',
-          'add',
-          newItem.id,
-          newItem.name,
-          { 
-            category: newItem.category, 
-            expiryDate: newItem.expiryDate,
-            productionDate: newItem.productionDate
-          }
-        )
+        // 个人物品 - 调用后端API
+        api.addPersonalItem(newItem).then(function(res) {
+          uni.showToast({ title: '添加成功', icon: 'success' })
+          setTimeout(function() { uni.navigateBack() }, 1500)
+        }).catch(function(error) {
+          console.error('添加个人物品失败:', error)
+          uni.showToast({ title: error.message || '添加失败', icon: 'none' })
+        })
       }
-
-      uni.showToast({ title: '添加成功', icon: 'success' })
-      setTimeout(() => {
-        uni.navigateBack()
-      }, 1500)
     },
     cancel() {
       uni.navigateBack()

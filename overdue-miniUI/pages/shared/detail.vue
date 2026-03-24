@@ -123,6 +123,8 @@ import itemUtil from '@/common/utils/item.js'
 import ItemCard from '@/components/item-card/item-card.vue'
 import themeMixin from '@/common/mixins/theme.js'
 import logger from '@/common/utils/logger.js'
+import api from '@/common/utils/api.js'
+import { isLoggedIn } from '@/common/utils/auth.js'
 
 export default {
   mixins: [themeMixin],
@@ -136,34 +138,30 @@ export default {
       items: [],
       filter: 'all',
       searchKeyword: '',
-      allLogs: []
+      allLogs: [],
+      loading: false
     }
   },
   computed: {
     filteredItems() {
-      let result = this.items
-      // 先搜索
+      var result = this.items
       if (this.searchKeyword) {
         result = itemUtil.searchItems(result, this.searchKeyword)
       }
-      // 再筛选
       return itemUtil.filterItems(result, this.filter)
     },
     displaySpaceName() {
-      if (!this.space.name) {
+      if (!this.space || !this.space.name) {
         return '共享空间'
       }
-      // 如果空间名称以"箱"结尾，去掉最后一个字
       if (this.space.name.endsWith('箱')) {
         return this.space.name.slice(0, -1)
       }
       return this.space.name
     },
     spaceMembers() {
-      // 确保返回成员列表，如果不存在则返回空数组
-      if (!this.space.members) {
-        // 如果没有成员列表，尝试从创建者信息创建
-        if (this.space.creatorId) {
+      if (!this.space || !this.space.members) {
+        if (this.space && this.space.creatorId) {
           return [{
             userId: this.space.creatorId,
             userName: this.space.creatorName || '创建者',
@@ -184,30 +182,54 @@ export default {
   },
   onPullDownRefresh() {
     this.loadData()
-    setTimeout(() => {
+    setTimeout(function() {
       uni.stopPullDownRefresh()
     }, 500)
   },
   methods: {
-    loadData() {
-      const spaces = storage.get('sharedSpaces', [])
-      // 确保 ID 类型匹配（字符串比较）
-      this.space = spaces.find(s => String(s.id) === String(this.spaceId)) || {}
-      
-      // 如果没有找到空间，尝试从URL参数获取
-      if (!this.space.id && this.spaceId) {
-        // 可能是通过邀请链接进入的，空间信息会在join页面加载
+    async loadData() {
+      if (!isLoggedIn() || !this.spaceId) return
+      if (this.loading) return
+      this.loading = true
+      try {
+        // 并行请求空间详情、物品列表、操作日志
+        var spaceRes = await api.getSharedSpaceDetail(this.spaceId)
+        if (spaceRes && spaceRes.code === 200 && spaceRes.data) {
+          this.space = spaceRes.data
+        }
+
+        var itemsRes = await api.getSharedItems(this.spaceId)
+        if (itemsRes && itemsRes.code === 200 && itemsRes.data) {
+          this.items = Array.isArray(itemsRes.data) ? itemsRes.data : (itemsRes.data.rows || itemsRes.data.list || [])
+        }
+
+        // 加载操作日志
+        this.loadAllLogs()
+      } catch (error) {
+        console.error('加载空间详情失败:', error)
+        // 兜底使用缓存
+        var spaces = storage.get('sharedSpaces', [])
+        var self = this
+        this.space = spaces.find(function(s) { return String(s.id) === String(self.spaceId) }) || {}
+        var allItems = storage.get('sharedItems', [])
+        this.items = allItems.filter(function(item) { return String(item.spaceId) === String(self.spaceId) })
+        this.loadAllLogs()
+      } finally {
+        this.loading = false
       }
-      
-      const allItems = storage.get('sharedItems', [])
-      this.items = allItems.filter(item => String(item.spaceId) === String(this.spaceId))
-      
-      // 加载所有物品的操作日志
-      this.loadAllLogs()
     },
-    loadAllLogs() {
-      // 获取该空间下所有物品的操作日志，最多显示10条
-      this.allLogs = logger.getSpaceLogs(this.spaceId, 'all').slice(0, 10)
+    async loadAllLogs() {
+      try {
+        var res = await api.getSpaceLogs(this.spaceId)
+        if (res && res.code === 200 && res.data) {
+          var logs = Array.isArray(res.data) ? res.data : (res.data.rows || res.data.list || [])
+          this.allLogs = logs.slice(0, 10)
+        }
+      } catch (error) {
+        console.error('加载操作日志失败:', error)
+        // 兜底使用本地日志
+        this.allLogs = logger.getSpaceLogs(this.spaceId, 'all').slice(0, 10)
+      }
     },
     getRoleText(role) {
       const roleMap = {

@@ -1,14 +1,8 @@
 package com.overdue.h5.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.overdue.common.core.redis.OrderCountdownService;
 import com.overdue.manager.act.service.IntegralHistoryService;
 import com.overdue.manager.oms.domain.entity.Order;
-import com.overdue.manager.oms.domain.entity.OrderItem;
-import com.overdue.manager.ums.domain.entity.Member;
-import com.overdue.manager.oms.mapper.OrderItemMapper;
-import com.overdue.manager.ums.mapper.MemberMapper;
-import com.overdue.websocket.OrderNotificationWebSocket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -17,20 +11,12 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 @Service
 public class PaymentPostProcessService {
 
   private static final Logger log = LoggerFactory.getLogger(PaymentPostProcessService.class);
-
-  @Autowired
-  private OrderItemMapper orderItemMapper;
-
-  @Autowired
-  private MemberMapper memberMapper;
 
   @Autowired
   private IntegralHistoryService integralHistoryService;
@@ -100,57 +86,6 @@ public class PaymentPostProcessService {
   }
 
   /**
-   * 异步处理WebSocket消息推送
-   */
-  @Async("paymentAsyncExecutor")
-  public void handleWebSocketNotificationAsync(Order order) {
-    String traceId = MDC.get("traceId");
-
-    try {
-      MDC.put("operation", "WEBSOCKET_NOTIFICATION");
-      MDC.put("orderId", String.valueOf(order.getId()));
-      MDC.put("orderSn", order.getOrderSn());
-
-      log.info("开始异步推送WebSocket消息 - 订单ID: {}, 订单号: {}",
-          order.getId(), order.getOrderSn());
-
-      // 获取订单商品信息
-      List<OrderItem> orderItems = orderItemMapper.selectList(
-          new QueryWrapper<OrderItem>().eq("order_id", order.getId()));
-
-      // 构建商品名称列表
-      String productNames = orderItems.stream()
-          .map(OrderItem::getProductName)
-          .limit(3)
-          .collect(Collectors.joining("、"));
-
-      if (orderItems.size() > 3) {
-        productNames += "等";
-      }
-
-      // 获取会员信息
-      Member member = memberMapper.selectById(order.getMemberId());
-      String memberName = member != null ? member.getNickname() : "未知用户";
-
-      // 推送WebSocket消息
-      OrderNotificationWebSocket.broadcastOrderPaymentSuccess(
-          order.getOrderSn(), memberName, String.valueOf(order.getPayAmount()), productNames);
-
-      log.info("WebSocket消息推送完成 - 订单号: {}, 客户: {}, 金额: {}元",
-          order.getOrderSn(), memberName, order.getPayAmount());
-
-    } catch (Exception e) {
-      log.error("WebSocket消息推送失败 - 订单ID: {}, 订单号: {}",
-          order.getId(), order.getOrderSn(), e);
-    } finally {
-      MDC.clear();
-      if (traceId != null) {
-        MDC.put("traceId", traceId);
-      }
-    }
-  }
-
-  /**
    * 异步处理语音播报
    */
   @Async("paymentAsyncExecutor")
@@ -201,7 +136,6 @@ public class PaymentPostProcessService {
           CompletableFuture
               .runAsync(() -> handleIntegralAsync(order.getId(), order.getPayAmount(), order.getMemberId())),
           CompletableFuture.runAsync(() -> handleOrderCountdownAsync(order.getId(), order.getOrderSn())),
-          CompletableFuture.runAsync(() -> handleWebSocketNotificationAsync(order)),
           CompletableFuture.runAsync(() -> handleVoiceNotificationAsync(order))).join();
 
       log.info("所有支付后操作处理完成 - 订单ID: {}, 订单号: {}",

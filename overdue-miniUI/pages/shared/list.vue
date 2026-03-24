@@ -48,13 +48,16 @@
 <script>
 import storage from '@/common/utils/storage.js'
 import themeMixin from '@/common/mixins/theme.js'
+import api from '@/common/utils/api.js'
+import { isLoggedIn } from '@/common/utils/auth.js'
 
 export default {
   mixins: [themeMixin],
   data() {
     return {
       spaces: [],
-      searchKeyword: ''
+      searchKeyword: '',
+      loading: false
     }
   },
   computed: {
@@ -62,10 +65,10 @@ export default {
       if (!this.searchKeyword) {
         return this.spaces
       }
-      const keyword = this.searchKeyword.toLowerCase()
-      return this.spaces.filter(space => 
-        space.name && space.name.toLowerCase().includes(keyword)
-      )
+      var keyword = this.searchKeyword.toLowerCase()
+      return this.spaces.filter(function(space) {
+        return space.name && space.name.toLowerCase().indexOf(keyword) !== -1
+      })
     }
   },
   onLoad() {
@@ -75,8 +78,22 @@ export default {
     this.loadSpaces()
   },
   methods: {
-    loadSpaces() {
-      this.spaces = storage.get('sharedSpaces', [])
+    async loadSpaces() {
+      if (!isLoggedIn()) return
+      if (this.loading) return
+      this.loading = true
+      try {
+        var res = await api.getSharedSpaces()
+        if (res && res.code === 200 && res.data) {
+          this.spaces = Array.isArray(res.data) ? res.data : (res.data.rows || res.data.list || [])
+          storage.set('sharedSpaces', this.spaces)
+        }
+      } catch (error) {
+        console.error('加载共享空间列表失败:', error)
+        this.spaces = storage.get('sharedSpaces', [])
+      } finally {
+        this.loading = false
+      }
     },
     onSearch() {
       // 搜索逻辑已在computed中处理

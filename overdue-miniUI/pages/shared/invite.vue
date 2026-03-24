@@ -58,6 +58,7 @@
 import storage from '@/common/utils/storage.js'
 import inviteUtil from '@/common/utils/invite.js'
 import themeMixin from '@/common/mixins/theme.js'
+import api from '@/common/utils/api.js'
 
 export default {
   mixins: [themeMixin],
@@ -67,7 +68,7 @@ export default {
       spaceInfo: {},
       inviteCode: '',
       inviteLink: '',
-      qrCodePath: '' // 二维码图片路径
+      qrCodePath: ''
     }
   },
   onLoad(options) {
@@ -77,27 +78,40 @@ export default {
   },
   methods: {
     // 加载空间信息
-    loadSpaceInfo() {
-      const spaces = storage.get('sharedSpaces', [])
-      this.spaceInfo = spaces.find(s => s.id === this.spaceId) || {}
+    async loadSpaceInfo() {
+      try {
+        var res = await api.getSharedSpaceDetail(this.spaceId)
+        if (res && res.code === 200 && res.data) {
+          this.spaceInfo = res.data
+        }
+      } catch (error) {
+        console.error('加载空间信息失败:', error)
+        var spaces = storage.get('sharedSpaces', [])
+        var self = this
+        this.spaceInfo = spaces.find(function(s) { return String(s.id) === String(self.spaceId) }) || {}
+      }
     },
 
     // 生成邀请
-    generateInvite() {
-      const userInfo = storage.get('userInfo', {})
-      
-      // 生成邀请码
-      this.inviteCode = inviteUtil.generateInviteCode(
-        this.spaceId,
-        userInfo.openid || '',
-        userInfo.nickName || '用户',
-        7 // 7天有效期
-      )
-      
-      // 生成邀请链接
-      this.inviteLink = inviteUtil.generateInviteLink(this.inviteCode)
-      
-      // 生成二维码
+    async generateInvite() {
+      try {
+        var res = await api.generateInviteCode(this.spaceId)
+        if (res && res.code === 200 && res.data) {
+          this.inviteCode = res.data.inviteCode || res.data
+          this.inviteLink = inviteUtil.generateInviteLink(this.inviteCode)
+        }
+      } catch (error) {
+        console.error('生成邀请码失败:', error)
+        // 兜底使用本地邀请码生成
+        var userInfo = storage.get('userInfo', {})
+        this.inviteCode = inviteUtil.generateInviteCode(
+          this.spaceId,
+          userInfo.openid || '',
+          userInfo.nickName || '用户',
+          7
+        )
+        this.inviteLink = inviteUtil.generateInviteLink(this.inviteCode)
+      }
       this.generateQRCode()
     },
 
