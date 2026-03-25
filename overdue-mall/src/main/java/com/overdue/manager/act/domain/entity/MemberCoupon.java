@@ -1,5 +1,7 @@
 package com.overdue.manager.act.domain.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.overdue.common.annotation.Excel;
@@ -21,6 +23,7 @@ public class MemberCoupon {
     private static final long serialVersionUID = 1L;
 
     @ApiModelProperty("ID")
+    @TableId(value = "id", type = IdType.ASSIGN_ID)
     private Long id;
 
     @ApiModelProperty("活动id")

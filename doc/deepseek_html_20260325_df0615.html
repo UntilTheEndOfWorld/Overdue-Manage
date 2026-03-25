@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>温馨时光 | 多主题管家</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        /* 默认主题：清新薄荷 (会在JS中动态覆盖，此处先定义默认) */
+        :root {
+            --primary-bg: #F4F9F0;
+            --card-bg: #FFFFFF;
+            --card-border: #E0EFD4;
+            --text-primary: #3A5E4C;
+            --text-secondary: #6D8F74;
+            --accent-primary: #5A9B7C;
+            --accent-light: #A7C7A1;
+            --accent-warm: #E8B86B;
+            --btn-bg: #5A9B7C;
+            --btn-hover: #4A8568;
+            --shadow: rgba(0,0,0,0.05);
+            --stat-bg: #FFFFFF;
+            --tab-bg: #EFF5EA;
+            --tab-active: #FFFFFF;
+            --modal-overlay: rgba(58, 94, 76, 0.3);
+        }
+
+        /* 温柔粉橘 */
+        body.theme-peach {
+            --primary-bg: #FFF8F0;
+            --card-bg: #FFFFFF;
+            --card-border: #FFEFDF;
+            --text-primary: #5E3A2B;
+            --text-secondary: #B08968;
+            --accent-primary: #F4A261;
+            --accent-light: #E9C46A;
+            --accent-warm: #E76F51;
+            --btn-bg: #F4A261;
+            --btn-hover: #E76F51;
+            --tab-bg: #FFF0E4;
+            --tab-active: #FFFFFF;
+            --modal-overlay: rgba(94, 58, 43, 0.3);
+        }
+
+        /* 淡雅紫芋 */
+        body.theme-lavender {
+            --primary-bg: #FBF8FF;
+            --card-bg: #FFFFFF;
+            --card-border: #F0E9FF;
+            --text-primary: #4A3B5C;
+            --text-secondary: #8A7A9E;
+            --accent-primary: #B7A6CF;
+            --accent-light: #D9C8E6;
+            --accent-warm: #E8B4B8;
+            --btn-bg: #B7A6CF;
+            --btn-hover: #9F8AB9;
+            --tab-bg: #F2ECFF;
+            --tab-active: #FFFFFF;
+            --modal-overlay: rgba(74, 59, 92, 0.3);
+        }
+
+        /* 海洋静谧 */
+        body.theme-ocean {
+            --primary-bg: #F0F8FF;
+            --card-bg: #FFFFFF;
+            --card-border: #D8EAF3;
+            --text-primary: #2C5A6B;
+            --text-secondary: #6190A0;
+            --accent-primary: #5C9EAD;
+            --accent-light: #A9D6E5;
+            --accent-warm: #F4A261;
+            --btn-bg: #5C9EAD;
+            --btn-hover: #488196;
+            --tab-bg: #E5F2F7;
+            --tab-active: #FFFFFF;
+            --modal-overlay: rgba(44, 90, 107, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.2s ease, color 0.2s, border-color 0.2s;
+        }
+
+        body {
+            background: var(--primary-bg);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text-primary);
+            line-height: 1.5;
+            padding-bottom: 80px;
+        }
+
+        .app-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px 20px 0 20px;
+        }
+
+        /* 头部 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding: 12px 0;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo-icon {
+            background: var(--accent-light);
+            width: 44px;
+            height: 44px;
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            color: var(--accent-primary);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+        .logo-text {
+            font-size: 1.7rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--accent-primary), var(--btn-hover));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .avatar {
+            width: 44px;
+            height: 44px;
+            background: var(--accent-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            color: var(--text-primary);
+            cursor: pointer;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 28px;
+            padding: 20px 16px;
+            text-align: center;
+            box-shadow: 0 4px 12px var(--shadow);
+            border: 1px solid var(--card-border);
+        }
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin-bottom: 6px;
+        }
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* 空间选项卡 */
+        .space-tabs {
+            background: var(--tab-bg);
+            border-radius: 60px;
+            padding: 6px;
+            display: flex;
+            margin-bottom: 28px;
+        }
+        .tab-btn {
+            flex: 1;
+            text-align: center;
+            padding: 12px 0;
+            border-radius: 50px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .tab-btn.active {
+            background: var(--tab-active);
+            color: var(--accent-primary);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        /* 内容区域 */
+        .space-content {
+            display: none;
+            animation: fade 0.25s ease;
+        }
+        .space-content.active {
+            display: block;
+        }
+        @keyframes fade {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 操作栏 */
+        .action-bar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+        .btn-add {
+            background: var(--btn-bg);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+        .btn-add:hover {
+            background: var(--btn-hover);
+            transform: translateY(-2px);
+        }
+
+        /* 物品卡片 */
+        .items-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .item-card {
+            background: var(--card-bg);
+            border-radius: 28px;
+            padding: 18px 20px;
+            border-left: 5px solid var(--accent-primary);
+            box-shadow: 0 4px 12px var(--shadow);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .item-card.warning {
+            border-left-color: var(--accent-warm);
+        }
+        .item-card.expired {
+            border-left-color: #E69A8F;
+        }
+        .item-card:hover {
+            transform: translateX(4px);
+            background: var(--card-bg);
+        }
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .item-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .item-category {
+            background: var(--tab-bg);
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        .item-date {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 6px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .expiry-status {
+            margin-top: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 30px;
+            background: var(--tab-bg);
+            color: var(--text-secondary);
+        }
+        .expiry-status.warning {
+            background: rgba(232, 184, 107, 0.15);
+            color: var(--accent-warm);
+        }
+        .expiry-status.danger {
+            background: rgba(230, 154, 143, 0.15);
+            color: #D96952;
+        }
+
+        /* 共享空间卡片 */
+        .spaces-list {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .space-card {
+            background: var(--card-bg);
+            border-radius: 28px;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 4px 12px var(--shadow);
+            cursor: pointer;
+        }
+        .space-card:hover {
+            background: var(--card-bg);
+            transform: translateX(4px);
+        }
+        .space-icon {
+            width: 52px;
+            height: 52px;
+            background: var(--accent-light);
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--accent-primary);
+        }
+        .space-info {
+            flex: 1;
+        }
+        .space-name {
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+        .space-meta {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 12px;
+        }
+        .enter-btn {
+            background: var(--tab-bg);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--accent-primary);
+            cursor: pointer;
+        }
+
+        /* 底部导航 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border-top: 1px solid var(--card-border);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 20px 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            border-radius: 32px 32px 0 0;
+            box-shadow: 0 -4px 12px var(--shadow);
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 30px;
+        }
+        .nav-item i {
+            font-size: 1.3rem;
+        }
+        .nav-item.active {
+            color: var(--accent-primary);
+            background: var(--tab-bg);
+        }
+
+        /* 个人中心样式 */
+        .profile-section {
+            background: var(--card-bg);
+            border-radius: 32px;
+            padding: 28px;
+            margin-top: 20px;
+            text-align: center;
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+        .profile-avatar-large {
+            width: 80px;
+            height: 80px;
+            background: var(--accent-light);
+            border-radius: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--accent-primary);
+            margin: 0 auto 16px;
+        }
+        .profile-name {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .profile-stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin: 24px 0;
+        }
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+        .setting-list {
+            margin-top: 20px;
+            text-align: left;
+        }
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--card-border);
+        }
+        .setting-label {
+            font-weight: 500;
+        }
+        /* 主题选择器按钮组 */
+        .theme-selector {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            justify-content: center;
+        }
+        .theme-dot {
+            width: 40px;
+            height: 40px;
+            border-radius: 40px;
+            cursor: pointer;
+            border: 2px solid var(--card-border);
+            transition: 0.2s;
+        }
+        .theme-dot.active {
+            transform: scale(1.1);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px var(--card-bg), 0 0 0 4px var(--accent-primary);
+        }
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--modal-overlay);
+            backdrop-filter: blur(6px);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 36px;
+            width: 100%;
+            max-width: 460px;
+            padding: 28px;
+            box-shadow: 0 25px 40px rgba(0,0,0,0.1);
+            animation: slideUp 0.25s ease;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        .form-input, .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--primary-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 28px;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        .btn-secondary {
+            background: var(--tab-bg);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: var(--btn-bg);
+            border: none;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+        }
+        .placeholder-page {
+            background: var(--card-bg);
+            border-radius: 32px;
+            padding: 40px 24px;
+            text-align: center;
+            margin-top: 20px;
+            color: var(--text-secondary);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+    </style>
+</head>
+<body class="theme-mint">
+<div class="app-container">
+    <!-- 头部 -->
+    <div class="header">
+        <div class="logo">
+            <div class="logo-icon"><i class="fas fa-leaf"></i></div>
+            <div class="logo-text">温馨时光</div>
+        </div>
+        <div class="avatar" onclick="switchPage('profile')">张</div>
+    </div>
+
+    <!-- 首页内容 -->
+    <div id="home-page" class="page-container active">
+        <div class="stats-grid" id="stats-grid">
+            <div class="stat-card"><div class="stat-value" id="total-count">24</div><div class="stat-label">总物品</div></div>
+            <div class="stat-card"><div class="stat-value" id="expiring-count">5</div><div class="stat-label">即将过期</div></div>
+        </div>
+        <div class="space-tabs">
+            <div class="tab-btn active" data-space="personal"><i class="fas fa-user"></i> 个人空间</div>
+            <div class="tab-btn" data-space="shared"><i class="fas fa-users"></i> 共享空间</div>
+        </div>
+        <div id="personal-space" class="space-content active">
+            <div class="action-bar">
+                <button class="btn-add" onclick="showAddModal()"><i class="fas fa-plus"></i> 添加物品</button>
+            </div>
+            <div id="personal-items" class="items-grid"></div>
+        </div>
+        <div id="shared-space" class="space-content">
+            <div class="action-bar">
+                <button class="btn-add" onclick="showCreateSpaceModal()"><i class="fas fa-plus-circle"></i> 创建空间</button>
+            </div>
+            <div id="shared-spaces-list" class="spaces-list"></div>
+        </div>
+    </div>
+
+    <!-- 日历页面占位 -->
+    <div id="calendar-page" class="page-container">
+        <div class="placeholder-page">
+            <i class="fas fa-calendar-alt" style="font-size: 2rem; margin-bottom: 12px;"></i>
+            <h3>📅 日历视图</h3>
+            <p>即将推出：按日期查看物品过期提醒</p>
+        </div>
+    </div>
+
+    <!-- 统计页面占位 -->
+    <div id="stats-page" class="page-container">
+        <div class="placeholder-page">
+            <i class="fas fa-chart-line" style="font-size: 2rem; margin-bottom: 12px;"></i>
+            <h3>📊 统计报告</h3>
+            <p>物品分类占比、过期趋势分析敬请期待</p>
+        </div>
+    </div>
+
+    <!-- 我的页面（个人中心） -->
+    <div id="profile-page" class="page-container">
+        <div class="profile-section">
+            <div class="profile-avatar-large">张</div>
+            <div class="profile-name">张暖暖</div>
+            <div style="color: var(--text-secondary);">记录生活，珍惜每一份新鲜</div>
+            <div class="profile-stats-row">
+                <div class="stat-small"><div class="stat-number">156</div><div>累计管理</div></div>
+                <div class="stat-small"><div class="stat-number">24</div><div>当前物品</div></div>
+            </div>
+            <div class="setting-list">
+                <div class="setting-item">
+                    <span class="setting-label">推送提醒</span>
+                    <label class="toggle-switch"><input type="checkbox" checked><span class="slider"></span></label>
+                </div>
+                <div class="setting-item">
+                    <span class="setting-label">共享空间通知</span>
+                    <label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label>
+                </div>
+                <div class="setting-item">
+                    <span class="setting-label">主题风格</span>
+                    <div class="theme-selector" id="theme-selector">
+                        <div class="theme-dot" data-theme="mint" style="background: #5A9B7C;" title="清新薄荷"></div>
+                        <div class="theme-dot" data-theme="peach" style="background: #F4A261;" title="温柔粉橘"></div>
+                        <div class="theme-dot" data-theme="lavender" style="background: #B7A6CF;" title="淡雅紫芋"></div>
+                        <div class="theme-dot" data-theme="ocean" style="background: #5C9EAD;" title="海洋静谧"></div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-secondary" style="margin-top: 24px; width: 100%;" onclick="alert('关于我们')">关于我们</button>
+        </div>
+    </div>
+</div>
+
+<!-- 底部导航 -->
+<div class="bottom-nav">
+    <div class="nav-item active" data-page="home"><i class="fas fa-home"></i><span>首页</span></div>
+    <div class="nav-item" data-page="calendar"><i class="fas fa-calendar-alt"></i><span>日历</span></div>
+    <div class="nav-item" data-page="stats"><i class="fas fa-chart-bar"></i><span>统计</span></div>
+    <div class="nav-item" data-page="profile"><i class="fas fa-user"></i><span>我的</span></div>
+</div>
+
+<!-- 添加物品模态框 -->
+<div id="add-item-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h3>记录新物品</h3></div>
+        <div class="form-group"><label class="form-label">名称</label><input type="text" id="item-name" class="form-input" placeholder="牛奶、维生素C..."></div>
+        <div class="form-group"><label class="form-label">分类</label><select id="item-category" class="form-select"><option>食品</option><option>药品</option><option>其他</option></select></div>
+        <div class="form-group"><label class="form-label">生产日期</label><input type="date" id="prod-date" class="form-input"></div>
+        <div class="form-group"><label class="form-label">保质期(天)</label><input type="number" id="shelf-days" class="form-input" placeholder="例如30"></div>
+        <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('add-item-modal')">取消</button><button class="btn-primary" id="confirm-add">添加</button></div>
+    </div>
+</div>
+
+<!-- 创建空间模态框 -->
+<div id="create-space-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h3>创建共享空间</h3></div>
+        <div class="form-group"><label class="form-label">空间名称</label><input type="text" id="space-name-input" class="form-input" placeholder="家庭药箱、厨房小队..."></div>
+        <div class="form-group"><label class="form-label">简介</label><input type="text" id="space-desc-input" class="form-input" placeholder="一起守护家人的健康"></div>
+        <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('create-space-modal')">取消</button><button class="btn-primary" id="confirm-create-space">创建</button></div>
+    </div>
+</div>
+
+<script>
+    // ----- 模拟数据 -----
+    let personalItems = [
+        { id: '1', name: '纯牛奶', category: '食品', productionDate: '2023-10-10', shelfDays: 21, expiryDate: '2023-11-10', status: 'warning' },
+        { id: '2', name: '维生素C片', category: '药品', productionDate: '2023-05-15', shelfDays: 365, expiryDate: '2024-05-15', status: 'normal' },
+        { id: '3', name: '番茄酱', category: '食品', productionDate: '2023-03-01', shelfDays: 180, expiryDate: '2023-10-25', status: 'expired' },
+        { id: '4', name: '布洛芬', category: '药品', productionDate: '2023-08-20', shelfDays: 720, expiryDate: '2025-08-20', status: 'normal' }
+    ];
+    let sharedSpaces = [
+        { id: 'sp1', name: '家庭药箱', description: '常备药品', memberCount: 3, itemCount: 8, lastUpdate: '今天' },
+        { id: 'sp2', name: '厨房小分队', description: '一起管理冰箱食材', memberCount: 2, itemCount: 12, lastUpdate: '昨天' }
+    ];
+
+    // 辅助函数
+    function formatDate(dateStr) { return dateStr ? new Date(dateStr).toLocaleDateString() : '未知'; }
+    function updateStats() {
+        const now = new Date();
+        const expiringCount = personalItems.filter(item => {
+            const expiry = new Date(item.expiryDate);
+            const diffDays = Math.ceil((expiry - now) / (1000*3600*24));
+            return diffDays > 0 && diffDays <= 7;
+        }).length;
+        document.getElementById('total-count').innerText = personalItems.length;
+        document.getElementById('expiring-count').innerText = expiringCount;
+    }
+
+    function renderPersonalItems() {
+        const container = document.getElementById('personal-items');
+        if (!container) return;
+        if (personalItems.length === 0) {
+            container.innerHTML = `<div class="placeholder-page" style="padding: 40px;">✨ 暂无物品，点击上方按钮添加</div>`;
+            return;
+        }
+        const now = new Date();
+        const sorted = [...personalItems].sort((a,b) => new Date(a.expiryDate) - new Date(b.expiryDate));
+        container.innerHTML = sorted.map(item => {
+            const expiry = new Date(item.expiryDate);
+            const diff = Math.ceil((expiry - now) / (1000*3600*24));
+            let statusClass = '', statusText = '';
+            if (diff < 0) { statusClass = 'danger'; statusText = '已过期'; }
+            else if (diff <= 7) { statusClass = 'warning'; statusText = `${diff}天后过期`; }
+            else { statusClass = ''; statusText = '有效期长'; }
+            return `
+                <div class="item-card ${item.status === 'warning' ? 'warning' : (item.status === 'expired' ? 'expired' : '')}" onclick="viewItemDetail('${item.id}')">
+                    <div class="item-header"><div class="item-name">${escapeHtml(item.name)}</div><div class="item-category">${item.category}</div></div>
+                    <div class="item-date"><div><i class="far fa-calendar-alt"></i> 生产: ${formatDate(item.productionDate)}</div><div><i class="far fa-hourglass-half"></i> 过期: ${formatDate(item.expiryDate)}</div></div>
+                    <div class="expiry-status ${statusClass}">${statusText}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderSharedSpaces() {
+        const container = document.getElementById('shared-spaces-list');
+        if (!container) return;
+        if (sharedSpaces.length === 0) {
+            container.innerHTML = `<div class="placeholder-page" style="padding: 40px;">🏠 还没有共享空间，点击创建吧</div>`;
+            return;
+        }
+        container.innerHTML = sharedSpaces.map(space => `
+            <div class="space-card" onclick="enterSharedSpace('${space.id}')">
+                <div class="space-icon"><i class="fas fa-${space.id === 'sp1' ? 'home' : 'utensils'}"></i></div>
+                <div class="space-info">
+                    <div class="space-name">${escapeHtml(space.name)}</div>
+                    <div class="space-meta"><span><i class="fas fa-user-friends"></i> ${space.memberCount}人</span><span><i class="fas fa-box"></i> ${space.itemCount}件</span><span>更新:${space.lastUpdate}</span></div>
+                </div>
+                <button class="enter-btn" onclick="event.stopPropagation();enterSharedSpace('${space.id}')">进入</button>
+            </div>
+        `).join('');
+    }
+
+    function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){if(m==='&')return '&amp;';if(m==='<')return '&lt;';if(m==='>')return '&gt;';return m;}); }
+
+    // 添加物品
+    function addItem(name, category, prodDate, shelfDays) {
+        if (!name || !prodDate || !shelfDays) return false;
+        const expiry = new Date(prodDate);
+        expiry.setDate(expiry.getDate() + parseInt(shelfDays));
+        const expiryStr = expiry.toISOString().slice(0,10);
+        const now = new Date();
+        let status = 'normal';
+        if (expiry < now) status = 'expired';
+        else if ((expiry - now) / (1000*3600*24) <= 7) status = 'warning';
+        const newId = Date.now().toString();
+        personalItems.push({ id: newId, name, category, productionDate: prodDate, shelfDays: parseInt(shelfDays), expiryDate: expiryStr, status });
+        renderPersonalItems();
+        updateStats();
+        return true;
+    }
+
+    // 创建空间
+    function createSpace(name, desc) {
+        if (!name) return;
+        const newId = 'sp' + Date.now();
+        sharedSpaces.push({ id: newId, name, description: desc, memberCount: 1, itemCount: 0, lastUpdate: '刚刚' });
+        renderSharedSpaces();
+    }
+
+    // 页面切换
+    let currentPage = 'home';
+    function switchPage(pageId) {
+        currentPage = pageId;
+        document.querySelectorAll('.page-container').forEach(cont => cont.classList.remove('active'));
+        document.getElementById(`${pageId}-page`).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+        document.querySelector(`.nav-item[data-page="${pageId}"]`).classList.add('active');
+        if (pageId === 'home') {
+            renderPersonalItems();
+            renderSharedSpaces();
+            updateStats();
+        }
+    }
+
+    // 空间选项卡切换
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const space = btn.getAttribute('data-space');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.space-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(`${space}-space`).classList.add('active');
+            if (space === 'personal') renderPersonalItems();
+            else renderSharedSpaces();
+        });
+    });
+
+    // 模态框
+    function showAddModal() { document.getElementById('add-item-modal').style.display = 'flex'; }
+    function showCreateSpaceModal() { document.getElementById('create-space-modal').style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    window.onclick = function(e) { if(e.target.classList.contains('modal')) e.target.style.display = 'none'; };
+
+    // 确认添加
+    document.getElementById('confirm-add').onclick = () => {
+        const name = document.getElementById('item-name').value.trim();
+        const category = document.getElementById('item-category').value;
+        const prodDate = document.getElementById('prod-date').value;
+        const shelf = document.getElementById('shelf-days').value;
+        if (!name || !prodDate || !shelf) { alert('请完整填写信息～'); return; }
+        addItem(name, category, prodDate, shelf);
+        closeModal('add-item-modal');
+        document.getElementById('item-name').value = '';
+        document.getElementById('prod-date').value = '';
+        document.getElementById('shelf-days').value = '';
+    };
+    document.getElementById('confirm-create-space').onclick = () => {
+        const name = document.getElementById('space-name-input').value.trim();
+        const desc = document.getElementById('space-desc-input').value.trim();
+        if (!name) { alert('空间名称不能为空'); return; }
+        createSpace(name, desc);
+        closeModal('create-space-modal');
+        document.getElementById('space-name-input').value = '';
+        document.getElementById('space-desc-input').value = '';
+        document.querySelector('.tab-btn[data-space="shared"]').click();
+    };
+
+    // 共享空间进入占位
+    window.enterSharedSpace = (id) => { alert(`即将进入共享空间，查看成员与物品协作记录`); };
+    window.viewItemDetail = (id) => { alert(`物品详情页开发中`); };
+
+    // ----- 主题切换功能 -----
+    function setTheme(themeName) {
+        // 移除所有主题类
+        document.body.classList.remove('theme-mint', 'theme-peach', 'theme-lavender', 'theme-ocean');
+        document.body.classList.add(`theme-${themeName}`);
+        localStorage.setItem('selectedTheme', themeName);
+        // 更新选中样式
+        document.querySelectorAll('.theme-dot').forEach(dot => {
+            if (dot.getAttribute('data-theme') === themeName) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+    }
+
+    // 初始化主题
+    function initTheme() {
+        const saved = localStorage.getItem('selectedTheme');
+        if (saved && ['mint','peach','lavender','ocean'].includes(saved)) {
+            setTheme(saved);
+        } else {
+            setTheme('mint'); // 默认薄荷
+        }
+    }
+
+    // 绑定主题按钮事件
+    function bindThemeButtons() {
+        document.querySelectorAll('.theme-dot').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const theme = btn.getAttribute('data-theme');
+                setTheme(theme);
+            });
+        });
+    }
+
+    // 底部导航
+    document.querySelectorAll('.nav-item').forEach(nav => {
+        nav.addEventListener('click', (e) => {
+            const page = nav.getAttribute('data-page');
+            if (page) switchPage(page);
+        });
+    });
+
+    // 页面加载初始化
+    window.onload = () => {
+        const today = new Date().toISOString().slice(0,10);
+        document.getElementById('prod-date').value = today;
+        document.getElementById('shelf-days').value = '30';
+        renderPersonalItems();
+        renderSharedSpaces();
+        updateStats();
+        initTheme();
+        bindThemeButtons();
+    };
+</script>
+</body>
+</html>

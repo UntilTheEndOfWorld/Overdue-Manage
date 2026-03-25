@@ -92,11 +92,16 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         }
 
-        // 会员token验证和刷新（滑动过期）
+        // 会员token验证和刷新（滑动过期），并写入 SecurityContext，供 OverdueMiniappAuthFilter 等使用
         LoginMember loginMember = tokenService.getLoginMember(request);
         if (StringUtils.isNotNull(loginMember)) {
-            // 每次请求都刷新会员token，确保7天有效期
             tokenService.verifyMemberToken(loginMember);
+            if (StringUtils.isNull(SecurityContextHolder.getContext().getAuthentication())) {
+                UsernamePasswordAuthenticationToken memberAuth = new UsernamePasswordAuthenticationToken(
+                        loginMember, null, null);
+                memberAuth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(memberAuth);
+            }
         }
 
         boolean locked = false;

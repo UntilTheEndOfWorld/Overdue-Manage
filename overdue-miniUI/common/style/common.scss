@@ -191,6 +191,68 @@ page {
   --modal-overlay: #{$modal-overlay-light};
 }
 
+/* ========== 浅色模式 · 多主题风格（参考 doc/deepseek_html_20260325_df0615.html）==========
+   仅覆盖背景/卡片/边框/文字色，不改变全局主按钮（btn-primary / .btn-gradient 等）的固定配色 */
+.light-mode.theme-palette-mint {
+  --primary-bg: #F4F9F0;
+  --secondary-bg: #EFF5EA;
+  --card-bg: rgba(255, 255, 255, 0.92);
+  --card-bg-solid: #FFFFFF;
+  --card-border: #E0EFD4;
+  --text-primary: #3A5E4C;
+  --text-secondary: #6D8F74;
+  --text-tertiary: #7a9a82;
+  --shadow-color: rgba(0, 0, 0, 0.05);
+  --shadow-sm: rgba(0, 0, 0, 0.04);
+  --shadow-md: rgba(0, 0, 0, 0.06);
+  --modal-overlay: rgba(58, 94, 76, 0.3);
+}
+
+.light-mode.theme-palette-peach {
+  --primary-bg: #FFF8F0;
+  --secondary-bg: #FFF0E4;
+  --card-bg: rgba(255, 255, 255, 0.92);
+  --card-bg-solid: #FFFFFF;
+  --card-border: #FFEFDF;
+  --text-primary: #5E3A2B;
+  --text-secondary: #B08968;
+  --text-tertiary: #a08070;
+  --shadow-color: rgba(0, 0, 0, 0.05);
+  --shadow-sm: rgba(0, 0, 0, 0.04);
+  --shadow-md: rgba(0, 0, 0, 0.06);
+  --modal-overlay: rgba(94, 58, 43, 0.3);
+}
+
+.light-mode.theme-palette-lavender {
+  --primary-bg: #FBF8FF;
+  --secondary-bg: #F2ECFF;
+  --card-bg: rgba(255, 255, 255, 0.92);
+  --card-bg-solid: #FFFFFF;
+  --card-border: #F0E9FF;
+  --text-primary: #4A3B5C;
+  --text-secondary: #8A7A9E;
+  --text-tertiary: #7d6d8a;
+  --shadow-color: rgba(0, 0, 0, 0.05);
+  --shadow-sm: rgba(0, 0, 0, 0.04);
+  --shadow-md: rgba(0, 0, 0, 0.06);
+  --modal-overlay: rgba(74, 59, 92, 0.3);
+}
+
+.light-mode.theme-palette-ocean {
+  --primary-bg: #F0F8FF;
+  --secondary-bg: #E5F2F7;
+  --card-bg: rgba(255, 255, 255, 0.92);
+  --card-bg-solid: #FFFFFF;
+  --card-border: #D8EAF3;
+  --text-primary: #2C5A6B;
+  --text-secondary: #6190A0;
+  --text-tertiary: #4d7a8a;
+  --shadow-color: rgba(0, 0, 0, 0.05);
+  --shadow-sm: rgba(0, 0, 0, 0.04);
+  --shadow-md: rgba(0, 0, 0, 0.06);
+  --modal-overlay: rgba(44, 90, 107, 0.3);
+}
+
 /* ========== 高级玻璃态效果卡片 ========== */
 .glass-card {
   background: var(--card-bg);

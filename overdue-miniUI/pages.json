@@ -107,6 +107,30 @@
       }
     },
     {
+      "path": "pages/profile/reminder-settings",
+      "style": {
+        "navigationBarTitleText": "到期提醒",
+        "navigationBarBackgroundColor": "#6a89cc",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/profile/edit-profile",
+      "style": {
+        "navigationBarTitleText": "编辑资料",
+        "navigationBarBackgroundColor": "#6a89cc",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/profile/personal-info",
+      "style": {
+        "navigationBarTitleText": "个人信息",
+        "navigationBarBackgroundColor": "#6a89cc",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
       "path": "pages/member/member",
       "style": {
         "navigationBarTitleText": "会员中心",

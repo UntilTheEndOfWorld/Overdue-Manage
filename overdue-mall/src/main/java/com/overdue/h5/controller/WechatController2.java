@@ -119,17 +119,16 @@ public class WechatController2 {
                 throw new RuntimeException("登录失败，请重试");
             }
 
-            // 从token中解析用户ID（这里需要根据实际的token格式来解析）
-            // 暂时使用一个简单的用户ID生成方式
-            String userId = "user_" + System.currentTimeMillis();
-
-            // 获取登录信息以获取过期时间
+            // 获取登录信息以获取过期时间与会员 ID（须与 JWT/Redis 中一致，供小程序 X-User-Id 与业务对齐）
             LoginMember loginMember = tokenService.getLoginMemberByToken(token);
+            String userId = loginMember != null && loginMember.getMemberId() != null
+                    ? String.valueOf(loginMember.getMemberId())
+                    : "";
 
             // 构造返回的用户信息
             JSONObject response = new JSONObject();
             response.put("data", token);
-            response.put("userId", userId); // 使用真实的用户ID
+            response.put("userId", userId);
             response.put("nickname", form.getNickname());
             response.put("avatar", form.getAvatarUrl());
             response.put("phone", ""); // 手机号已加密存储，不返回明文

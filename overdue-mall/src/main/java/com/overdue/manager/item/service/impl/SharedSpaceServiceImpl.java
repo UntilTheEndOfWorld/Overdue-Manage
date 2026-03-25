@@ -5,6 +5,8 @@ import com.overdue.manager.item.mapper.SharedSpaceMapper;
 import com.overdue.manager.item.service.SharedSpaceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -24,11 +26,19 @@ public class SharedSpaceServiceImpl implements SharedSpaceService {
 
     @Override
     public int insertSharedSpace(SharedSpace sharedSpace) {
+        LocalDateTime now = LocalDateTime.now();
+        if (sharedSpace.getCreateTime() == null) {
+            sharedSpace.setCreateTime(now);
+        }
+        if (sharedSpace.getUpdateTime() == null) {
+            sharedSpace.setUpdateTime(now);
+        }
         return sharedSpaceMapper.insert(sharedSpace);
     }
 
     @Override
     public int updateSharedSpace(SharedSpace sharedSpace) {
+        sharedSpace.setUpdateTime(LocalDateTime.now());
         return sharedSpaceMapper.updateById(sharedSpace);
     }
 

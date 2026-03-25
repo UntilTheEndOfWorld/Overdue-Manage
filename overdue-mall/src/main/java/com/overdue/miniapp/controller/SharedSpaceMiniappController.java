@@ -190,7 +190,8 @@ public class SharedSpaceMiniappController {
         }
         // 返回基本信息（不含敏感数据）
         java.util.Map<String, Object> info = new java.util.HashMap<>();
-        info.put("spaceId", space.getId());
+        // 小程序端 number 无法安全表示雪花 ID，使用字符串
+        info.put("spaceId", space.getId() != null ? String.valueOf(space.getId()) : null);
         info.put("spaceName", space.getName());
         info.put("description", space.getDescription());
         info.put("inviteCode", inviteCode);

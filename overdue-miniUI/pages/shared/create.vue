@@ -96,12 +96,16 @@ export default {
   margin-bottom: 20rpx;
 }
 
+/* 名称输入框：原仅 padding 时视觉偏矮，固定高度约 80rpx 量级，此处整体加高一倍便于点击与阅读 */
 .input {
   width: 100%;
-  padding: 24rpx;
+  height: 160rpx;
+  min-height: 160rpx;
+  padding: 0 28rpx;
+  line-height: 160rpx;
   background: var(--hover-bg);
   border: 2rpx solid var(--card-border);
-  border-radius: 12rpx;
+  border-radius: 16rpx;
   font-size: 32rpx;
   color: var(--text-primary);
   transition: all 0.3s ease;

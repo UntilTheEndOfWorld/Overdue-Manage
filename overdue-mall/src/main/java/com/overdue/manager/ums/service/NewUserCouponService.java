@@ -84,7 +84,7 @@ public class NewUserCouponService {
 
     } catch (Exception e) {
       log.error("新用户优惠券赠送失败: {}", e.getMessage(), e);
-      throw new RuntimeException("优惠券赠送失败: " + e.getMessage());
+      return false;
     }
   }
 

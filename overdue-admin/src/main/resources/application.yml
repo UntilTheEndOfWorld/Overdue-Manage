@@ -98,7 +98,9 @@ mybatis-plus:
   configLocation: classpath:mybatis/mybatis-config.xml
   global-config:
     db-config:
-      id-type: auto
+      # 全局主键：雪花 ID（MyBatis-Plus DefaultIdentifierGenerator），Long 主键表勿用 AUTO_INCREMENT
+      # 多实例部署时请配置 worker-id / datacenter-id（见 MP 文档 IdentifierGenerator）
+      id-type: assign_id
       update-strategy: ignored
 pagehelper:
   helperDialect: mysql
@@ -396,3 +398,22 @@ gen:
 #      accessKey: 111111
 #      secretKey: xxxxxx
 #      bucketName: PinYGou
+
+# 到期提醒：扫描任务 cron、MQ topic；Kafka/Rabbit/Rocket 消费者默认关闭，与 sys_config 中 overdue.notify.queue.type 配合开启
+overdue:
+  reminder:
+    scan:
+      cron: "0 0 8 * * ?"
+  notify:
+    mq:
+      topic: overdue-notify
+    kafka:
+      group-id: overdue-reminder-consumer
+    rocket:
+      consumer-group: overdue-reminder-consumer
+    consumer:
+      redis-poll-enabled: true
+      redis-poll-ms: 5000
+      kafka-enabled: false
+      rabbit-enabled: false
+      rocket-enabled: false

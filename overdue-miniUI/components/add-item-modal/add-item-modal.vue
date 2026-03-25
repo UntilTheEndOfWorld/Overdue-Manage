@@ -54,20 +54,22 @@
         <view class="form-group">
           <text class="form-label">保质期 *</text>
           <view class="shelf-life-group">
-            <input 
-              class="form-input" 
-              type="number" 
-              v-model="form.shelfLife" 
-              placeholder="保质期"
-              @input="calculateExpiryDate"
-            />
+            <view class="shelf-life-input-wrap">
+              <input 
+                class="form-input shelf-life-input" 
+                type="number" 
+                v-model="form.shelfLife" 
+                placeholder="保质期"
+                @input="calculateExpiryDate"
+              />
+            </view>
             <picker 
               mode="selector" 
               :range="shelfLifeUnits" 
               :value="unitIndex" 
               @change="onUnitChange"
             >
-              <view class="picker">{{ form.unit || '天' }}</view>
+              <view class="picker shelf-life-unit-picker">{{ form.unit || '天' }}</view>
             </picker>
           </view>
         </view>
@@ -97,6 +99,8 @@ import storage from '@/common/utils/storage.js'
 import dateUtil from '@/common/utils/date.js'
 import validator from '@/common/utils/validator.js'
 import logger from '@/common/utils/logger.js'
+import memberUtil from '@/common/utils/member.js'
+import api from '@/common/utils/api.js'
 
 export default {
   name: 'AddItemModal',
@@ -185,11 +189,8 @@ export default {
         return
       }
 
-      // 检查额度（仅个人物品需要检查）
-      const memberUtil = require('@/common/utils/member.js').default
+      // 检查额度（与 pages/personal/add-item 一致）
       if (!memberUtil.canAddItemWithAd()) {
-        // 额度已用完，跳转到升级页面
-        this.$emit('close')
         uni.showModal({
           title: '免费额度已用完',
           content: '您已用完免费额度，请观看广告或升级会员继续添加物品',
@@ -205,53 +206,54 @@ export default {
         })
         return
       }
-      
-      // 如果使用了广告额度，消耗一个广告额度
+
       const used = memberUtil.getUsedQuota()
       const freeQuota = memberUtil.FREE_QUOTA
       if (used >= freeQuota) {
-        // 使用了广告额度
         memberUtil.useAdQuota()
       }
 
-      const items = storage.get('personalItems', [])
       const newItem = {
-        id: Date.now().toString(),
         name: this.form.name,
         category: this.form.category,
         purchaseDate: this.form.purchaseDate || null,
         productionDate: this.form.productionDate,
         shelfLife: this.form.shelfLife,
         unit: this.form.unit,
-        expiryDate: this.form.expiryDate,
-        createdAt: new Date().toISOString()
+        expiryDate: this.form.expiryDate
       }
-      items.push(newItem)
-      storage.set('personalItems', items)
 
-      // 记录操作日志
-      const userInfo = storage.get('userInfo', {})
-      logger.logOperation(
-        'personal',
-        userInfo.openid || '',
-        userInfo.nickName || '我',
-        'add',
-        newItem.id,
-        newItem.name,
-        { 
-          category: newItem.category, 
-          expiryDate: newItem.expiryDate,
-          productionDate: newItem.productionDate
-        }
-      )
-
-      uni.showToast({ title: '添加成功', icon: 'success' })
-      
-      // 触发添加成功事件，通知父组件刷新数据
-      this.$emit('success', newItem)
-      
-      // 关闭弹窗
-      this.handleClose()
+      // 与新增页一致：调用后端 POST /personal/items（见 api.addPersonalItem）
+      const self = this
+      uni.showLoading({ title: '保存中...' })
+      api.addPersonalItem(newItem)
+        .then(function(res) {
+          uni.hideLoading()
+          uni.showToast({ title: '添加成功', icon: 'success' })
+          const saved = res && res.data != null ? res.data : newItem
+          const userInfo = storage.get('userInfo', {})
+          const logId = saved && saved.id != null ? String(saved.id) : String(Date.now())
+          logger.logOperation(
+            'personal',
+            userInfo.openid || '',
+            userInfo.nickName || '我',
+            'add',
+            logId,
+            newItem.name,
+            {
+              category: newItem.category,
+              expiryDate: newItem.expiryDate,
+              productionDate: newItem.productionDate
+            }
+          )
+          self.$emit('success', saved)
+          self.handleClose()
+        })
+        .catch(function(error) {
+          uni.hideLoading()
+          console.error('添加个人物品失败:', error)
+          uni.showToast({ title: (error && error.message) || '添加失败', icon: 'none' })
+        })
     },
     handleClose() {
       this.$emit('close')
@@ -371,7 +373,10 @@ export default {
 
 .form-input {
   width: 100%;
-  padding: 28rpx 36rpx;
+  height: 96rpx;
+  min-height: 96rpx;
+  padding: 0 36rpx;
+  line-height: 96rpx;
   background: var(--hover-bg);
   border: 2rpx solid var(--card-border);
   border-radius: 24rpx;
@@ -389,7 +394,12 @@ export default {
 }
 
 .picker {
-  padding: 28rpx 36rpx;
+  height: 96rpx;
+  min-height: 96rpx;
+  padding: 0 36rpx;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
   background: var(--hover-bg);
   border: 2rpx solid var(--card-border);
   border-radius: 24rpx;
@@ -405,16 +415,30 @@ export default {
 
 .shelf-life-group {
   display: flex;
+  align-items: stretch;
   gap: 20rpx;
 }
 
-.shelf-life-group .form-input {
+.shelf-life-input-wrap {
   flex: 1;
+  min-width: 0;
+  height: 96rpx;
+  box-sizing: border-box;
 }
 
-.shelf-life-group .picker {
+.shelf-life-group .shelf-life-input {
+  display: block;
+  width: 100%;
+  height: 96rpx !important;
+  min-height: 96rpx !important;
+  line-height: 96rpx !important;
+}
+
+.shelf-life-group .shelf-life-unit-picker {
   width: 150rpx;
   flex-shrink: 0;
+  height: 96rpx !important;
+  min-height: 96rpx !important;
 }
 
 .modal-footer {

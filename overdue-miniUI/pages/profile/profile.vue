@@ -1,11 +1,20 @@
 <template>
   <view class="container" :class="themeClass">
     <view class="user-section">
-      <view class="avatar">
-        <image v-if="userInfo.avatarUrl" :src="userInfo.avatarUrl" mode="aspectFill" />
-        <text v-else class="avatar-text">{{ userInfo.nickName?.charAt(0) || 'U' }}</text>
+      <view class="avatar" @click="goEditProfile">
+        <image v-if="displayAvatar" :src="displayAvatar" mode="aspectFill" />
+        <text v-else class="avatar-text">{{ (displayName || 'U').charAt(0) }}</text>
       </view>
-      <text class="nickname">{{ userInfo.nickName || '未登录' }}</text>
+      <text class="nickname">{{ displayName }}</text>
+      <view class="user-meta" v-if="isLoggedIn">
+        <text class="meta-line">手机：{{ displayPhone }}</text>
+        <text class="meta-line">邮箱：{{ displayEmail }}</text>
+      </view>
+      <view class="edit-profile-entry" v-if="isLoggedIn">
+        <text class="edit-profile-text profile-link" @click="goPersonalInfo">个人信息</text>
+        <text class="edit-profile-sep">|</text>
+        <text class="edit-profile-text" @click="goEditProfile">编辑资料</text>
+      </view>
     </view>
 
     <view class="stats-section">
@@ -56,6 +65,28 @@
     </view>
 
     <view class="menu-section">
+      <view class="menu-item theme-style-row">
+        <text class="icon">🎨</text>
+        <view class="setting-info">
+          <text class="text">主题风格</text>
+          <text class="subtext">仅浅色模式；按钮样式不变</text>
+        </view>
+        <view class="palette-dots">
+          <view
+            v-for="opt in paletteOptions"
+            :key="opt.id"
+            class="palette-dot"
+            :class="{ active: themePalette === opt.id }"
+            :style="{ background: opt.color }"
+            @click.stop="selectPalette(opt.id)"
+          />
+        </view>
+      </view>
+      <view class="menu-item" @click="goReminderSettings">
+        <text class="icon">🔔</text>
+        <text class="text">到期提醒</text>
+        <text class="arrow">》</text>
+      </view>
       <view class="menu-item" @click="goToPersonal">
         <text class="icon">📦</text>
         <text class="text">个人空间</text>
@@ -122,7 +153,14 @@ export default {
       normalCount: 0,
       nearCount: 0,
       expiredCount: 0,
-      isLoggedIn: false
+      isLoggedIn: false,
+      profile: {},
+      paletteOptions: [
+        { id: 'mint', color: '#5A9B7C' },
+        { id: 'peach', color: '#F4A261' },
+        { id: 'lavender', color: '#B7A6CF' },
+        { id: 'ocean', color: '#5C9EAD' }
+      ]
     }
   },
   computed: {
@@ -130,6 +168,22 @@ export default {
       if (!this.memberInfo.expireTime) return ''
       const date = new Date(this.memberInfo.expireTime)
       return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
+    },
+    displayName() {
+      if (this.profile && this.profile.nickname) return this.profile.nickname
+      return this.userInfo.nickName || this.userInfo.nickname || '未登录'
+    },
+    displayAvatar() {
+      if (this.profile && this.profile.avatarUrl) return this.profile.avatarUrl
+      return this.userInfo.avatarUrl || this.userInfo.avatar
+    },
+    displayPhone() {
+      if (this.profile && this.profile.phone) return this.profile.phone
+      return this.userInfo.phone || '未填写'
+    },
+    displayEmail() {
+      if (this.profile && this.profile.email) return this.profile.email
+      return this.userInfo.email || '未填写'
     }
   },
   onLoad() {
@@ -155,51 +209,93 @@ export default {
       this.userInfo = storage.get('userInfo', {})
       this.isLoggedIn = checkLoggedIn()
 
-      var items = []
-      try {
-        if (this.isLoggedIn) {
-          var res = await api.getPersonalItems()
-          if (res && res.code === 200 && res.data) {
-            items = Array.isArray(res.data) ? res.data : (res.data.rows || res.data.list || [])
+      if (this.isLoggedIn) {
+        try {
+          var pres = await api.getProfile()
+          if (pres && pres.data) {
+            this.profile = pres.data
+            var merged = Object.assign({}, this.userInfo, {
+              nickName: pres.data.nickname || this.userInfo.nickName,
+              nickname: pres.data.nickname,
+              avatarUrl: pres.data.avatarUrl,
+              avatar: pres.data.avatarUrl,
+              phone: pres.data.phone,
+              email: pres.data.email
+            })
+            storage.set('userInfo', merged)
+            this.userInfo = merged
           }
+        } catch (pe) {
+          console.warn('加载个人资料失败', pe)
         }
-      } catch (error) {
-        console.error('加载个人物品统计失败:', error)
-        items = storage.get('personalItems', []) || []
+      } else {
+        this.profile = {}
       }
 
-      this.totalCount = items.length
+      var statsOk = false
+      if (this.isLoggedIn) {
+        try {
+          var sres = await api.getPersonalItemStats()
+          if (sres && sres.code === 200 && sres.data) {
+            var sd = sres.data
+            this.totalCount = Number(sd.total) || 0
+            this.normalCount = Number(sd.normal) || 0
+            this.nearCount = Number(sd.near) || 0
+            this.expiredCount = Number(sd.expired) || 0
+            statsOk = true
+          }
+        } catch (se) {
+          console.warn('加载物品统计失败', se)
+        }
+      }
 
-      if (items.length === 0) {
-        this.normalCount = 0
-        this.nearCount = 0
-        this.expiredCount = 0
-      } else {
-        var now = new Date()
-        now.setHours(0, 0, 0, 0)
-        var sevenDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+      if (!statsOk) {
+        var items = []
+        try {
+          if (this.isLoggedIn) {
+            var res = await api.getPersonalItems()
+            if (res && res.code === 200 && res.data) {
+              items = Array.isArray(res.data) ? res.data : (res.data.rows || res.data.list || [])
+            }
+          }
+        } catch (error) {
+          console.error('加载个人物品统计失败:', error)
+          items = storage.get('personalItems', []) || []
+        }
 
-        this.expiredCount = items.filter(function(item) {
-          if (!item.expiryDate) return false
-          var expiry = new Date(item.expiryDate)
-          expiry.setHours(0, 0, 0, 0)
-          return expiry < now
-        }).length
+        this.totalCount = items.length
 
-        this.nearCount = items.filter(function(item) {
-          if (!item.expiryDate) return false
-          try {
+        if (items.length === 0) {
+          this.normalCount = 0
+          this.nearCount = 0
+          this.expiredCount = 0
+        } else {
+          var now = new Date()
+          now.setHours(0, 0, 0, 0)
+          var sevenDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+
+          this.expiredCount = items.filter(function(item) {
+            if (!item.expiryDate) return false
             var expiry = new Date(item.expiryDate)
             expiry.setHours(0, 0, 0, 0)
-            return expiry >= now && expiry <= sevenDaysLater
-          } catch (e) {
-            return false
-          }
-        }).length
+            return expiry < now
+          }).length
 
-        this.normalCount = this.totalCount - this.expiredCount - this.nearCount
-        if (this.normalCount < 0) {
-          this.normalCount = 0
+          this.nearCount = items.filter(function(item) {
+            if (!item.expiryDate) return false
+            try {
+              var expiry = new Date(item.expiryDate)
+              expiry.setHours(0, 0, 0, 0)
+              return expiry >= now && expiry <= sevenDaysLater
+            } catch (e) {
+              return false
+            }
+          }).length
+
+          this.normalCount = this.totalCount - this.expiredCount - this.nearCount
+          if (this.normalCount < 0) {
+            this.normalCount = 0
+          }
         }
       }
       
@@ -214,6 +310,27 @@ export default {
       uni.navigateTo({
         url: '/pages/member/member'
       })
+    },
+    selectPalette(id) {
+      themeUtil.setThemePalette(id)
+      uni.showToast({ title: '已切换主题风格', icon: 'none', duration: 1200 })
+    },
+    goEditProfile() {
+      if (!this.isLoggedIn) {
+        uni.showToast({ title: '请先登录', icon: 'none' })
+        return
+      }
+      uni.navigateTo({ url: '/pages/profile/edit-profile' })
+    },
+    goPersonalInfo() {
+      if (!this.isLoggedIn) {
+        uni.showToast({ title: '请先登录', icon: 'none' })
+        return
+      }
+      uni.navigateTo({ url: '/pages/profile/personal-info' })
+    },
+    goReminderSettings() {
+      uni.navigateTo({ url: '/pages/profile/reminder-settings' })
     },
     goToPersonal() {
       uni.switchTab({
@@ -618,6 +735,73 @@ export default {
 .menu-item .arrow {
   font-size: 32rpx;
   color: var(--text-secondary);
+}
+
+.user-meta {
+  margin-top: 16rpx;
+  text-align: center;
+}
+
+.meta-line {
+  display: block;
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.92);
+  margin-top: 8rpx;
+}
+
+.light-mode .meta-line {
+  color: var(--text-secondary);
+}
+
+.edit-profile-entry {
+  margin-top: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+  flex-wrap: wrap;
+}
+
+.edit-profile-sep {
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.light-mode .edit-profile-sep {
+  color: var(--text-secondary);
+}
+
+.edit-profile-text {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.95);
+  text-decoration: underline;
+}
+
+.light-mode .edit-profile-text {
+  color: var(--accent-blue);
+}
+
+.theme-style-row {
+  flex-wrap: wrap;
+}
+
+.palette-dots {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-left: auto;
+}
+
+.palette-dot {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  border: 3rpx solid transparent;
+}
+
+.palette-dot.active {
+  border-color: var(--text-primary);
+  box-shadow: 0 0 0 2rpx var(--card-bg-solid);
 }
 
 .logout-section {

@@ -97,6 +97,7 @@ export function handleUnauthorizedError(error, context = '') {
   
   // 清除本地登录信息
   try {
+    clearUserScopedCaches()
     uni.removeStorageSync('token')
     uni.removeStorageSync('userInfo')
     uni.removeStorageSync('loginTime')
@@ -174,10 +175,23 @@ export function safeApiCall(apiCall, context = '') {
 }
 
 /**
+ * 清除与当前账号相关的本地业务缓存（换用户登录前调用，避免串数据）
+ */
+export function clearUserScopedCaches() {
+  try {
+    uni.removeStorageSync('personalItems')
+    uni.removeStorageSync('sharedItems')
+  } catch (error) {
+    console.error('清除用户业务缓存失败:', error)
+  }
+}
+
+/**
  * 清除登录数据
  */
 export function clearLoginData() {
   try {
+    clearUserScopedCaches()
     uni.removeStorageSync('token')
     uni.removeStorageSync('userInfo')
     uni.removeStorageSync('loginTime')

@@ -56,4 +56,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by expiry_date desc
     </select>
 
+    <select id="selectByExpiryDatesIn" resultMap="PersonalItemResult">
+        <include refid="selectPersonalItemVo"/>
+        where status = #{status}
+          and expiry_date in
+        <foreach collection="dates" item="d" open="(" separator="," close=")">
+            #{d}
+        </foreach>
+        order by expiry_date asc, id asc
+    </select>
+
 </mapper>

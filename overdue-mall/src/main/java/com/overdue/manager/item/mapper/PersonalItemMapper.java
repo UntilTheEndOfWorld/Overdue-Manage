@@ -4,6 +4,7 @@ import com.overdue.manager.item.domain.entity.PersonalItem;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import java.util.Collection;
 import java.util.List;
 import java.time.LocalDate;
 
@@ -51,4 +52,10 @@ public interface PersonalItemMapper extends BaseMapper<PersonalItem> {
      */
     List<PersonalItem> selectExpiredItems(@Param("userId") Long userId, 
                                          @Param("currentDate") LocalDate currentDate);
+
+    /**
+     * 按过期日集合查询未删除物品（到期提醒扫描）
+     */
+    List<PersonalItem> selectByExpiryDatesIn(@Param("dates") Collection<LocalDate> dates,
+                                            @Param("status") String status);
 }

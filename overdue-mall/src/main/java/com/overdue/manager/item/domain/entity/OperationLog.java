@@ -1,6 +1,8 @@
 package com.overdue.manager.item.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -18,18 +20,22 @@ public class OperationLog {
     private static final long serialVersionUID = 1L;
 
     @ApiModelProperty("日志ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
     @ApiModelProperty("空间ID（个人物品为NULL）")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long spaceId;
 
     @ApiModelProperty("物品ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long itemId;
 
     @ApiModelProperty("物品类型：personal-个人物品，shared-共享物品")
     private String itemType;
 
     @ApiModelProperty("操作人用户ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long operatorId;
 
     @ApiModelProperty("操作人昵称")

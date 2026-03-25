@@ -4,6 +4,7 @@ import com.overdue.common.constant.Constants;
 import com.overdue.common.core.domain.AjaxResult;
 import com.overdue.framework.config.LocalDataUtil;
 import com.overdue.manager.item.domain.entity.PersonalItem;
+import com.overdue.manager.item.domain.vo.PersonalItemStatsVO;
 import com.overdue.manager.item.service.PersonalItemService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -53,6 +54,17 @@ public class PersonalItemMiniappController {
         }
         List<PersonalItem> list = personalItemService.selectByUserId(userId);
         return AjaxResult.success(list);
+    }
+
+    @ApiOperation("个人物品状态统计（全部/正常/即将过期/已过期）")
+    @GetMapping("/items/stats")
+    public AjaxResult itemStats() {
+        Long userId = getCurrentUserId();
+        if (userId == null) {
+            return AjaxResult.error(HttpStatus.UNAUTHORIZED.value(), "请先登录");
+        }
+        PersonalItemStatsVO stats = personalItemService.getItemStats(userId);
+        return AjaxResult.success(stats);
     }
 
     @ApiOperation("新增个人物品")

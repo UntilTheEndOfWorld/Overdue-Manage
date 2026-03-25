@@ -16,12 +16,19 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="province" column="province"/>
         <result property="city" column="city"/>
         <result property="status" column="status"/>
+        <result property="email" column="email"/>
+        <result property="reminderEnabled" column="reminder_enabled"/>
+        <result property="reminderSubscribe" column="reminder_subscribe"/>
+        <result property="reminderSms" column="reminder_sms"/>
+        <result property="reminderEmail" column="reminder_email"/>
         <result property="createTime" column="create_time"/>
         <result property="updateTime" column="update_time"/>
     </resultMap>
 
     <sql id="selectOverdueUserVo">
-        select id, openid, unionid, nickname, avatar_url, phone, gender, country, province, city, status, create_time, update_time from overdue_user
+        select id, openid, unionid, nickname, avatar_url, phone, gender, country, province, city, status,
+               email, reminder_enabled, reminder_subscribe, reminder_sms, reminder_email,
+               create_time, update_time from overdue_user
     </sql>
 
     <select id="selectOverdueUserList" parameterType="com.overdue.manager.item.domain.entity.OverdueUser" resultMap="OverdueUserResult">
@@ -30,6 +37,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="openid != null  and openid != ''"> and openid = #{openid}</if>
             <if test="nickname != null  and nickname != ''"> and nickname like concat('%', #{nickname}, '%')</if>
             <if test="phone != null  and phone != ''"> and phone = #{phone}</if>
+            <if test="email != null  and email != ''"> and email like concat('%', #{email}, '%')</if>
             <if test="status != null  and status != ''"> and status = #{status}</if>
         </where>
         order by create_time desc

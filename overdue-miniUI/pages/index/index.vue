@@ -336,8 +336,10 @@ export default {
     },
     // 跳转到共享空间详情
     goToSpaceDetail(spaceId) {
+      var id = spaceId != null && spaceId !== '' ? String(spaceId) : ''
+      if (!id) return
       uni.navigateTo({
-        url: `/pages/shared/detail?id=${spaceId}`
+        url: '/pages/shared/detail?id=' + encodeURIComponent(id)
       })
     },
     // 添加物品成功回调

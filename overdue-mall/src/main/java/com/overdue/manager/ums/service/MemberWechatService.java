@@ -36,6 +36,7 @@ import com.overdue.h5.domain.form.WechatPhoneForm;
 import com.overdue.common.core.domain.model.LoginMember;
 import com.overdue.framework.web.service.TokenService;
 import com.overdue.manager.ums.service.NewUserCouponService;
+import com.overdue.manager.item.service.OverdueUserService;
 
 /**
  * 用户微信信息Service业务层处理
@@ -62,6 +63,9 @@ public class MemberWechatService {
 
     @Autowired
     private NewUserCouponService newUserCouponService;
+
+    @Autowired
+    private OverdueUserService overdueUserService;
 
     @Value("${wechat.miniProgramAppId}")
     private String miniProgramAppId;
@@ -206,10 +210,8 @@ public class MemberWechatService {
             // 用户不存在，创建新用户
             log.info("微信用户不存在，开始创建新用户");
 
-            // 直接创建Member（ums_member表），不创建SysUser
+            // 直接创建Member（ums_member表），不创建SysUser；主键为全局雪花 ID
             Member newMember = new Member();
-            // 使用数据库自增ID
-            newMember.setId(null);
             newMember.setNickname(StrUtil.isNotBlank(form.getNickname()) ? form.getNickname() : "微信用户");
             newMember.setAvatar(StrUtil.isNotBlank(form.getAvatarUrl()) ? form.getAvatarUrl() : "");
             newMember.setStatus(Constants.MEMBER_ACCOUNT_STATUS.NORMAL);
@@ -364,6 +366,7 @@ public class MemberWechatService {
                     log.error("手机号已存在但获取token失败");
                     throw new RuntimeException("登录失败，请重试");
                 }
+                syncOverdueUserForMiniapp(openid, form.getNickname(), form.getAvatarUrl());
                 return token;
             } else {
                 log.info("手机号未注册，继续创建新用户");
@@ -401,6 +404,7 @@ public class MemberWechatService {
                     log.error("微信账号已存在但获取token失败");
                     throw new RuntimeException("登录失败，请重试");
                 }
+                syncOverdueUserForMiniapp(openid, form.getNickname(), form.getAvatarUrl());
                 return token;
             } else {
                 log.info("微信openid未存在，将创建新用户");
@@ -409,10 +413,8 @@ public class MemberWechatService {
             // 5. 创建新用户（只创建Member和MemberWechat，不创建SysUser）
             log.info("创建新会员，手机号: {}", phoneNumber);
 
-            // 直接创建Member（ums_member表），不创建SysUser
+            // 直接创建Member（ums_member表），不创建SysUser；主键由全局雪花 ID 在 insert 时生成
             Member newMember = new Member();
-            // 生成唯一的会员ID，避免与sys_user冲突
-            newMember.setId(generateMemberId());
             newMember.setPhone(phoneNumber); // 保存完整手机号
             newMember.setPhoneEncrypted(AesCryptoUtils.encrypt(aesKey, phoneNumber));
             newMember.setPhoneHidden(PhoneUtils.hidePhone(phoneNumber));
@@ -424,12 +426,13 @@ public class MemberWechatService {
             newMember.setLevelName("普通会员"); // 设置会员等级名称
             newMember.setCreateTime(LocalDateTime.now());
             newMember.setUpdateTime(LocalDateTime.now());
-            newMember.setCreateBy(newMember.getId()); // 自己创建自己
-            newMember.setUpdateBy(newMember.getId());
 
-            // 插入到ums_member表
+            // 插入到ums_member表（insert 后 newMember.getId() 才有值）
             int insertResult = memberMapper.insert(newMember);
-            if (insertResult > 0) {
+            if (insertResult > 0 && newMember.getId() != null) {
+                newMember.setCreateBy(newMember.getId());
+                newMember.setUpdateBy(newMember.getId());
+                memberMapper.updateById(newMember);
                 log.info("创建Member成功，插入ums_member表: {}", newMember.getId());
             } else {
                 log.error("创建Member失败，插入ums_member表失败");
@@ -454,24 +457,38 @@ public class MemberWechatService {
                 throw new RuntimeException("创建微信关联记录失败");
             }
 
-            // 6. 为新用户赠送优惠券
-            try {
-                newUserCouponService.giveNewUserCoupons(newMember.getId());
+            // 6. 为新用户赠送优惠券（失败仅记录日志，不影响注册）
+            boolean couponOk = newUserCouponService.giveNewUserCoupons(newMember.getId());
+            if (couponOk) {
                 log.info("新用户优惠券赠送成功，会员ID: {}", newMember.getId());
-            } catch (Exception e) {
-                log.error("新用户优惠券赠送失败，但不影响注册流程: {}", e.getMessage());
-                // 优惠券赠送失败不影响用户注册
+            } else {
+                log.warn("新用户优惠券赠送失败，但不影响注册流程，会员ID: {}", newMember.getId());
             }
 
             // 7. 返回会员token（不是系统用户token）
             String token = getToken(newMember.getId());
             log.info("生成会员token成功，会员ID: {}", newMember.getId());
 
+            syncOverdueUserForMiniapp(openid, form.getNickname(), form.getAvatarUrl());
             return token;
 
         } catch (Exception e) {
             log.error("微信手机号注册失败", e);
             throw new RuntimeException("注册失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 同步「过期了么」业务用户表，供 OverdueMiniappAuthFilter 根据 openid 解析 overdue_user_id。
+     */
+    private void syncOverdueUserForMiniapp(String openid, String nickname, String avatarUrl) {
+        if (StrUtil.isBlank(openid)) {
+            return;
+        }
+        try {
+            overdueUserService.createOrGetByOpenid(openid, nickname, avatarUrl, null, null, null, null);
+        } catch (Exception e) {
+            log.warn("同步 OverdueUser 失败（不影响登录）: {}", e.getMessage());
         }
     }
 
@@ -516,10 +533,8 @@ public class MemberWechatService {
             }
 
             // 3. 创建临时会员记录（不包含手机号）
-            // 直接创建Member（ums_member表），不创建SysUser
+            // 直接创建Member（ums_member表），不创建SysUser；主键为全局雪花 ID
             Member newMember = new Member();
-            // 使用数据库自增ID
-            newMember.setId(null);
             newMember.setNickname(StrUtil.isNotBlank(form.getNickname()) ? form.getNickname() : "微信用户");
             newMember.setAvatar(StrUtil.isNotBlank(form.getAvatarUrl()) ? form.getAvatarUrl() : "");
             newMember.setStatus(Constants.MEMBER_ACCOUNT_STATUS.NORMAL);
@@ -762,11 +777,5 @@ public class MemberWechatService {
             log.error("刷新微信登录token失败", e);
             throw new RuntimeException("刷新token失败: " + e.getMessage());
         }
-    }
-
-    private Long generateMemberId() {
-        // 使用数据库自增ID，让数据库自动生成
-        // 这里返回null，让MyBatis-Plus自动处理ID生成
-        return null;
     }
 }

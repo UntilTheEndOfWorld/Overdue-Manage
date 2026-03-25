@@ -1,5 +1,7 @@
 package com.overdue.common.core.domain;
 
+import com.baomidou.mybatisplus.annotation.TableField;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,8 +15,9 @@ public abstract class BaseEntity extends BaseAudit implements Serializable, IQue
     private static final long serialVersionUID = 1L;
 
     /**
-     * 搜索值
+     * 搜索值（仅查询条件，非表字段）
      */
+    @TableField(exist = false)
     private String searchValue;
 
     /**
@@ -23,8 +26,9 @@ public abstract class BaseEntity extends BaseAudit implements Serializable, IQue
     private String remark;
 
     /**
-     * 请求参数
+     * 请求参数（如前端 JSON 中的 params，非表字段；勿参与 MyBatis 插入/更新）
      */
+    @TableField(exist = false)
     private Map<String, Object> params;
 
     @Override

@@ -138,10 +138,22 @@ export default {
 
         uni.showToast({ title: '加入成功', icon: 'success' })
 
-        var spaceId = this.spaceInfo.id
+        // 优先用返回的 space；邀请预览接口字段为 spaceId / spaceName
+        var spaceId = ''
+        if (res && res.data && res.data.space) {
+          var sp = res.data.space
+          spaceId = sp.id != null ? String(sp.id) : ''
+        }
+        if (!spaceId && this.spaceInfo.spaceId != null) {
+          spaceId = String(this.spaceInfo.spaceId)
+        }
+        if (!spaceId && this.spaceInfo.id != null) {
+          spaceId = String(this.spaceInfo.id)
+        }
         setTimeout(function() {
+          if (!spaceId) return
           uni.navigateTo({
-            url: '/pages/shared/detail?id=' + spaceId
+            url: '/pages/shared/detail?id=' + encodeURIComponent(spaceId)
           })
         }, 1500)
       } catch (error) {

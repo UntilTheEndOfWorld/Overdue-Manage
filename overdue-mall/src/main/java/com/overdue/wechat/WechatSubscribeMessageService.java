@@ -277,4 +277,46 @@ public class WechatSubscribeMessageService {
       return false;
     }
   }
+
+  /**
+   * 通用订阅消息（到期提醒等业务调用）。data 为微信要求的字段名 → {@code { "value": "展示内容" }}。
+   *
+   * @param page 点击模板跳转的小程序页面路径，可 null 则默认首页
+   */
+  public boolean sendGenericSubscribeMessage(String openid, String templateId,
+      Map<String, Map<String, String>> data, String page) {
+    if (openid == null || templateId == null || data == null || data.isEmpty()) {
+      log.warn("sendGenericSubscribeMessage: invalid args");
+      return false;
+    }
+    try {
+      String accessToken = getAccessToken();
+      if (accessToken == null) {
+        return false;
+      }
+      String url = String.format(SEND_SUBSCRIBE_MESSAGE_URL, accessToken);
+      Map<String, Object> requestBody = new HashMap<>();
+      requestBody.put("touser", openid);
+      requestBody.put("template_id", templateId);
+      requestBody.put("page", page != null ? page : "pages/index/index");
+      requestBody.put("data", data);
+      requestBody.put("miniprogram_state", "formal");
+
+      HttpHeaders headers = new HttpHeaders();
+      headers.setContentType(MediaType.APPLICATION_JSON);
+      HttpEntity<String> entity = new HttpEntity<>(JSON.toJSONString(requestBody), headers);
+
+      ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+      JSONObject responseJson = JSON.parseObject(response.getBody());
+      if (responseJson != null && Integer.valueOf(0).equals(responseJson.getInteger("errcode"))) {
+        log.info("通用订阅消息发送成功 openid={}", openid);
+        return true;
+      }
+      log.error("通用订阅消息发送失败: {}", responseJson);
+      return false;
+    } catch (Exception e) {
+      log.error("通用订阅消息异常", e);
+      return false;
+    }
+  }
 }

@@ -122,6 +122,23 @@ public class RedisCache {
     }
 
     /**
+     * 从左侧入队（FIFO 消费可与 rightPop 配合）
+     *
+     * @return 队列长度
+     */
+    public <T> long leftPushCacheList(final String key, final T value) {
+        Long len = redisTemplate.opsForList().leftPush(key, value);
+        return len == null ? 0 : len;
+    }
+
+    /**
+     * 从右侧出队（与 leftPush 组成 FIFO）
+     */
+    public <T> T rightPopCacheList(final String key) {
+        return (T) redisTemplate.opsForList().rightPop(key);
+    }
+
+    /**
      * 缓存Set
      *
      * @param key     缓存键值

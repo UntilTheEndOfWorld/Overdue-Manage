@@ -3,19 +3,30 @@
  */
 import { tokenManager } from './auth.js'
 
-// 基础配置 - 根据环境动态选择API地址
+/**
+ * 本地联调开关
+ * - true：请求本机（默认端口与 overdue-admin application.yml 中 server.port 一致，当前为 8080）
+ * - 微信开发者工具：可用 http://127.0.0.1:8080，并关闭域名校验（manifest 里 mp-weixin.setting.urlCheck 已为 false）
+ * - 真机调试：127.0.0.1 指向手机自身，请改为电脑局域网 IP，例如 http://192.168.1.100:8080
+ * - 上线前改为 false 或走正式域名
+ */
+var USE_LOCAL_API = true
+var LOCAL_BASE_URL = 'http://127.0.0.1:8080'
+var PROD_BASE_URL = 'https://www.lycc.ltd/jx_slr_api'
+
+// 基础配置 - 根据环境动态选择 API 地址
 var getBaseUrl = function() {
-  // 判断环境
+  if (USE_LOCAL_API) {
+    return LOCAL_BASE_URL
+  }
+  // H5：浏览器访问本机时用本地（可选）
   if (typeof window !== 'undefined') {
     var hostname = window.location.hostname
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return 'https://www.lycc.ltd/jx_slr_api'
-    } else {
-      return 'https://www.lycc.ltd/jx_slr_api'
+      return LOCAL_BASE_URL
     }
-  } else {
-    return 'https://www.lycc.ltd/jx_slr_api'
   }
+  return PROD_BASE_URL
 }
 
 var BASE_URL = getBaseUrl()
@@ -80,11 +91,15 @@ var request = function(url, options) {
             if (res.data.code === 200) {
               resolve(res.data)
             } else if (res.data.code === 401) {
-              console.warn('[API] 业务错误码401，Token无效')
+              console.warn('[API] 业务错误码401:', res.data.msg || res.data)
               tokenManager.clearToken()
               uni.removeStorageSync('userInfo')
+              var msg401 = res.data.msg
+              if (!msg401 || String(msg401).trim() === '') {
+                msg401 = '登录已过期，请重新登录'
+              }
               uni.showToast({
-                title: '登录已过期，请重新登录',
+                title: msg401,
                 icon: 'none'
               })
               // 跳转到登录页
@@ -117,6 +132,49 @@ var request = function(url, options) {
       },
       fail: function(err) {
         console.error('[API] 请求失败:', err)
+        reject(err)
+      }
+    })
+  })
+}
+
+/** 上传图片到服务端，返回可访问 URL */
+var uploadImageFile = function(filePath) {
+  return new Promise(function(resolve, reject) {
+    var token = tokenManager.getToken()
+    var userInfo = uni.getStorageSync('userInfo')
+    if (typeof userInfo === 'string' && userInfo.trim() !== '') {
+      try {
+        userInfo = JSON.parse(userInfo)
+      } catch (e) {
+        userInfo = null
+      }
+    }
+    var headers = {}
+    if (token) {
+      headers['Authorization'] = 'Bearer ' + token
+    }
+    if (userInfo && (userInfo.id || userInfo.userId || userInfo.memberId)) {
+      headers['X-User-Id'] = String(userInfo.id || userInfo.userId || userInfo.memberId)
+    }
+    uni.uploadFile({
+      url: BASE_URL + '/h5/file/upload-image',
+      filePath: filePath,
+      name: 'file',
+      header: headers,
+      success: function(res) {
+        try {
+          var body = typeof res.data === 'string' ? JSON.parse(res.data) : res.data
+          if (body.code === 200 && body.data && body.data.url) {
+            resolve(body.data.url)
+          } else {
+            reject(new Error(body.msg || '上传失败'))
+          }
+        } catch (err) {
+          reject(err)
+        }
+      },
+      fail: function(err) {
         reject(err)
       }
     })
@@ -265,6 +323,10 @@ Api.prototype.getPersonalItems = function() {
   return this.request('/personal/items', 'GET')
 }
 
+Api.prototype.getPersonalItemStats = function() {
+  return this.request('/personal/items/stats', 'GET')
+}
+
 Api.prototype.addPersonalItem = function(item) {
   return this.request('/personal/items', 'POST', item)
 }
@@ -353,6 +415,28 @@ Api.prototype.deleteSharedItem = function(spaceId, itemId) {
 Api.prototype.getSpaceLogs = function(spaceId, params) {
   params = params || {}
   return this.request('/shared/spaces/' + spaceId + '/logs', 'GET', params)
+}
+
+// ==================== 个人资料 ====================
+Api.prototype.getProfile = function() {
+  return this.request('/personal/profile', 'GET')
+}
+
+Api.prototype.updateProfile = function(data) {
+  return this.request('/personal/profile', 'PUT', data)
+}
+
+Api.prototype.uploadImage = function(filePath) {
+  return uploadImageFile(filePath)
+}
+
+// ==================== 到期提醒设置 ====================
+Api.prototype.getReminderSettings = function() {
+  return this.request('/personal/reminder-settings', 'GET')
+}
+
+Api.prototype.updateReminderSettings = function(data) {
+  return this.request('/personal/reminder-settings', 'PUT', data)
 }
 
 // ==================== 日历相关接口 ====================

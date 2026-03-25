@@ -1,6 +1,11 @@
 package com.overdue.manager.item.service;
 
 import com.overdue.manager.item.domain.entity.OverdueUser;
+import com.overdue.manager.item.domain.form.OverdueProfileForm;
+import com.overdue.manager.item.domain.form.ReminderSettingsForm;
+import com.overdue.manager.item.domain.vo.OverdueProfileVO;
+import com.overdue.manager.item.domain.vo.ReminderSettingsVO;
+
 import java.util.List;
 
 /**
@@ -79,4 +84,21 @@ public interface OverdueUserService {
      */
     OverdueUser createOrGetByOpenid(String openid, String nickname, String avatarUrl,
                                     Integer gender, String country, String province, String city);
+
+    /**
+     * 查询用户到期提醒设置（脱敏）
+     */
+    ReminderSettingsVO getReminderSettings(Long userId);
+
+    /**
+     * 更新到期提醒设置
+     */
+    void updateReminderSettings(Long userId, ReminderSettingsForm form);
+
+    /**
+     * 小程序个人资料
+     */
+    OverdueProfileVO getProfile(Long userId);
+
+    void updateProfile(Long userId, OverdueProfileForm form);
 }

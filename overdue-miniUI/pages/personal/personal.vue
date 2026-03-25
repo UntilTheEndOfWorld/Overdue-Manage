@@ -18,28 +18,28 @@
           :class="{ active: filter === 'all' }"
           @click="setFilter('all')"
         >
-          全部
+          全部<text v-if="itemStats.total > 0" class="filter-num">{{ itemStats.total }}</text>
         </view>
         <view 
           class="filter-item" 
           :class="{ active: filter === 'normal' }"
           @click="setFilter('normal')"
         >
-          正常
+          正常<text v-if="itemStats.normal > 0" class="filter-num">{{ itemStats.normal }}</text>
         </view>
         <view 
           class="filter-item" 
           :class="{ active: filter === 'near' }"
           @click="setFilter('near')"
         >
-          即将过期
+          即将过期<text v-if="itemStats.near > 0" class="filter-num">{{ itemStats.near }}</text>
         </view>
         <view 
           class="filter-item" 
           :class="{ active: filter === 'expired' }"
           @click="setFilter('expired')"
         >
-          已过期
+          已过期<text v-if="itemStats.expired > 0" class="filter-num">{{ itemStats.expired }}</text>
         </view>
       </view>
       <view class="add-btn" @click="addItem">+</view>
@@ -57,8 +57,13 @@
       />
     </view>
 
-    <view class="empty-state" v-if="filteredItems.length === 0">
+    <view class="empty-state" v-if="filteredItems.length === 0 && (!loadError || items.length > 0)">
       <text>暂无物品</text>
+    </view>
+
+    <view class="error-state" v-if="loadError && items.length === 0">
+      <text class="error-text">加载失败，请检查网络后重试</text>
+      <button class="retry-btn" type="default" size="mini" @click="retryLoad">重试</button>
     </view>
     
   </view>
@@ -82,7 +87,14 @@ export default {
       items: [],
       filter: 'all',
       searchKeyword: '',
-      loading: false
+      loading: false,
+      loadError: false,
+      itemStats: {
+        total: 0,
+        normal: 0,
+        near: 0,
+        expired: 0
+      }
     }
   },
   computed: {
@@ -96,32 +108,74 @@ export default {
   },
   onLoad() {
     this.loadItems()
+    this.loadItemStats()
   },
   onShow() {
     this.loadItems()
+    this.loadItemStats()
   },
   onPullDownRefresh() {
     this.loadItems()
+    this.loadItemStats()
     setTimeout(function() {
       uni.stopPullDownRefresh()
     }, 500)
   },
   methods: {
+    async loadItemStats() {
+      if (!isLoggedIn()) return
+      try {
+        var sres = await api.getPersonalItemStats()
+        if (sres && sres.code === 200 && sres.data) {
+          var d = sres.data
+          this.itemStats = {
+            total: Number(d.total) || 0,
+            normal: Number(d.normal) || 0,
+            near: Number(d.near) || 0,
+            expired: Number(d.expired) || 0
+          }
+        }
+      } catch (e) {
+        console.warn('加载物品统计失败', e)
+        var local = this.items && this.items.length ? itemUtil.getItemStats(this.items) : null
+        if (local) {
+          this.itemStats = {
+            total: local.total,
+            normal: local.normal,
+            near: local.near,
+            expired: local.expired
+          }
+        }
+      }
+    },
+    retryLoad() {
+      this.loadError = false
+      this.loadItems()
+      this.loadItemStats()
+    },
     async loadItems() {
       if (!isLoggedIn()) return
       if (this.loading) return
       this.loading = true
+      this.loadError = false
       try {
         var res = await api.getPersonalItems()
         if (res && res.code === 200 && res.data) {
           this.items = Array.isArray(res.data) ? res.data : (res.data.rows || res.data.list || [])
-          // 同步到本地缓存
           storage.set('personalItems', this.items)
+        } else {
+          this.loadError = true
+          this.items = []
         }
       } catch (error) {
         console.error('加载个人物品失败:', error)
-        // 兜底使用本地缓存
-        this.items = storage.get('personalItems', [])
+        this.loadError = true
+        this.items = storage.get('personalItems', []) || []
+        if (!this.items.length) {
+          uni.showToast({ title: '网络异常', icon: 'none' })
+        } else {
+          uni.showToast({ title: '已显示本地缓存', icon: 'none' })
+        }
       } finally {
         this.loading = false
       }
@@ -444,5 +498,27 @@ export default {
   padding: 100rpx 0;
   color: var(--text-secondary);
   font-size: 32rpx;
+}
+
+.filter-num {
+  margin-left: 6rpx;
+  font-size: 22rpx;
+  opacity: 0.85;
+}
+
+.error-state {
+  text-align: center;
+  padding: 80rpx 40rpx;
+  color: var(--text-secondary);
+}
+
+.error-text {
+  display: block;
+  font-size: 28rpx;
+  margin-bottom: 24rpx;
+}
+
+.retry-btn {
+  margin-top: 8rpx;
 }
 </style>

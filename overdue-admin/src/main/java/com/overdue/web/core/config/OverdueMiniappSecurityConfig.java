@@ -1,6 +1,6 @@
 package com.overdue.web.core.config;
 
-import com.overdue.framework.security.filter.MemberAuthenticationTokenFilter;
+import com.overdue.framework.security.filter.JwtAuthenticationTokenFilter;
 import com.overdue.web.filter.OverdueMiniappAuthFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
@@ -8,7 +8,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
 /**
- * 过期了吗小程序鉴权：在会员 token 校验之后设置 Overdue 用户 ID 到 ThreadLocal。
+ * 过期了吗小程序鉴权：必须在 JwtAuthenticationTokenFilter 解析会员 JWT 并写入 LoginMember 之后再执行，
+ * 否则无法从 SecurityContext 取得 LoginMember，也无法设置 Overdue 用户 ID。
  *
  * @author overdue
  */
@@ -20,6 +21,6 @@ public class OverdueMiniappSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.addFilterAfter(overdueMiniappAuthFilter, MemberAuthenticationTokenFilter.class);
+        http.addFilterAfter(overdueMiniappAuthFilter, JwtAuthenticationTokenFilter.class);
     }
 }

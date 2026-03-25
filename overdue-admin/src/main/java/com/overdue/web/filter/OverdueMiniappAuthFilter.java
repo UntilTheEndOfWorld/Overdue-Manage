@@ -7,6 +7,8 @@ import com.overdue.manager.item.domain.entity.OverdueUser;
 import com.overdue.manager.item.service.OverdueUserService;
 import com.overdue.manager.ums.domain.entity.MemberWechat;
 import com.overdue.manager.ums.mapper.MemberWechatMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,6 +29,8 @@ import java.io.IOException;
  */
 @Component
 public class OverdueMiniappAuthFilter extends OncePerRequestFilter {
+
+    private static final Logger log = LoggerFactory.getLogger(OverdueMiniappAuthFilter.class);
 
     @Autowired
     private MemberWechatMapper memberWechatMapper;
@@ -57,7 +61,16 @@ public class OverdueMiniappAuthFilter extends OncePerRequestFilter {
                 if (memberId != null) {
                     MemberWechat wechat = memberWechatMapper.selectByMemberId(memberId);
                     if (wechat != null && wechat.getOpenid() != null) {
-                        OverdueUser overdueUser = overdueUserService.selectByOpenid(wechat.getOpenid());
+                        String openid = wechat.getOpenid();
+                        OverdueUser overdueUser = overdueUserService.selectByOpenid(openid);
+                        // 注册时若 insert 失败或未执行同步，此处按 openid 补建业务用户，避免会员 JWT 有效却返回 401、前端误报「登录过期」
+                        if (overdueUser == null || overdueUser.getId() == null) {
+                            try {
+                                overdueUser = overdueUserService.createOrGetByOpenid(openid, null, null, null, null, null, null);
+                            } catch (Exception ex) {
+                                log.warn("OverdueUser 补建失败 memberId={}, openid={}: {}", memberId, openid, ex.getMessage());
+                            }
+                        }
                         if (overdueUser != null && overdueUser.getId() != null) {
                             LocalDataUtil.setVar(Constants.OVERDUE_USER_ID, overdueUser.getId());
                         }

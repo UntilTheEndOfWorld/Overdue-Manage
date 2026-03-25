@@ -104,8 +104,11 @@ export default {
       })
     },
     goToDetail(spaceId) {
+      // 雪花 ID 超出 JS 安全整数时必须用字符串传递，勿经 Number 转换
+      var id = spaceId != null && spaceId !== '' ? String(spaceId) : ''
+      if (!id) return
       uni.navigateTo({
-        url: `/pages/shared/detail?id=${spaceId}`
+        url: '/pages/shared/detail?id=' + encodeURIComponent(id)
       })
     },
     getRoleText(role) {

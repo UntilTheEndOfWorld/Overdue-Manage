@@ -174,7 +174,8 @@ export default {
     }
   },
   onLoad(options) {
-    this.spaceId = options.id
+    // 空间 ID 为雪花 Long，仅作字符串使用，避免参与 Number 运算丢精度
+    this.spaceId = options.id != null && options.id !== '' ? String(options.id) : ''
     this.loadData()
   },
   onShow() {

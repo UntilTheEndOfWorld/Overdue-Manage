@@ -5,7 +5,9 @@ import com.overdue.manager.item.mapper.SharedItemMapper;
 import com.overdue.manager.item.service.SharedItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -25,11 +27,19 @@ public class SharedItemServiceImpl implements SharedItemService {
 
     @Override
     public int insertSharedItem(SharedItem sharedItem) {
+        LocalDateTime now = LocalDateTime.now();
+        if (sharedItem.getCreateTime() == null) {
+            sharedItem.setCreateTime(now);
+        }
+        if (sharedItem.getUpdateTime() == null) {
+            sharedItem.setUpdateTime(now);
+        }
         return sharedItemMapper.insert(sharedItem);
     }
 
     @Override
     public int updateSharedItem(SharedItem sharedItem) {
+        sharedItem.setUpdateTime(LocalDateTime.now());
         return sharedItemMapper.updateById(sharedItem);
     }
 

@@ -159,7 +159,7 @@
 import storage from '@/common/utils/storage.js'
 import themeMixin from '@/common/mixins/theme.js'
 import { userAPI } from '@/common/utils/api.js'
-import { tokenManager } from '@/common/utils/auth.js'
+import { tokenManager, clearUserScopedCaches } from '@/common/utils/auth.js'
 import { executeLoginCallback } from '@/common/utils/loginCallback.js'
 
 export default {
@@ -285,6 +285,7 @@ export default {
             loginTime: Date.now()
           }
 
+          clearUserScopedCaches()
           uni.setStorageSync('userInfo', userData)
           tokenManager.setToken(res.data)
           uni.setStorageSync('loginTime', Date.now())
@@ -402,6 +403,7 @@ export default {
             loginTime: Date.now()
           }
 
+          clearUserScopedCaches()
           uni.setStorageSync('userInfo', userData)
           tokenManager.setToken(res.data)
           uni.setStorageSync('loginTime', Date.now())

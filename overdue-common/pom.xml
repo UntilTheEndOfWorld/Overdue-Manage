@@ -17,6 +17,13 @@
 
     <dependencies>
 
+        <!-- MyBatis-Plus 注解：BaseEntity 中非数据库字段（如 params）需 @TableField(exist = false) -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-annotation</artifactId>
+            <version>${mybatis.plus.version}</version>
+        </dependency>
+
         <!-- Spring框架基本的核心工具 -->
         <dependency>
             <groupId>org.springframework</groupId>

@@ -18,6 +18,9 @@
       <el-form-item label="手机号" prop="phone">
         <el-input v-model="queryParams.phone" placeholder="请输入手机号" clearable size="small"/>
       </el-form-item>
+      <el-form-item label="邮箱" prop="email">
+        <el-input v-model="queryParams.email" placeholder="请输入邮箱" clearable size="small"/>
+      </el-form-item>
       <el-form-item label="状态" prop="status">
         <el-select v-model="queryParams.status" placeholder="请选择状态" clearable size="small">
           <el-option label="正常" value="0"/>
@@ -50,7 +53,8 @@
             <el-avatar :size="36" icon="el-icon-user-solid" v-else/>
             <div class="user-cell__info">
               <div class="user-cell__name">{{ scope.row.nickname || '-' }}</div>
-              <div class="user-cell__sub">{{ scope.row.phone || 'OpenID: ' + (scope.row.openid || '').substring(0, 10) + '...' }}</div>
+              <div class="user-cell__sub">{{ scope.row.phone || '未填手机' }} · {{ scope.row.email || '未填邮箱' }}</div>
+              <div class="user-cell__sub user-cell__openid">OpenID: {{ (scope.row.openid || '').substring(0, 12) }}...</div>
             </div>
           </div>
         </template>
@@ -110,6 +114,7 @@
       <el-descriptions :column="2" border v-if="currentRow" style="margin-top:16px">
         <el-descriptions-item label="ID">{{ currentRow.id }}</el-descriptions-item>
         <el-descriptions-item label="手机号">{{ currentRow.phone || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="邮箱">{{ currentRow.email || '-' }}</el-descriptions-item>
         <el-descriptions-item label="OpenID" :span="2"><code style="font-size:12px;color:#6366f1">{{ currentRow.openid }}</code></el-descriptions-item>
         <el-descriptions-item label="UnionID" :span="2"><code style="font-size:12px;color:#6366f1">{{ currentRow.unionid || '-' }}</code></el-descriptions-item>
         <el-descriptions-item label="性别">
@@ -141,6 +146,7 @@ export default {
         pageSize: 10,
         nickname: null,
         phone: null,
+        email: null,
         status: null
       },
       detailOpen: false,
@@ -219,6 +225,10 @@ export default {
   font-size: 11px;
   color: #9ca3af;
   margin-top: 1px;
+}
+.user-cell__openid {
+  font-size: 10px;
+  opacity: 0.85;
 }
 .gender-tag {
   font-size: 12px;

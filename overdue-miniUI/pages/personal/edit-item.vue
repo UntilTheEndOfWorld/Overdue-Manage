@@ -30,9 +30,11 @@
       <view class="form-group">
         <text class="label">保质期 *</text>
         <view class="shelf-life-group">
-          <input class="input" type="number" v-model="form.shelfLife" placeholder="保质期" />
+          <view class="shelf-life-input-wrap">
+            <input class="input shelf-life-input" type="number" v-model="form.shelfLife" placeholder="保质期" />
+          </view>
           <picker mode="selector" :range="shelfLifeUnits" :value="unitIndex" @change="onUnitChange">
-            <view class="picker">{{ form.unit || '天' }}</view>
+            <view class="picker shelf-life-unit-picker">{{ form.unit || '天' }}</view>
           </picker>
         </view>
       </view>
@@ -238,9 +240,13 @@ export default {
   margin-bottom: 20rpx;
 }
 
+/* 与 .picker 同高，避免原生 input 与选择器展示区域高度不一致 */
 .input {
   width: 100%;
-  padding: 24rpx 30rpx;
+  height: 88rpx;
+  min-height: 88rpx;
+  padding: 0 30rpx;
+  line-height: 88rpx;
   background: var(--hover-bg);
   border: 2rpx solid var(--card-border);
   border-radius: 16rpx;
@@ -257,7 +263,12 @@ export default {
 }
 
 .picker {
-  padding: 24rpx 30rpx;
+  height: 88rpx;
+  min-height: 88rpx;
+  padding: 0 30rpx;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
   background: var(--hover-bg);
   border: 2rpx solid var(--card-border);
   border-radius: 16rpx;
@@ -273,15 +284,30 @@ export default {
 
 .shelf-life-group {
   display: flex;
+  align-items: stretch;
   gap: 20rpx;
 }
 
-.shelf-life-group .input {
+.shelf-life-input-wrap {
   flex: 1;
+  min-width: 0;
+  height: 88rpx;
+  box-sizing: border-box;
 }
 
-.shelf-life-group .picker {
+.shelf-life-group .shelf-life-input {
+  display: block;
+  width: 100%;
+  height: 88rpx !important;
+  min-height: 88rpx !important;
+  line-height: 88rpx !important;
+}
+
+.shelf-life-group .shelf-life-unit-picker {
   width: 150rpx;
+  flex-shrink: 0;
+  height: 88rpx !important;
+  min-height: 88rpx !important;
 }
 
 .btn-group {

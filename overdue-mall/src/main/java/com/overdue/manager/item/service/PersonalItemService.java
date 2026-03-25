@@ -1,6 +1,8 @@
 package com.overdue.manager.item.service;
 
 import com.overdue.manager.item.domain.entity.PersonalItem;
+import com.overdue.manager.item.domain.vo.PersonalItemStatsVO;
+
 import java.util.List;
 import java.time.LocalDate;
 
@@ -49,6 +51,14 @@ public interface PersonalItemService {
      * @return 物品列表
      */
     List<PersonalItem> selectByUserId(Long userId);
+
+    /**
+     * 按当前时间与过期日统计各状态数量（与前端 item.js 逻辑对齐）
+     *
+     * @param userId 用户ID
+     * @return 统计结果
+     */
+    PersonalItemStatsVO getItemStats(Long userId);
 
     /**
      * 查询即将过期的物品（7天内）
