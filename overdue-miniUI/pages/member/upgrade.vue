@@ -35,31 +35,6 @@
       <button class="option-btn member-btn" @click="selectPlan">升级会员</button>
     </view>
 
-    <!-- 套餐选择（点击升级会员后显示） -->
-    <view class="plans-section" v-if="showPlans">
-      <view class="section-title">选择套餐</view>
-      <view class="plans-list">
-        <view 
-          class="plan-card" 
-          v-for="plan in plans" 
-          :key="plan.id"
-          :class="{ 'plan-selected': selectedPlan === plan.id, 'plan-recommended': plan.id === 'monthly' }"
-          @click="selectedPlan = plan.id"
-        >
-          <view class="plan-header">
-            <text class="plan-name">{{ plan.name }}</text>
-            <view class="plan-badge" v-if="plan.id === 'monthly'">推荐</view>
-          </view>
-          <view class="plan-price">
-            <text class="price-symbol">¥</text>
-            <text class="price-value">{{ plan.price }}</text>
-            <text class="price-unit">/{{ plan.period }}</text>
-          </view>
-        </view>
-      </view>
-      
-      <button class="btn-purchase" :disabled="!selectedPlan" @click="purchaseMember">确认购买</button>
-    </view>
   </view>
 </template>
 
@@ -73,8 +48,6 @@ export default {
     return {
       memberUtil,
       FREE_QUOTA: 5,
-      showPlans: false,
-      selectedPlan: null,
       plans: []
     }
   },
@@ -88,21 +61,8 @@ export default {
       })
     },
     selectPlan() {
-      this.showPlans = true
-      this.selectedPlan = 'monthly' // 默认选择月度
-    },
-    purchaseMember() {
-      if (!this.selectedPlan) {
-        uni.showToast({
-          title: '请选择套餐',
-          icon: 'none'
-        })
-        return
-      }
-
-      // 跳转到购买页面
       uni.navigateTo({
-        url: `/pages/member/purchase?planId=${this.selectedPlan}`
+        url: '/pages/member/member'
       })
     }
   }
@@ -225,94 +185,4 @@ export default {
   color: white;
 }
 
-.plans-section {
-  margin-top: 40rpx;
-}
-
-.section-title {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: var(--text-primary);
-  margin-bottom: 30rpx;
-}
-
-.plans-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20rpx;
-  margin-bottom: 40rpx;
-}
-
-.plan-card {
-  background: var(--card-bg-solid);
-  border-radius: 24rpx;
-  padding: 30rpx;
-  border: 2rpx solid var(--card-border);
-  transition: all 0.3s ease;
-}
-
-.plan-card.plan-selected {
-  border: 2rpx solid var(--accent-blue);
-  background: rgba(59, 130, 246, 0.1);
-}
-
-.plan-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20rpx;
-}
-
-.plan-name {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: var(--text-primary);
-}
-
-.plan-badge {
-  font-size: 22rpx;
-  color: white;
-  background: var(--accent-blue);
-  padding: 6rpx 14rpx;
-  border-radius: 16rpx;
-}
-
-.plan-price {
-  display: flex;
-  align-items: baseline;
-}
-
-.price-symbol {
-  font-size: 28rpx;
-  color: var(--text-primary);
-  font-weight: 600;
-}
-
-.price-value {
-  font-size: 48rpx;
-  color: var(--text-primary);
-  font-weight: bold;
-  margin: 0 8rpx;
-}
-
-.price-unit {
-  font-size: 28rpx;
-  color: var(--text-secondary);
-}
-
-.btn-purchase {
-  width: 100%;
-  padding: 28rpx;
-  background: linear-gradient(135deg, var(--accent-blue), var(--accent-teal));
-  color: white;
-  border-radius: 24rpx;
-  font-size: 32rpx;
-  font-weight: 600;
-  border: none;
-}
-
-.btn-purchase:disabled {
-  background: var(--text-tertiary);
-  opacity: 0.5;
-}
 </style>

@@ -39,7 +39,12 @@
           class="plan-card" 
           v-for="plan in plans" 
           :key="plan.id"
-          :class="{ 'plan-recommended': plan.id === 'monthly', 'plan-lifetime': plan.id === 'lifetime' }"
+          :class="{
+            'plan-selected': selectedPlan === plan.id,
+            'plan-recommended': plan.id === 'monthly',
+            'plan-lifetime': plan.id === 'lifetime'
+          }"
+          @click="selectPlan(plan.id)"
         >
           <view class="plan-header">
             <text class="plan-name">{{ plan.name }}</text>
@@ -76,7 +81,8 @@ export default {
       usedQuota: 0,
       remainingQuota: 0,
       memberInfo: {},
-      plans: []
+      plans: [],
+      selectedPlan: ''
     }
   },
   computed: {
@@ -100,10 +106,25 @@ export default {
       
       // 获取套餐列表
       this.plans = Object.values(memberUtil.PLANS)
+      if (!this.selectedPlan && this.plans && this.plans.length > 0) {
+        const defaultPlan = this.plans.find((plan) => plan && plan.id === 'monthly')
+        this.selectedPlan = (defaultPlan && defaultPlan.id) || (this.plans[0] && this.plans[0].id) || ''
+      }
+    },
+    selectPlan(planId) {
+      if (!planId) return
+      this.selectedPlan = planId
     },
     goToUpgrade() {
+      if (!this.selectedPlan) {
+        uni.showToast({
+          title: '请选择套餐',
+          icon: 'none'
+        })
+        return
+      }
       uni.navigateTo({
-        url: '/pages/member/upgrade'
+        url: `/pages/member/purchase?planId=${this.selectedPlan}`
       })
     }
   }
@@ -220,6 +241,15 @@ export default {
   border: 2rpx solid var(--card-border);
   box-shadow: 0 8rpx 24rpx var(--shadow-color);
   transition: all 0.3s ease;
+}
+
+.plan-card:active {
+  transform: scale(0.98);
+}
+
+.plan-card.plan-selected {
+  border: 2rpx solid var(--accent-blue);
+  box-shadow: 0 12rpx 32rpx rgba(59, 130, 246, 0.2);
 }
 
 .plan-card.plan-recommended {

@@ -32,11 +32,11 @@
       <!-- 月份导航栏 -->
       <view class="month-nav">
         <view class="nav-btn" @click="prevMonth">
-          <text class="nav-icon">&lt;</text>
+          <text class="nav-icon">{{ '<' }}</text>
         </view>
         <view class="month-text">{{ currentYear }}年{{ currentMonth }}月</view>
         <view class="nav-btn" @click="nextMonth">
-          <text class="nav-icon">&gt;</text>
+          <text class="nav-icon">{{ '>' }}</text>
         </view>
       </view>
 

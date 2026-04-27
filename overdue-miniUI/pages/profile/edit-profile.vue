@@ -213,7 +213,10 @@ export default {
 
 .input {
   width: 100%;
-  padding: 24rpx;
+  height: 88rpx;
+  min-height: 88rpx;
+  padding: 0 24rpx;
+  line-height: 88rpx;
   background: var(--secondary-bg);
   border-radius: 16rpx;
   font-size: 28rpx;

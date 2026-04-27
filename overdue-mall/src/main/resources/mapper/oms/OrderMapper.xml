@@ -191,7 +191,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <if test="status==-1">
             and status in (1,2,3,4)
         </if>
-        <if test="status>-1 and status&lt;3">
+        <if test="status gt -1 and status lt 3">
             and status=#{status}
             and aftersale_status=1
         </if>

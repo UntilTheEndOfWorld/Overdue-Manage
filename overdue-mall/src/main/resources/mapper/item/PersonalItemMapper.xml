@@ -52,7 +52,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <include refid="selectPersonalItemVo"/>
         where user_id = #{userId} 
           and status = '0'
-          and expiry_date &lt;= #{currentDate}
+          and expiry_date <![CDATA[ <= ]]> #{currentDate}
         order by expiry_date desc
     </select>
 

@@ -633,18 +633,14 @@ export default {
 .tab-container {
   display: flex;
   gap: 16rpx;
-  margin-bottom: 30rpx;
-  background: var(--card-bg);
-  border-radius: 40rpx;
-  padding: 8rpx;
-  border: 2rpx solid var(--card-border);
-  backdrop-filter: blur(24rpx) saturate(180%);
-  -webkit-backdrop-filter: blur(24rpx) saturate(180%);
-  box-shadow: 
-    0 8rpx 32rpx -8rpx var(--shadow-color),
-    0 0 0 1rpx rgba(255, 255, 255, 0.05) inset;
-  position: sticky;
-  top: 20rpx;
+  margin-bottom: 0;
+  background: #eaf3ff;
+  border-radius: 36rpx 36rpx 0 0;
+  padding: 10rpx;
+  border: 2rpx solid #bfd7ff;
+  border-bottom: none;
+  box-shadow: 0 8rpx 24rpx -10rpx rgba(59, 130, 246, 0.25);
+  position: relative;
   z-index: 10;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -655,7 +651,7 @@ export default {
   align-items: center;
   justify-content: center;
   gap: 12rpx;
-  padding: 24rpx;
+  padding: 22rpx 24rpx;
   border-radius: 32rpx;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
@@ -666,18 +662,17 @@ export default {
   }
   
   &.active {
-    background: linear-gradient(135deg, var(--accent-blue), var(--accent-teal));
-    box-shadow: 
-      0 4rpx 16rpx -4rpx var(--glow-blue),
-      0 2rpx 8rpx -2rpx var(--shadow-color);
+    background: linear-gradient(135deg, #cfe3ff, #bcd9ff);
+    box-shadow: 0 8rpx 20rpx -10rpx rgba(59, 130, 246, 0.45);
     
     .tab-text {
-      color: #ffffff;
-      font-weight: 600;
+      color: #2f4c7d;
+      font-size: 38rpx;
+      font-weight: 700;
     }
     
     .tab-icon {
-      filter: brightness(1.2);
+      transform: scale(1.12);
     }
     
     /* 光泽效果 */
@@ -700,21 +695,23 @@ export default {
 
 .tab-icon {
   font-size: 36rpx;
+  transition: transform 0.25s ease;
 }
 
 .tab-text {
   font-size: 32rpx;
   font-weight: 500;
-  color: var(--text-secondary);
-  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.tab-item.active .tab-text {
-  color: var(--text-primary);
-  font-weight: 600;
+  color: #a0a9b8;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .tab-content {
+  background: #f5f9ff;
+  border: 2rpx solid #bfd7ff;
+  border-top: none;
+  border-radius: 0 0 30rpx 30rpx;
+  padding: 28rpx;
+  margin-bottom: 30rpx;
   animation: fadeIn 0.3s ease-out;
 }
 

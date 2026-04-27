@@ -26,10 +26,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                 and user_id = #{userId}
             </if>
             <if test="params.beginTime != null and params.beginTime != ''">
-                and last_watch_time &gt;= #{params.beginTime}
+                and last_watch_time <![CDATA[ >= ]]> #{params.beginTime}
             </if>
             <if test="params.endTime != null and params.endTime != ''">
-                and last_watch_time &lt;= #{params.endTime}
+                and last_watch_time <![CDATA[ <= ]]> #{params.endTime}
             </if>
         </where>
         order by last_watch_time desc
@@ -57,10 +57,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         from overdue_ad_watch_record
         <where>
             <if test="startDate != null and startDate != ''">
-                and DATE(last_watch_time) &gt;= #{startDate}
+                and DATE(last_watch_time) <![CDATA[ >= ]]> #{startDate}
             </if>
             <if test="endDate != null and endDate != ''">
-                and DATE(last_watch_time) &lt;= #{endDate}
+                and DATE(last_watch_time) <![CDATA[ <= ]]> #{endDate}
             </if>
         </where>
         group by DATE(last_watch_time)
