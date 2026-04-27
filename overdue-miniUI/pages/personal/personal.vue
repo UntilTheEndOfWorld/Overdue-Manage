@@ -46,10 +46,10 @@
     </view>
 
     <!-- 物品列表 -->
-    <view class="item-list">
+    <view class="item-list" v-if="filteredItems.length > 0" :key="listRenderKey">
       <item-card 
         v-for="item in filteredItems" 
-        :key="item.id"
+        :key="item._renderKey"
         :item="item"
         :show-process="true"
         @click="editItem"
@@ -92,15 +92,16 @@ export default {
       searchKeyword: '',
       loading: false,
       loadError: false,
-      itemStats: {
-        total: 0,
-        normal: 0,
-        near: 0,
-        expired: 0
-      }
+      renderTick: 0
     }
   },
   computed: {
+    itemStats() {
+      return itemUtil.getItemStats(Array.isArray(this.items) ? this.items : [])
+    },
+    listRenderKey() {
+      return [this.filter, this.searchKeyword, this.filteredItems.length, this.renderTick].join('|')
+    },
     filteredItems() {
       var result = this.items
       if (this.searchKeyword) {
@@ -111,50 +112,20 @@ export default {
   },
   onLoad() {
     this.loadItems()
-    this.loadItemStats()
   },
   onShow() {
     this.loadItems()
-    this.loadItemStats()
   },
   onPullDownRefresh() {
     this.loadItems()
-    this.loadItemStats()
     setTimeout(function() {
       uni.stopPullDownRefresh()
     }, 500)
   },
   methods: {
-    async loadItemStats() {
-      if (!isLoggedIn()) return
-      try {
-        var sres = await api.getPersonalItemStats()
-        if (sres && sres.code === 200 && sres.data) {
-          var d = sres.data
-          this.itemStats = {
-            total: Number(d.total) || 0,
-            normal: Number(d.normal) || 0,
-            near: Number(d.near) || 0,
-            expired: Number(d.expired) || 0
-          }
-        }
-      } catch (e) {
-        console.warn('加载物品统计失败', e)
-        var local = this.items && this.items.length ? itemUtil.getItemStats(this.items) : null
-        if (local) {
-          this.itemStats = {
-            total: local.total,
-            normal: local.normal,
-            near: local.near,
-            expired: local.expired
-          }
-        }
-      }
-    },
     retryLoad() {
       this.loadError = false
       this.loadItems()
-      this.loadItemStats()
     },
     async loadItems() {
       if (!isLoggedIn()) return
@@ -164,7 +135,8 @@ export default {
       try {
         var res = await api.getPersonalItems()
         if (res && res.code === 200 && res.data) {
-          this.items = Array.isArray(res.data) ? res.data : (res.data.rows || res.data.list || [])
+          var rawItems = Array.isArray(res.data) ? res.data : (res.data.rows || res.data.list || [])
+          this.items = this.normalizeItems(rawItems)
           storage.set('personalItems', this.items)
         } else {
           this.loadError = true
@@ -173,21 +145,24 @@ export default {
       } catch (error) {
         console.error('加载个人物品失败:', error)
         this.loadError = true
-        this.items = storage.get('personalItems', []) || []
+        this.items = this.normalizeItems(storage.get('personalItems', []) || [])
         if (!this.items.length) {
           uni.showToast({ title: '网络异常', icon: 'none' })
         } else {
           uni.showToast({ title: '已显示本地缓存', icon: 'none' })
         }
       } finally {
+        this.renderTick++
         this.loading = false
       }
     },
     setFilter(type) {
       this.filter = type
+      this.renderTick++
     },
     onSearch() {
-      // 搜索逻辑已在computed中处理
+      // 搜索逻辑已在computed中处理；递增 tick 强制列表区重建，避免小程序渲染残影
+      this.renderTick++
     },
     addItem() {
       // 检查额度
@@ -237,12 +212,24 @@ export default {
           api.deletePersonalItem(itemId, 'process').then(function() {
             uni.showToast({ title: '处理完成', icon: 'success' })
             self.loadItems()
-            self.loadItemStats()
           }).catch(function(error) {
             console.error('处理过期物品失败:', error)
             uni.showToast({ title: (error && error.message) || '处理失败', icon: 'none' })
           })
         }
+      })
+    },
+    normalizeItems(items) {
+      if (!Array.isArray(items)) {
+        return []
+      }
+      return items.map(function(item, index) {
+        var id = item && item.id != null ? String(item.id) : ''
+        var fallbackKey = [item && item.name ? item.name : '', item && item.expiryDate ? item.expiryDate : '', index].join('_')
+        return Object.assign({}, item, {
+          id: id || item.id,
+          _renderKey: id || fallbackKey
+        })
       })
     }
   }

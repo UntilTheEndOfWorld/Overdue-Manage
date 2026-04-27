@@ -36,7 +36,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <select id="selectByUserId" parameterType="Long" resultMap="PersonalItemResult">
         <include refid="selectPersonalItemVo"/>
-        where user_id = #{userId} and status = '0'
+        where user_id = #{userId}
+          and status = '0'
+          and create_time is not null
         order by expiry_date asc
     </select>
 

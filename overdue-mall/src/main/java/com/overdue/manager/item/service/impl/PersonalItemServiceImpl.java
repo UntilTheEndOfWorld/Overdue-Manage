@@ -3,6 +3,7 @@ package com.overdue.manager.item.service.impl;
 import com.overdue.manager.item.domain.entity.PersonalItem;
 import com.overdue.manager.item.domain.vo.PersonalItemStatsVO;
 import com.overdue.manager.item.domain.entity.OperationLog;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.overdue.manager.item.mapper.PersonalItemMapper;
 import com.overdue.manager.item.service.OperationLogService;
 import com.overdue.manager.item.service.PersonalItemService;
@@ -43,8 +44,12 @@ public class PersonalItemServiceImpl implements PersonalItemService {
             return 0;
         }
         LocalDateTime now = LocalDateTime.now();
-        personalItem.setStatus(STATUS_NORMAL);
-        personalItem.setCreateTime(now);
+        if (personalItem.getStatus() == null || personalItem.getStatus().trim().isEmpty()) {
+            personalItem.setStatus(STATUS_NORMAL);
+        }
+        if (personalItem.getCreateTime() == null) {
+            personalItem.setCreateTime(now);
+        }
         personalItem.setUpdateTime(now);
         return personalItemMapper.insert(personalItem);
     }
@@ -67,6 +72,22 @@ public class PersonalItemServiceImpl implements PersonalItemService {
     public int updatePersonalItem(PersonalItem personalItem) {
         if (personalItem == null || personalItem.getId() == null) {
             return 0;
+        }
+        PersonalItem existing = personalItemMapper.selectById(personalItem.getId());
+        if (existing == null) {
+            return 0;
+        }
+        // 防止更新请求未携带关键字段时把状态/创建时间置空，导致列表被过滤。
+        if (personalItem.getUserId() == null) {
+            personalItem.setUserId(existing.getUserId());
+        }
+        if (personalItem.getStatus() == null || personalItem.getStatus().trim().isEmpty()) {
+            personalItem.setStatus(existing.getStatus() == null || existing.getStatus().trim().isEmpty()
+                    ? STATUS_NORMAL
+                    : existing.getStatus());
+        }
+        if (personalItem.getCreateTime() == null) {
+            personalItem.setCreateTime(existing.getCreateTime() == null ? LocalDateTime.now() : existing.getCreateTime());
         }
         personalItem.setUpdateTime(LocalDateTime.now());
         return personalItemMapper.updateById(personalItem);
@@ -91,11 +112,11 @@ public class PersonalItemServiceImpl implements PersonalItemService {
         if (id == null) {
             return 0;
         }
-        PersonalItem deleted = new PersonalItem();
-        deleted.setId(id);
-        deleted.setStatus(STATUS_DELETED);
-        deleted.setUpdateTime(LocalDateTime.now());
-        return personalItemMapper.updateById(deleted);
+        UpdateWrapper<PersonalItem> updateWrapper = new UpdateWrapper<>();
+        updateWrapper.eq("id", id)
+                .set("status", STATUS_DELETED)
+                .set("update_time", LocalDateTime.now());
+        return personalItemMapper.update(null, updateWrapper);
     }
 
     @Override
@@ -244,4 +265,5 @@ public class PersonalItemServiceImpl implements PersonalItemService {
     private String safeText(Object value) {
         return value == null ? "" : String.valueOf(value);
     }
+
 }

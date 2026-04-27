@@ -31,7 +31,7 @@
         <text class="label">保质期 *</text>
         <view class="shelf-life-group">
           <view class="shelf-life-input-wrap">
-            <input class="input shelf-life-input" type="number" v-model="form.shelfLife" placeholder="保质期" />
+            <input class="input shelf-life-input" type="number" :value="form.shelfLife" @input="onShelfLifeInput" placeholder="保质期" />
           </view>
           <picker mode="selector" :range="shelfLifeUnits" :value="unitIndex" @change="onUnitChange">
             <view class="picker shelf-life-unit-picker">{{ form.unit || '天' }}</view>
@@ -44,6 +44,9 @@
         <picker mode="date" :value="form.expiryDate" @change="onExpiryDateChange">
           <view class="picker">{{ form.expiryDate || '自动计算' }}</view>
         </picker>
+        <view class="calc-btn-wrap">
+          <button class="calc-btn" @click="onClickCalcExpiry">按保质期计算</button>
+        </view>
       </view>
 
       <view class="btn-group">
@@ -133,17 +136,35 @@ export default {
       this.form.productionDate = e.detail.value
       this.calculateExpiryDate()
     },
+    onShelfLifeInput(e) {
+      var raw = e && e.detail ? e.detail.value : ''
+      var value = String(raw || '').replace(/[^\d]/g, '')
+      this.form.shelfLife = value
+      this.calculateExpiryDate()
+    },
     onExpiryDateChange(e) {
       this.form.expiryDate = e.detail.value
     },
+    onClickCalcExpiry() {
+      var shelfLifeValue = Number(this.form.shelfLife)
+      if (!this.form.productionDate || shelfLifeValue <= 0) {
+        uni.showToast({ title: '请先填写生产日期和保质期', icon: 'none' })
+        return
+      }
+      this.calculateExpiryDate()
+      uni.showToast({ title: '已按保质期计算', icon: 'none' })
+    },
     calculateExpiryDate() {
-      if (this.form.productionDate && this.form.shelfLife) {
+      var shelfLifeValue = Number(this.form.shelfLife)
+      if (this.form.productionDate && shelfLifeValue > 0) {
         const unit = this.form.unit === '天' ? 'day' : (this.form.unit === '月' ? 'month' : 'year')
         this.form.expiryDate = dateUtil.calculateExpiryDate(
           this.form.productionDate,
-          this.form.shelfLife,
+          shelfLifeValue,
           unit
         )
+      } else {
+        this.form.expiryDate = ''
       }
     },
     async save() {
@@ -158,7 +179,7 @@ export default {
         category: this.form.category,
         purchaseDate: this.form.purchaseDate || null,
         productionDate: this.form.productionDate,
-        shelfLife: this.form.shelfLife,
+        shelfLife: Number(this.form.shelfLife) || 0,
         unit: this.form.unit,
         expiryDate: this.form.expiryDate
       }
@@ -306,6 +327,23 @@ export default {
   flex-shrink: 0;
   height: 88rpx !important;
   min-height: 88rpx !important;
+}
+
+.calc-btn-wrap {
+  margin-top: 16rpx;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.calc-btn {
+  height: 64rpx;
+  line-height: 64rpx;
+  padding: 0 24rpx;
+  border-radius: 32rpx;
+  font-size: 24rpx;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-teal));
+  border: none;
 }
 
 .btn-group {
