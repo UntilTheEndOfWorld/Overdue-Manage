@@ -46,4 +46,26 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by operation_time desc
     </select>
 
+    <select id="selectPersonalLogs" resultMap="OperationLogResult">
+        <include refid="selectOperationLogVo"/>
+        where item_type = 'personal'
+          and operator_id = #{operatorId}
+        <if test="itemId != null">
+          and item_id = #{itemId}
+        </if>
+        <if test="operationType != null and operationType != '' and operationType != 'all'">
+          and operation_type = #{operationType}
+        </if>
+        order by operation_time desc
+        limit 200
+    </select>
+
+    <select id="countExpireLogByItemAndDate" resultType="int">
+        select count(1) from overdue_operation_log
+        where item_id = #{itemId}
+          and item_type = #{itemType}
+          and operation_type = 'expire'
+          and operation_data like concat('%"expiryDate":"', #{expiryDate}, '"%')
+    </select>
+
 </mapper>

@@ -127,7 +127,7 @@
               <text class="space-name">{{ space.name }}</text>
               <text class="space-desc">{{ space.memberCount || 0 }} 个成员 · {{ space.itemCount || 0 }} 件物品</text>
             </view>
-            <view class="space-arrow">></view>
+            <view class="space-arrow">{{ '>' }}</view>
           </view>
         </view>
       </view>
@@ -316,17 +316,67 @@ export default {
         var res = await api.getSharedSpaces()
         if (res && res.code === 200 && res.data) {
           var spaces = Array.isArray(res.data) ? res.data : (res.data.rows || res.data.list || [])
-          this.sharedSpaces = spaces
-          this.sharedCount = spaces.length
+          var normalizedSpaces = this.normalizeSharedSpaces(spaces)
+          this.sharedSpaces = await this.fillSharedSpaceCounts(normalizedSpaces)
+          this.sharedCount = this.sharedSpaces.length
           // 缓存到本地
-          storage.set('sharedSpaces', spaces)
+          storage.set('sharedSpaces', this.sharedSpaces)
         }
       } catch (error) {
         console.error('加载共享空间失败:', error)
         // 兜底使用缓存
-        this.sharedSpaces = storage.get('sharedSpaces', [])
+        this.sharedSpaces = this.normalizeSharedSpaces(storage.get('sharedSpaces', []))
         this.sharedCount = this.sharedSpaces.length
       }
+    },
+    normalizeSharedSpaces(spaces) {
+      if (!Array.isArray(spaces)) return []
+      return spaces.map(function(space) {
+        var memberCount = Number(
+          space.memberCount != null ? space.memberCount :
+          (space.memberNum != null ? space.memberNum :
+          (space.membersCount != null ? space.membersCount :
+          (space.member_size != null ? space.member_size : 0)))
+        )
+        var itemCount = Number(
+          space.itemCount != null ? space.itemCount :
+          (space.itemNum != null ? space.itemNum :
+          (space.itemsCount != null ? space.itemsCount :
+          (space.item_size != null ? space.item_size : 0)))
+        )
+        return Object.assign({}, space, {
+          memberCount: Number.isFinite(memberCount) ? memberCount : 0,
+          itemCount: Number.isFinite(itemCount) ? itemCount : 0
+        })
+      })
+    },
+    async fillSharedSpaceCounts(spaces) {
+      if (!Array.isArray(spaces) || spaces.length === 0) return []
+      var enriched = await Promise.all(spaces.map(async function(space) {
+        var spaceId = space && (space.id || space.spaceId)
+        if (!spaceId) return space
+        // 仅在计数缺失时补拉，避免不必要请求
+        if ((space.memberCount || 0) > 0 || (space.itemCount || 0) > 0) {
+          return space
+        }
+        try {
+          var results = await Promise.allSettled([
+            api.getSpaceMembers(spaceId),
+            api.getSharedItems(spaceId)
+          ])
+          var membersRes = results[0] && results[0].status === 'fulfilled' ? results[0].value : null
+          var itemsRes = results[1] && results[1].status === 'fulfilled' ? results[1].value : null
+          var members = membersRes && membersRes.data ? (Array.isArray(membersRes.data) ? membersRes.data : (membersRes.data.rows || membersRes.data.list || [])) : []
+          var items = itemsRes && itemsRes.data ? (Array.isArray(itemsRes.data) ? itemsRes.data : (itemsRes.data.rows || itemsRes.data.list || [])) : []
+          return Object.assign({}, space, {
+            memberCount: members.length,
+            itemCount: items.length
+          })
+        } catch (e) {
+          return space
+        }
+      }))
+      return enriched
     },
     // 跳转到创建共享空间
     goToCreateSpace() {

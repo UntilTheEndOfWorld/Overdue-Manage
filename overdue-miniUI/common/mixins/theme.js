@@ -5,9 +5,12 @@ import themeUtil from '@/common/utils/theme.js'
 
 export default {
   data() {
+    const savedTheme = themeUtil.getTheme()
+    const savedPalette = themeUtil.getThemePalette()
     return {
-      isLightMode: false,
-      themePalette: 'mint'
+      // 首帧即使用已保存主题，避免页面切换时先闪默认深色
+      isLightMode: savedTheme === 'light',
+      themePalette: savedPalette || 'mint'
     }
   },
   created() {

@@ -41,4 +41,14 @@ public interface OperationLogService {
      * @return 操作日志列表
      */
     List<OperationLog> selectByItemId(Long itemId, String itemType);
+
+    /**
+     * 查询个人物品日志（按当前用户）
+     */
+    List<OperationLog> selectPersonalLogs(Long operatorId, Long itemId, String operationType);
+
+    /**
+     * 过期日志去重判断
+     */
+    boolean hasExpireLog(Long itemId, String itemType, String expiryDate);
 }

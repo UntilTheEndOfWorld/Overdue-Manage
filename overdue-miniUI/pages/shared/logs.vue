@@ -114,13 +114,16 @@ export default {
       this.loadLogs()
     },
     getLogText(log) {
+      if (log && log.operationDesc) return log.operationDesc
       return logger.getOperationText(log)
     },
     getTypeText(type) {
       const typeMap = {
         'add': '添加',
         'update': '更新',
-        'delete': '删除'
+        'delete': '删除',
+        'expire': '过期',
+        'process': '处理'
       }
       return typeMap[type] || '未知'
     },
@@ -170,7 +173,7 @@ export default {
 .title {
   font-size: 56rpx;
   font-weight: 600;
-  color: $text-primary;
+  color: var(--text-primary);
 }
 
 .filter-bar {
@@ -186,7 +189,7 @@ export default {
   border: 2rpx solid $glass-border;
   border-radius: 40rpx;
   font-size: 28rpx;
-  color: $text-secondary;
+  color: var(--text-secondary);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   
   &:active {
@@ -248,17 +251,17 @@ export default {
 .name {
   font-size: 32rpx;
   font-weight: 600;
-  color: $text-primary;
+  color: var(--text-primary);
 }
 
 .time {
   font-size: 24rpx;
-  color: $text-secondary;
+  color: var(--text-secondary);
 }
 
 .log-content {
   font-size: 32rpx;
-  color: $text-primary;
+  color: var(--text-primary);
   line-height: 1.6;
   margin-bottom: 10rpx;
 }
@@ -284,12 +287,22 @@ export default {
     background: rgba(244, 63, 94, 0.15);
     color: $accent-rose;
   }
+  
+  &.expire {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+  }
+  
+  &.process {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+  }
 }
 
 .empty-state {
   text-align: center;
   padding: 160rpx 40rpx;
-  color: $text-secondary;
+  color: var(--text-secondary);
 }
 
 .empty-icon {
@@ -302,7 +315,7 @@ export default {
 .empty-text {
   display: block;
   font-size: 32rpx;
-  color: $text-secondary;
+  color: var(--text-secondary);
 }
 
 /* 浅色模式下的筛选按钮 */

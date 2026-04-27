@@ -38,4 +38,18 @@ public interface OperationLogMapper extends BaseMapper<OperationLog> {
      */
     List<OperationLog> selectByItemId(@Param("itemId") Long itemId, 
                                      @Param("itemType") String itemType);
+
+    /**
+     * 查询个人物品日志（按操作人）
+     */
+    List<OperationLog> selectPersonalLogs(@Param("operatorId") Long operatorId,
+                                          @Param("itemId") Long itemId,
+                                          @Param("operationType") String operationType);
+
+    /**
+     * 统计某物品某过期日是否已写过过期日志（用于去重）
+     */
+    int countExpireLogByItemAndDate(@Param("itemId") Long itemId,
+                                    @Param("itemType") String itemType,
+                                    @Param("expiryDate") String expiryDate);
 }

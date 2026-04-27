@@ -51,9 +51,11 @@
         v-for="item in filteredItems" 
         :key="item.id"
         :item="item"
+        :show-process="true"
         @click="editItem"
         @edit="editItem"
         @log="showItemLogs"
+        @process="handleProcessItem"
       />
     </view>
 
@@ -76,6 +78,7 @@ import ItemCard from '@/components/item-card/item-card.vue'
 import themeMixin from '@/common/mixins/theme.js'
 import api from '@/common/utils/api.js'
 import { isLoggedIn } from '@/common/utils/auth.js'
+import memberUtil from '@/common/utils/member.js'
 
 export default {
   mixins: [themeMixin],
@@ -188,7 +191,10 @@ export default {
     },
     addItem() {
       // 检查额度
-      const memberUtil = require('@/common/utils/member.js').default
+      if (!memberUtil || typeof memberUtil.canAddItemWithAd !== 'function') {
+        uni.showToast({ title: '会员能力加载失败', icon: 'none' })
+        return
+      }
       if (!memberUtil.canAddItemWithAd()) {
         // 额度已用完，跳转到升级页面
         uni.navigateTo({
@@ -214,6 +220,29 @@ export default {
     showItemLogs(item) {
       uni.navigateTo({
         url: `/pages/personal/logs?itemId=${item.id}`
+      })
+    },
+    handleProcessItem(item) {
+      var itemId = item && item.id
+      if (!itemId) {
+        uni.showToast({ title: '物品信息异常', icon: 'none' })
+        return
+      }
+      var self = this
+      uni.showModal({
+        title: '处理过期物品',
+        content: '处理后将移入删除列表，并释放1个可用额度，确定处理吗？',
+        success: function(res) {
+          if (!res.confirm) return
+          api.deletePersonalItem(itemId, 'process').then(function() {
+            uni.showToast({ title: '处理完成', icon: 'success' })
+            self.loadItems()
+            self.loadItemStats()
+          }).catch(function(error) {
+            console.error('处理过期物品失败:', error)
+            uni.showToast({ title: (error && error.message) || '处理失败', icon: 'none' })
+          })
+        }
       })
     }
   }

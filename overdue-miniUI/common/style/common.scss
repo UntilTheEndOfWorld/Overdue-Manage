@@ -253,6 +253,21 @@ page {
   --modal-overlay: rgba(44, 90, 107, 0.3);
 }
 
+.light-mode.theme-palette-white {
+  --primary-bg: #FFFFFF;
+  --secondary-bg: #FFFFFF;
+  --card-bg: rgba(255, 255, 255, 0.98);
+  --card-bg-solid: #FFFFFF;
+  --card-border: #E5E7EB;
+  --text-primary: #111827;
+  --text-secondary: #4B5563;
+  --text-tertiary: #6B7280;
+  --shadow-color: rgba(0, 0, 0, 0.06);
+  --shadow-sm: rgba(0, 0, 0, 0.04);
+  --shadow-md: rgba(0, 0, 0, 0.06);
+  --modal-overlay: rgba(17, 24, 39, 0.3);
+}
+
 /* ========== 高级玻璃态效果卡片 ========== */
 .glass-card {
   background: var(--card-bg);

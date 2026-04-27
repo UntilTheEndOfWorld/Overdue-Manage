@@ -23,17 +23,23 @@
     <!-- 会员特权 -->
     <view class="privilege-section">
       <view class="section-title">
-        <text class="title-text">会员特权</text>
-        <text class="title-badge">无限物品</text>
+        <view class="title-text with-crown">
+          <text>会员特权</text>
+          <text class="title-crown">👑</text>
+        </view>
+        <view class="title-badges">
+          <text class="title-badge crown">尊享权益</text>
+          <text class="title-badge">无限物品</text>
+          <text class="title-badge">多端同步</text>
+        </view>
       </view>
     </view>
 
     <!-- 选择套餐 -->
-    <view class="plans-section">
-      <view class="section-title">
+    <view class="plans-section-card">
+      <view class="section-title plans-title">
         <text class="title-text">选择套餐</text>
       </view>
-      
       <view class="plans-list">
         <view 
           class="plan-card" 
@@ -41,8 +47,8 @@
           :key="plan.id"
           :class="{
             'plan-selected': selectedPlan === plan.id,
-            'plan-recommended': plan.id === 'monthly',
-            'plan-lifetime': plan.id === 'lifetime'
+            'plan-selected-recommended': selectedPlan === plan.id && plan.id === 'monthly',
+            'plan-selected-lifetime': selectedPlan === plan.id && plan.id === 'lifetime'
           }"
           @click="selectPlan(plan.id)"
         >
@@ -154,21 +160,18 @@ export default {
 }
 
 .status-card {
-  background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+  background: linear-gradient(135deg, #2b2f36, #0f1115);
   border-radius: 32rpx;
   padding: 40rpx;
   margin-bottom: 40rpx;
-  box-shadow: 0 20rpx 50rpx -10rpx var(--shadow-color);
-  border: 2rpx solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20rpx 50rpx -10rpx rgba(0, 0, 0, 0.35);
+  border: 2rpx solid rgba(255, 255, 255, 0.12);
 }
 
 .status-card.member {
   background: linear-gradient(135deg, #f59e0b, #d97706);
-}
-
-.light-mode .status-card {
-  background: var(--card-bg-solid);
-  border: 2rpx solid var(--card-border);
+  border: 2rpx solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 20rpx 50rpx -10rpx rgba(217, 119, 6, 0.35);
 }
 
 .status-title {
@@ -178,28 +181,16 @@ export default {
   margin-bottom: 20rpx;
 }
 
-.light-mode .status-title {
-  color: var(--text-primary);
-}
-
 .status-desc {
   font-size: 28rpx;
   color: rgba(255, 255, 255, 0.95);
   line-height: 1.6;
 }
 
-.light-mode .status-desc {
-  color: var(--text-primary);
-}
-
 .highlight {
   font-weight: bold;
   font-size: 32rpx;
-  color: white;
-}
-
-.light-mode .highlight {
-  color: var(--accent-blue);
+  color: #ffffff;
 }
 
 .privilege-section,
@@ -220,12 +211,53 @@ export default {
   color: var(--text-primary);
 }
 
+.title-text.with-crown {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.title-crown {
+  position: absolute;
+  top: -16rpx;
+  right: -24rpx;
+  font-size: 24rpx;
+  transform: rotate(25deg);
+  transform-origin: center;
+}
+
 .title-badge {
   font-size: 24rpx;
   color: var(--accent-blue);
   background: rgba(59, 130, 246, 0.1);
   padding: 8rpx 16rpx;
   border-radius: 20rpx;
+}
+
+.title-badges {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.title-badge.crown {
+  color: #7a4a00;
+  background: linear-gradient(135deg, #ffe8ad, #ffd164);
+}
+
+.plans-section-card {
+  margin-bottom: 40rpx;
+  padding: 24rpx;
+  border-radius: 24rpx;
+  border: 2rpx solid rgba(245, 179, 1, 0.65);
+  background: rgba(255, 248, 220, 0.35);
+  box-shadow: 0 10rpx 28rpx rgba(245, 179, 1, 0.18);
+}
+
+.plans-title {
+  margin-bottom: 24rpx;
 }
 
 .plans-list {
@@ -235,11 +267,11 @@ export default {
 }
 
 .plan-card {
-  background: var(--card-bg-solid);
+  background: linear-gradient(135deg, #ffd86b, #f5b301);
   border-radius: 24rpx;
   padding: 30rpx;
-  border: 2rpx solid var(--card-border);
-  box-shadow: 0 8rpx 24rpx var(--shadow-color);
+  border: 2rpx solid #f0b429;
+  box-shadow: 0 8rpx 24rpx rgba(245, 179, 1, 0.22);
   transition: all 0.3s ease;
 }
 
@@ -247,19 +279,40 @@ export default {
   transform: scale(0.98);
 }
 
+.plan-card .plan-name,
+.plan-card .price-symbol,
+.plan-card .price-value,
+.plan-card .price-unit {
+  color: #4a3412;
+}
+
+.plan-card:not(.plan-selected) {
+  filter: grayscale(100%);
+  opacity: 0.58;
+}
+
 .plan-card.plan-selected {
-  border: 2rpx solid var(--accent-blue);
-  box-shadow: 0 12rpx 32rpx rgba(59, 130, 246, 0.2);
-}
-
-.plan-card.plan-recommended {
-  border: 2rpx solid var(--accent-blue);
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));
-}
-
-.plan-card.plan-lifetime {
   border: 2rpx solid #f59e0b;
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
+  background: linear-gradient(135deg, #ffe48d, #f5b301);
+  box-shadow: 0 14rpx 36rpx rgba(245, 179, 1, 0.35);
+  transform: scale(1.02);
+}
+
+.plan-card.plan-selected .plan-name,
+.plan-card.plan-selected .price-symbol,
+.plan-card.plan-selected .price-value,
+.plan-card.plan-selected .price-unit {
+  color: #2b1f05;
+}
+
+.plan-card.plan-selected-recommended {
+  border-color: #f59e0b;
+}
+
+.plan-card.plan-selected-lifetime {
+  border: 2rpx solid #f59e0b;
+  background: linear-gradient(135deg, #ffe9a6, #f5b301);
+  box-shadow: 0 12rpx 32rpx rgba(245, 158, 11, 0.32);
 }
 
 .plan-header {
@@ -271,20 +324,21 @@ export default {
 
 .plan-name {
   font-size: 32rpx;
-  font-weight: bold;
+  font-weight: 600;
   color: var(--text-primary);
+  transition: all 0.3s ease;
 }
 
 .plan-badge {
   font-size: 22rpx;
-  color: white;
-  background: var(--accent-blue);
+  color: #2b1f05;
+  background: #ffd24d;
   padding: 6rpx 14rpx;
   border-radius: 16rpx;
 }
 
 .plan-badge.lifetime {
-  background: #f59e0b;
+  background: #ffc329;
 }
 
 .plan-price {
@@ -296,6 +350,7 @@ export default {
   font-size: 28rpx;
   color: var(--text-primary);
   font-weight: 600;
+  transition: all 0.3s ease;
 }
 
 .price-value {
@@ -303,11 +358,33 @@ export default {
   color: var(--text-primary);
   font-weight: bold;
   margin: 0 8rpx;
+  transition: all 0.3s ease;
 }
 
 .price-unit {
   font-size: 28rpx;
   color: var(--text-secondary);
+  transition: all 0.3s ease;
+}
+
+.plan-card.plan-selected .plan-name {
+  font-size: 36rpx;
+  font-weight: 800;
+}
+
+.plan-card.plan-selected .price-symbol {
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.plan-card.plan-selected .price-value {
+  font-size: 56rpx;
+  font-weight: 800;
+}
+
+.plan-card.plan-selected .price-unit {
+  font-size: 30rpx;
+  font-weight: 600;
 }
 
 .upgrade-section {
@@ -317,23 +394,24 @@ export default {
 .btn-upgrade {
   width: 100%;
   padding: 28rpx;
-  background: linear-gradient(135deg, var(--accent-blue), var(--accent-teal));
-  color: white;
+  background: linear-gradient(135deg, #ffd86b, #f5b301);
+  color: #1f1a0d;
   border-radius: 24rpx;
   font-size: 32rpx;
-  font-weight: 600;
+  font-weight: 700;
   border: none;
-  box-shadow: 0 8rpx 24rpx rgba(59, 130, 246, 0.3);
+  box-shadow: 0 10rpx 28rpx rgba(245, 179, 1, 0.35);
   transition: all 0.3s ease;
 }
 
 .btn-upgrade:active {
   transform: scale(0.98);
-  box-shadow: 0 4rpx 12rpx rgba(59, 130, 246, 0.3);
+  box-shadow: 0 6rpx 16rpx rgba(245, 179, 1, 0.35);
 }
 
 .light-mode .btn-upgrade {
-  background: linear-gradient(135deg, #3b82f6, #14b8a6);
-  box-shadow: 0 8rpx 24rpx rgba(59, 130, 246, 0.2);
+  background: linear-gradient(135deg, #ffe08a, #f5b301);
+  color: #1f1a0d;
+  box-shadow: 0 8rpx 24rpx rgba(245, 179, 1, 0.3);
 }
 </style>

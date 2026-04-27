@@ -65,7 +65,7 @@
 </template>
 
 <script>
-import logger from '@/common/utils/logger.js'
+import api from '@/common/utils/api.js'
 import themeMixin from '@/common/mixins/theme.js'
 
 export default {
@@ -105,20 +105,44 @@ export default {
   },
   methods: {
     loadLogs() {
-      this.logs = logger.getPersonalLogs(this.filterType)
+      var self = this
+      api.getPersonalLogs({
+        itemId: this.itemId || undefined,
+        operationType: this.filterType
+      }).then(function(res) {
+        if (res && res.code === 200 && res.data) {
+          self.logs = Array.isArray(res.data) ? res.data : (res.data.rows || res.data.list || [])
+        } else {
+          self.logs = []
+        }
+      }).catch(function() {
+        self.logs = []
+      })
     },
     setFilterType(type) {
       this.filterType = type
       this.loadLogs()
     },
     getLogText(log) {
-      return logger.getOperationText(log)
+      if (log && log.operationDesc) return log.operationDesc
+      var typeMap = {
+        add: '添加了物品',
+        update: '更新了物品',
+        delete: '删除了物品',
+        expire: '物品已过期',
+        process: '处理了过期物品'
+      }
+      var action = typeMap[log && log.operationType] || '未知操作'
+      var itemName = log && log.itemName ? log.itemName : ''
+      return itemName ? (action + ' "' + itemName + '"') : action
     },
     getTypeText(type) {
       const typeMap = {
         'add': '添加',
         'update': '更新',
-        'delete': '删除'
+        'delete': '删除',
+        'expire': '过期',
+        'process': '处理'
       }
       return typeMap[type] || '未知'
     },
@@ -168,7 +192,7 @@ export default {
 .title {
   font-size: 56rpx;
   font-weight: 600;
-  color: $text-primary;
+  color: var(--text-primary);
 }
 
 .filter-bar {
@@ -184,7 +208,7 @@ export default {
   border: 2rpx solid $glass-border;
   border-radius: 40rpx;
   font-size: 28rpx;
-  color: $text-secondary;
+  color: var(--text-secondary);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   
   &:active {
@@ -246,17 +270,17 @@ export default {
 .name {
   font-size: 32rpx;
   font-weight: 600;
-  color: $text-primary;
+  color: var(--text-primary);
 }
 
 .time {
   font-size: 24rpx;
-  color: $text-secondary;
+  color: var(--text-secondary);
 }
 
 .log-content {
   font-size: 32rpx;
-  color: $text-primary;
+  color: var(--text-primary);
   line-height: 1.6;
   margin-bottom: 10rpx;
 }
@@ -282,12 +306,22 @@ export default {
     background: rgba(244, 63, 94, 0.15);
     color: $accent-rose;
   }
+  
+  &.expire {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+  }
+  
+  &.process {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+  }
 }
 
 .empty-state {
   text-align: center;
   padding: 160rpx 40rpx;
-  color: $text-secondary;
+  color: var(--text-secondary);
 }
 
 .empty-icon {
@@ -300,7 +334,7 @@ export default {
 .empty-text {
   display: block;
   font-size: 32rpx;
-  color: $text-secondary;
+  color: var(--text-secondary);
 }
 
 /* 浅色模式下的筛选按钮 */

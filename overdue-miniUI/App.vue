@@ -138,11 +138,10 @@ export default {
 @import './common/style/common.scss';
 
 page {
-  background: #{$primary-bg-dark};
-  color: #{$text-primary-dark};
+  background: #f4f9f0;
+  color: var(--text-primary);
   font-family: 'Inter', 'Microsoft YaHei', sans-serif;
   min-height: 100vh;
-  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* 通用按钮样式 */

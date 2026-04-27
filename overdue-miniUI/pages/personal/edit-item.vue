@@ -48,17 +48,15 @@
 
       <view class="btn-group">
         <button class="btn btn-secondary" @click="cancel">取消</button>
-        <button class="btn btn-primary" @click="save">保存</button>
         <button class="btn btn-danger" @click="deleteItem">删除</button>
+        <button class="btn btn-primary" @click="save">保存</button>
       </view>
     </view>
   </view>
 </template>
 
 <script>
-import storage from '@/common/utils/storage.js'
 import dateUtil from '@/common/utils/date.js'
-import logger from '@/common/utils/logger.js'
 import validator from '@/common/utils/validator.js'
 import themeMixin from '@/common/mixins/theme.js'
 import api from '@/common/utils/api.js'

@@ -339,8 +339,17 @@ Api.prototype.updatePersonalItem = function(id, item) {
   return this.request('/personal/items/' + id, 'PUT', item)
 }
 
-Api.prototype.deletePersonalItem = function(id) {
-  return this.request('/personal/items/' + id, 'DELETE')
+Api.prototype.deletePersonalItem = function(id, opType) {
+  var url = '/personal/items/' + id
+  if (opType) {
+    url += '?opType=' + encodeURIComponent(opType)
+  }
+  return this.request(url, 'DELETE')
+}
+
+Api.prototype.getPersonalLogs = function(params) {
+  params = params || {}
+  return this.request('/personal/logs', 'GET', params)
 }
 
 // ==================== 共享空间相关接口 ====================
@@ -407,8 +416,12 @@ Api.prototype.updateSharedItem = function(spaceId, itemId, item) {
   return this.request('/shared/spaces/' + spaceId + '/items/' + itemId, 'PUT', item)
 }
 
-Api.prototype.deleteSharedItem = function(spaceId, itemId) {
-  return this.request('/shared/spaces/' + spaceId + '/items/' + itemId, 'DELETE')
+Api.prototype.deleteSharedItem = function(spaceId, itemId, opType) {
+  var url = '/shared/spaces/' + spaceId + '/items/' + itemId
+  if (opType) {
+    url += '?opType=' + encodeURIComponent(opType)
+  }
+  return this.request(url, 'DELETE')
 }
 
 // 获取空间操作日志
@@ -419,11 +432,27 @@ Api.prototype.getSpaceLogs = function(spaceId, params) {
 
 // ==================== 个人资料 ====================
 Api.prototype.getProfile = function() {
-  return this.request('/personal/profile', 'GET')
+  var self = this
+  return this.request('/personal/profile', 'GET').catch(function(err) {
+    // 兼容旧后端：个人资料接口可能仍为 /h5/ucenter/user-profile
+    var message = (err && err.message) ? String(err.message) : ''
+    if (message.indexOf('404') !== -1) {
+      return self.request('/h5/ucenter/user-profile', 'GET')
+    }
+    throw err
+  })
 }
 
 Api.prototype.updateProfile = function(data) {
-  return this.request('/personal/profile', 'PUT', data)
+  var self = this
+  return this.request('/personal/profile', 'PUT', data).catch(function(err) {
+    // 兼容旧后端：更新资料接口回退到历史路径
+    var message = (err && err.message) ? String(err.message) : ''
+    if (message.indexOf('404') !== -1) {
+      return self.request('/h5/ucenter/update-profile', 'PUT', data)
+    }
+    throw err
+  })
 }
 
 Api.prototype.uploadImage = function(filePath) {

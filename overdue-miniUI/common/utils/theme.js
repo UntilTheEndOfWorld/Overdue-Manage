@@ -74,17 +74,17 @@ export default {
     return savedTheme
   },
 
-  /** 浅色下的配色风格：mint / peach / lavender / ocean（参考 deepseek_html_20260325_df0615） */
+  /** 浅色下的配色风格：mint / peach / lavender / ocean / white */
   getThemePalette() {
     const v = uni.getStorageSync('themePalette')
-    if (v === 'peach' || v === 'lavender' || v === 'ocean' || v === 'mint') {
+    if (v === 'peach' || v === 'lavender' || v === 'ocean' || v === 'mint' || v === 'white') {
       return v
     }
     return 'mint'
   },
 
   setThemePalette(p) {
-    const allowed = ['mint', 'peach', 'lavender', 'ocean']
+    const allowed = ['mint', 'peach', 'lavender', 'ocean', 'white']
     const next = allowed.indexOf(p) >= 0 ? p : 'mint'
     uni.setStorageSync('themePalette', next)
     uni.$emit('palette-changed', next)

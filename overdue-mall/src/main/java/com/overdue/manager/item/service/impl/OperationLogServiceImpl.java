@@ -36,4 +36,17 @@ public class OperationLogServiceImpl implements OperationLogService {
     public List<OperationLog> selectByItemId(Long itemId, String itemType) {
         return operationLogMapper.selectByItemId(itemId, itemType);
     }
+
+    @Override
+    public List<OperationLog> selectPersonalLogs(Long operatorId, Long itemId, String operationType) {
+        return operationLogMapper.selectPersonalLogs(operatorId, itemId, operationType);
+    }
+
+    @Override
+    public boolean hasExpireLog(Long itemId, String itemType, String expiryDate) {
+        if (itemId == null || itemType == null || expiryDate == null || expiryDate.trim().isEmpty()) {
+            return false;
+        }
+        return operationLogMapper.countExpireLogByItemAndDate(itemId, itemType, expiryDate) > 0;
+    }
 }

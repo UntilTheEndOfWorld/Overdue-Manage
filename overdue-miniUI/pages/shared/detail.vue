@@ -241,6 +241,7 @@ export default {
       return roleMap[role] || '成员'
     },
     getLogText(log) {
+      if (log && log.operationDesc) return log.operationDesc
       return logger.getOperationText(log)
     },
     formatTime(time) {

@@ -38,6 +38,10 @@
       <text class="log-icon">📋</text>
       <text class="log-text">操作日志</text>
     </view>
+    <view class="dispose-btn" v-if="showProcess && statusClass === 'status-expired'" @click.stop="handleProcess">
+      <text class="dispose-icon">♻️</text>
+      <text class="dispose-text">处理（移入删除列表）</text>
+    </view>
   </view>
 </template>
 
@@ -60,6 +64,10 @@ export default {
     showDates: {
       type: Boolean,
       default: true
+    },
+    showProcess: {
+      type: Boolean,
+      default: false
     }
   },
   computed: {
@@ -96,6 +104,9 @@ export default {
     },
     handleLog() {
       this.$emit('log', this.item)
+    },
+    handleProcess() {
+      this.$emit('process', this.item)
     }
   }
 }
@@ -324,6 +335,34 @@ export default {
     background: var(--active-bg);
     transform: scale(0.98);
   }
+}
+
+.dispose-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  padding: 16rpx 24rpx;
+  margin-top: 16rpx;
+  background: rgba(239, 68, 68, 0.12);
+  border: 2rpx solid rgba(239, 68, 68, 0.35);
+  border-radius: 20rpx;
+  transition: all 0.3s ease;
+  
+  &:active {
+    background: rgba(239, 68, 68, 0.2);
+    transform: scale(0.98);
+  }
+}
+
+.dispose-icon {
+  font-size: 26rpx;
+}
+
+.dispose-text {
+  font-size: 26rpx;
+  color: #ef4444;
+  font-weight: 600;
 }
 
 .log-icon {

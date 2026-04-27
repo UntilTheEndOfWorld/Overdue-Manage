@@ -92,7 +92,7 @@ export default {
 }
 
 .quota-info {
-  background: var(--card-bg-solid);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(20, 184, 166, 0.05));
   border-radius: 24rpx;
   padding: 30rpx;
   margin-bottom: 30rpx;
@@ -117,6 +117,16 @@ export default {
   margin-bottom: 30rpx;
   border: 2rpx solid var(--card-border);
   box-shadow: 0 8rpx 24rpx var(--shadow-color);
+}
+
+.ad-option {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.06));
+  border-color: rgba(16, 185, 129, 0.28);
+}
+
+.member-option {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.13), rgba(217, 119, 6, 0.08));
+  border-color: rgba(245, 158, 11, 0.32);
 }
 
 .option-header {

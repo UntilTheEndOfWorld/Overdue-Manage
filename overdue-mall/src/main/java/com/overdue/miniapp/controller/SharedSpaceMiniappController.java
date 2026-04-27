@@ -1,8 +1,6 @@
 package com.overdue.miniapp.controller;
 
-import com.overdue.common.constant.Constants;
 import com.overdue.common.core.domain.AjaxResult;
-import com.overdue.framework.config.LocalDataUtil;
 import com.overdue.manager.item.domain.entity.OperationLog;
 import com.overdue.manager.item.domain.entity.SharedItem;
 import com.overdue.manager.item.domain.entity.SharedSpace;
@@ -18,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.UUID;
 
 /**
@@ -28,7 +27,10 @@ import java.util.UUID;
 @Api(tags = "过期了吗小程序-共享空间")
 @RestController
 @RequestMapping("/shared")
-public class SharedSpaceMiniappController {
+public class SharedSpaceMiniappController extends BaseMiniappController {
+    private static final String MSG_SPACE_NOT_FOUND = "空间不存在";
+    private static final String MSG_ITEM_NOT_FOUND = "物品不存在";
+    private static final String MSG_FORBIDDEN = "无权限";
 
     @Autowired
     private SharedSpaceService sharedSpaceService;
@@ -39,133 +41,112 @@ public class SharedSpaceMiniappController {
     @Autowired
     private OperationLogService operationLogService;
 
-    private Long getCurrentUserId() {
-        Object uid = LocalDataUtil.getVar(Constants.OVERDUE_USER_ID);
-        if (uid == null)
-            return null;
-        if (uid instanceof Long)
-            return (Long) uid;
-        if (uid instanceof Number)
-            return ((Number) uid).longValue();
-        try {
-            return Long.parseLong(uid.toString());
-        } catch (NumberFormatException e) {
-            return null;
-        }
-    }
-
     private boolean isMember(Long spaceId, Long userId) {
         return spaceId != null && userId != null && spaceMemberService.isMember(spaceId, userId);
+    }
+
+    private void saveOperationLog(Long spaceId, Long userId, String userName, String operationType, SharedItem item, String operationDesc, String operationData) {
+        if (spaceId == null || userId == null || item == null || item.getId() == null) {
+            return;
+        }
+        OperationLog log = new OperationLog();
+        log.setSpaceId(spaceId);
+        log.setItemId(item.getId());
+        log.setItemType("shared");
+        log.setOperatorId(userId);
+        log.setOperatorName(userName);
+        log.setOperationType(operationType);
+        log.setOperationDesc(operationDesc);
+        log.setOperationData(operationData);
+        log.setOperationTime(LocalDateTime.now());
+        operationLogService.insertOperationLog(log);
     }
 
     @ApiOperation("我参与的空间列表")
     @GetMapping("/spaces")
     public AjaxResult listSpaces() {
-        Long userId = getCurrentUserId();
-        if (userId == null) {
-            return AjaxResult.error(HttpStatus.UNAUTHORIZED.value(), "请先登录");
-        }
-        List<SharedSpace> list = sharedSpaceService.selectByUserId(userId);
-        return AjaxResult.success(list);
+        return withLogin(userId -> AjaxResult.success(sharedSpaceService.selectByUserId(userId)));
     }
 
     @ApiOperation("创建共享空间")
     @PostMapping("/spaces")
     public AjaxResult createSpace(@RequestBody SharedSpace space) {
-        Long userId = getCurrentUserId();
-        if (userId == null) {
-            return AjaxResult.error(HttpStatus.UNAUTHORIZED.value(), "请先登录");
-        }
-        space.setCreatorId(userId);
-        if (space.getStatus() == null)
-            space.setStatus("0");
-        int rows = sharedSpaceService.insertSharedSpace(space);
-        if (rows <= 0)
-            return AjaxResult.error("创建失败");
-        spaceMemberService.addMember(space.getId(), userId, "creator");
-        return AjaxResult.success(space);
+        return withLogin(userId -> {
+            space.setCreatorId(userId);
+            if (space.getStatus() == null) {
+                space.setStatus("0");
+            }
+            int rows = sharedSpaceService.insertSharedSpace(space);
+            if (rows <= 0) {
+                return AjaxResult.error("创建失败");
+            }
+            spaceMemberService.addMember(space.getId(), userId, "creator");
+            return AjaxResult.success(space);
+        });
     }
 
     @ApiOperation("空间详情")
     @GetMapping("/spaces/{id}")
     public AjaxResult getSpace(@PathVariable Long id) {
-        Long userId = getCurrentUserId();
-        if (userId == null) {
-            return AjaxResult.error(HttpStatus.UNAUTHORIZED.value(), "请先登录");
-        }
-        SharedSpace space = sharedSpaceService.selectById(id);
-        if (space == null)
-            return AjaxResult.error("空间不存在");
-        if (!isMember(id, userId))
-            return AjaxResult.error(HttpStatus.FORBIDDEN.value(), "无权限");
-        return AjaxResult.success(space);
+        return withSpaceMember(id, (userId, space) -> AjaxResult.success(space));
     }
 
     @ApiOperation("修改空间")
     @PutMapping("/spaces/{id}")
     public AjaxResult updateSpace(@PathVariable Long id, @RequestBody SharedSpace space) {
-        Long userId = getCurrentUserId();
-        if (userId == null) {
-            return AjaxResult.error(HttpStatus.UNAUTHORIZED.value(), "请先登录");
-        }
-        SharedSpace existing = sharedSpaceService.selectById(id);
-        if (existing == null)
-            return AjaxResult.error("空间不存在");
-        if (!existing.getCreatorId().equals(userId)) {
-            return AjaxResult.error(HttpStatus.FORBIDDEN.value(), "仅创建者可修改");
-        }
-        space.setId(id);
-        int rows = sharedSpaceService.updateSharedSpace(space);
-        return rows > 0 ? AjaxResult.success() : AjaxResult.error("修改失败");
+        return withLogin(userId -> {
+            SharedSpace existing = sharedSpaceService.selectById(id);
+            if (existing == null) {
+                return AjaxResult.error(MSG_SPACE_NOT_FOUND);
+            }
+            if (!userId.equals(existing.getCreatorId())) {
+                return AjaxResult.error(HttpStatus.FORBIDDEN.value(), "仅创建者可修改");
+            }
+            space.setId(id);
+            int rows = sharedSpaceService.updateSharedSpace(space);
+            return rows > 0 ? AjaxResult.success() : AjaxResult.error("修改失败");
+        });
     }
 
     @ApiOperation("生成/刷新邀请码")
     @PostMapping("/spaces/{id}/invite")
     public AjaxResult generateInvite(@PathVariable Long id) {
-        Long userId = getCurrentUserId();
-        if (userId == null) {
-            return AjaxResult.error(HttpStatus.UNAUTHORIZED.value(), "请先登录");
-        }
-        SharedSpace space = sharedSpaceService.selectById(id);
-        if (space == null)
-            return AjaxResult.error("空间不存在");
-        if (!isMember(id, userId))
-            return AjaxResult.error(HttpStatus.FORBIDDEN.value(), "无权限");
-        String code = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
-        space.setInviteCode(code);
-        space.setInviteCodeExpireTime(LocalDateTime.now().plusDays(7));
-        sharedSpaceService.updateSharedSpace(space);
-        java.util.Map<String, String> data = new java.util.HashMap<>();
-        data.put("inviteCode", code);
-        return AjaxResult.success(data);
+        return withSpaceMember(id, (userId, space) -> {
+            String code = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+            space.setInviteCode(code);
+            space.setInviteCodeExpireTime(LocalDateTime.now().plusDays(7));
+            sharedSpaceService.updateSharedSpace(space);
+            java.util.Map<String, String> data = new java.util.HashMap<>();
+            data.put("inviteCode", code);
+            return AjaxResult.success(data);
+        });
     }
 
     @ApiOperation("通过邀请码加入空间")
     @PostMapping("/spaces/join")
     public AjaxResult joinSpace(@RequestBody java.util.Map<String, String> body) {
-        Long userId = getCurrentUserId();
-        if (userId == null) {
-            return AjaxResult.error(HttpStatus.UNAUTHORIZED.value(), "请先登录");
-        }
-        String inviteCode = body != null ? body.get("inviteCode") : null;
-        if (inviteCode == null || inviteCode.isEmpty()) {
-            return AjaxResult.error("邀请码不能为空");
-        }
-        SharedSpace space = sharedSpaceService.selectByInviteCode(inviteCode);
-        if (space == null)
-            return AjaxResult.error("邀请码无效或已过期");
-        if (space.getInviteCodeExpireTime() != null && space.getInviteCodeExpireTime().isBefore(LocalDateTime.now())) {
-            return AjaxResult.error("邀请码已过期");
-        }
-        boolean alreadyMember = spaceMemberService.isMember(space.getId(), userId);
-        if (!alreadyMember) {
-            spaceMemberService.addMember(space.getId(), userId, "member");
-        }
-        java.util.Map<String, Object> result = new java.util.HashMap<>();
-        result.put("space", space);
-        result.put("alreadyMember", alreadyMember);
-        result.put("joined", !alreadyMember);
-        return AjaxResult.success(result);
+        return withLogin(userId -> {
+            String inviteCode = body != null ? body.get("inviteCode") : null;
+            if (inviteCode == null || inviteCode.isEmpty()) {
+                return AjaxResult.error("邀请码不能为空");
+            }
+            SharedSpace space = sharedSpaceService.selectByInviteCode(inviteCode);
+            if (space == null) {
+                return AjaxResult.error("邀请码无效或已过期");
+            }
+            if (space.getInviteCodeExpireTime() != null && space.getInviteCodeExpireTime().isBefore(LocalDateTime.now())) {
+                return AjaxResult.error("邀请码已过期");
+            }
+            boolean alreadyMember = spaceMemberService.isMember(space.getId(), userId);
+            if (!alreadyMember) {
+                spaceMemberService.addMember(space.getId(), userId, "member");
+            }
+            java.util.Map<String, Object> result = new java.util.HashMap<>();
+            result.put("space", space);
+            result.put("alreadyMember", alreadyMember);
+            result.put("joined", !alreadyMember);
+            return AjaxResult.success(result);
+        });
     }
 
     /**
@@ -205,16 +186,14 @@ public class SharedSpaceMiniappController {
     @ApiOperation("检查是否是空间成员")
     @GetMapping("/spaces/{spaceId}/check-member")
     public AjaxResult checkMember(@PathVariable Long spaceId) {
-        Long userId = getCurrentUserId();
-        if (userId == null) {
-            return AjaxResult.error(HttpStatus.UNAUTHORIZED.value(), "请先登录");
-        }
-        boolean isMember = spaceMemberService.isMember(spaceId, userId);
-        java.util.Map<String, Object> result = new java.util.HashMap<>();
-        result.put("isMember", isMember);
-        result.put("spaceId", spaceId);
-        result.put("userId", userId);
-        return AjaxResult.success(result);
+        return withLogin(userId -> {
+            boolean isMember = spaceMemberService.isMember(spaceId, userId);
+            java.util.Map<String, Object> result = new java.util.HashMap<>();
+            result.put("isMember", isMember);
+            result.put("spaceId", spaceId);
+            result.put("userId", userId);
+            return AjaxResult.success(result);
+        });
     }
 
     /**
@@ -223,23 +202,20 @@ public class SharedSpaceMiniappController {
     @ApiOperation("退出空间")
     @DeleteMapping("/spaces/{spaceId}/leave")
     public AjaxResult leaveSpace(@PathVariable Long spaceId) {
-        Long userId = getCurrentUserId();
-        if (userId == null) {
-            return AjaxResult.error(HttpStatus.UNAUTHORIZED.value(), "请先登录");
-        }
-        SharedSpace space = sharedSpaceService.selectById(spaceId);
-        if (space == null) {
-            return AjaxResult.error("空间不存在");
-        }
-        // 创建者不能退出
-        if (space.getCreatorId().equals(userId)) {
-            return AjaxResult.error("创建者不能退出空间，请先转让或解散");
-        }
-        if (!spaceMemberService.isMember(spaceId, userId)) {
-            return AjaxResult.error("您不是该空间成员");
-        }
-        int rows = spaceMemberService.leaveSpace(spaceId, userId);
-        return rows > 0 ? AjaxResult.success("已退出空间") : AjaxResult.error("退出失败");
+        return withLogin(userId -> {
+            SharedSpace space = sharedSpaceService.selectById(spaceId);
+            if (space == null) {
+                return AjaxResult.error(MSG_SPACE_NOT_FOUND);
+            }
+            if (userId.equals(space.getCreatorId())) {
+                return AjaxResult.error("创建者不能退出空间，请先转让或解散");
+            }
+            if (!spaceMemberService.isMember(spaceId, userId)) {
+                return AjaxResult.error("您不是该空间成员");
+            }
+            int rows = spaceMemberService.leaveSpace(spaceId, userId);
+            return rows > 0 ? AjaxResult.success("已退出空间") : AjaxResult.error("退出失败");
+        });
     }
 
     /**
@@ -248,106 +224,108 @@ public class SharedSpaceMiniappController {
     @ApiOperation("获取空间成员列表")
     @GetMapping("/spaces/{spaceId}/members")
     public AjaxResult listMembers(@PathVariable Long spaceId) {
-        Long userId = getCurrentUserId();
-        if (userId == null) {
-            return AjaxResult.error(HttpStatus.UNAUTHORIZED.value(), "请先登录");
-        }
-        if (!isMember(spaceId, userId)) {
-            return AjaxResult.error(HttpStatus.FORBIDDEN.value(), "无权限");
-        }
-        return AjaxResult.success(spaceMemberService.selectBySpaceId(spaceId));
+        return withSpaceMember(spaceId, (userId, space) -> AjaxResult.success(spaceMemberService.selectBySpaceId(spaceId)));
     }
 
     @ApiOperation("空间内物品列表")
     @GetMapping("/spaces/{spaceId}/items")
     public AjaxResult listItems(@PathVariable Long spaceId) {
-        Long userId = getCurrentUserId();
-        if (userId == null) {
-            return AjaxResult.error(HttpStatus.UNAUTHORIZED.value(), "请先登录");
-        }
-        if (!isMember(spaceId, userId))
-            return AjaxResult.error(HttpStatus.FORBIDDEN.value(), "无权限");
-        List<SharedItem> list = sharedItemService.selectBySpaceId(spaceId);
-        return AjaxResult.success(list);
+        return withSpaceMember(spaceId, (userId, space) -> AjaxResult.success(sharedItemService.selectBySpaceId(spaceId)));
     }
 
     @ApiOperation("新增共享物品")
     @PostMapping("/spaces/{spaceId}/items")
     public AjaxResult addItem(@PathVariable Long spaceId, @RequestBody SharedItem item) {
-        Long userId = getCurrentUserId();
-        if (userId == null) {
-            return AjaxResult.error(HttpStatus.UNAUTHORIZED.value(), "请先登录");
-        }
-        if (!isMember(spaceId, userId))
-            return AjaxResult.error(HttpStatus.FORBIDDEN.value(), "无权限");
-        item.setSpaceId(spaceId);
-        item.setCreatorId(userId);
-        if (item.getStatus() == null)
-            item.setStatus("0");
-        int rows = sharedItemService.insertSharedItem(item);
-        return rows > 0 ? AjaxResult.success(item) : AjaxResult.error("新增失败");
+        return withSpaceMember(spaceId, (userId, space) -> {
+            item.setSpaceId(spaceId);
+            item.setCreatorId(userId);
+            if (item.getStatus() == null) {
+                item.setStatus("0");
+            }
+            int rows = sharedItemService.insertSharedItem(item);
+            if (rows > 0) {
+                String operationData = "{\"category\":\"" + (item.getCategory() == null ? "" : item.getCategory())
+                        + "\",\"expiryDate\":\"" + (item.getExpiryDate() == null ? "" : item.getExpiryDate()) + "\"}";
+                saveOperationLog(spaceId, userId, getCurrentUserName(), "add", item, "添加了物品\"" + item.getName() + "\"", operationData);
+            }
+            return rows > 0 ? AjaxResult.success(item) : AjaxResult.error("新增失败");
+        });
     }
 
     @ApiOperation("共享物品详情")
     @GetMapping("/spaces/{spaceId}/items/{itemId}")
     public AjaxResult getItem(@PathVariable Long spaceId, @PathVariable Long itemId) {
-        Long userId = getCurrentUserId();
-        if (userId == null) {
-            return AjaxResult.error(HttpStatus.UNAUTHORIZED.value(), "请先登录");
-        }
-        if (!isMember(spaceId, userId))
-            return AjaxResult.error(HttpStatus.FORBIDDEN.value(), "无权限");
-        SharedItem item = sharedItemService.selectById(itemId);
-        if (item == null || !spaceId.equals(item.getSpaceId()))
-            return AjaxResult.error("物品不存在");
-        return AjaxResult.success(item);
+        return withSpaceMember(spaceId, (userId, space) -> {
+            SharedItem item = sharedItemService.selectById(itemId);
+            if (item == null || !spaceId.equals(item.getSpaceId())) {
+                return AjaxResult.error(MSG_ITEM_NOT_FOUND);
+            }
+            return AjaxResult.success(item);
+        });
     }
 
     @ApiOperation("修改共享物品")
     @PutMapping("/spaces/{spaceId}/items/{itemId}")
     public AjaxResult updateItem(@PathVariable Long spaceId, @PathVariable Long itemId, @RequestBody SharedItem item) {
-        Long userId = getCurrentUserId();
-        if (userId == null) {
-            return AjaxResult.error(HttpStatus.UNAUTHORIZED.value(), "请先登录");
-        }
-        if (!isMember(spaceId, userId))
-            return AjaxResult.error(HttpStatus.FORBIDDEN.value(), "无权限");
-        SharedItem existing = sharedItemService.selectById(itemId);
-        if (existing == null || !spaceId.equals(existing.getSpaceId()))
-            return AjaxResult.error("物品不存在");
-        item.setId(itemId);
-        item.setSpaceId(spaceId);
-        item.setCreatorId(existing.getCreatorId());
-        int rows = sharedItemService.updateSharedItem(item);
-        return rows > 0 ? AjaxResult.success() : AjaxResult.error("修改失败");
+        return withSpaceMember(spaceId, (userId, space) -> {
+            SharedItem existing = sharedItemService.selectById(itemId);
+            if (existing == null || !spaceId.equals(existing.getSpaceId())) {
+                return AjaxResult.error(MSG_ITEM_NOT_FOUND);
+            }
+            SharedItem before = sharedItemService.selectById(itemId);
+            item.setId(itemId);
+            item.setSpaceId(spaceId);
+            item.setCreatorId(existing.getCreatorId());
+            int rows = sharedItemService.updateSharedItem(item);
+            if (rows > 0) {
+                String operationData = "{\"name\":\"" + (item.getName() == null ? "" : item.getName())
+                        + "\",\"category\":\"" + (item.getCategory() == null ? "" : item.getCategory())
+                        + "\",\"expiryDate\":\"" + (item.getExpiryDate() == null ? "" : item.getExpiryDate())
+                        + "\",\"beforeExpiryDate\":\"" + (before == null || before.getExpiryDate() == null ? "" : before.getExpiryDate()) + "\"}";
+                saveOperationLog(spaceId, userId, getCurrentUserName(), "update", item, "更新了物品\"" + item.getName() + "\"", operationData);
+            }
+            return rows > 0 ? AjaxResult.success() : AjaxResult.error("修改失败");
+        });
     }
 
     @ApiOperation("删除共享物品")
     @DeleteMapping("/spaces/{spaceId}/items/{itemId}")
-    public AjaxResult deleteItem(@PathVariable Long spaceId, @PathVariable Long itemId) {
-        Long userId = getCurrentUserId();
-        if (userId == null) {
-            return AjaxResult.error(HttpStatus.UNAUTHORIZED.value(), "请先登录");
-        }
-        if (!isMember(spaceId, userId))
-            return AjaxResult.error(HttpStatus.FORBIDDEN.value(), "无权限");
-        SharedItem existing = sharedItemService.selectById(itemId);
-        if (existing == null || !spaceId.equals(existing.getSpaceId()))
-            return AjaxResult.error("物品不存在");
-        int rows = sharedItemService.deleteSharedItemById(itemId);
-        return rows > 0 ? AjaxResult.success() : AjaxResult.error("删除失败");
+    public AjaxResult deleteItem(@PathVariable Long spaceId, @PathVariable Long itemId,
+                                 @RequestParam(value = "opType", required = false) String opType) {
+        return withSpaceMember(spaceId, (userId, space) -> {
+            SharedItem existing = sharedItemService.selectById(itemId);
+            if (existing == null || !spaceId.equals(existing.getSpaceId())) {
+                return AjaxResult.error(MSG_ITEM_NOT_FOUND);
+            }
+            int rows = sharedItemService.deleteSharedItemById(itemId);
+            if (rows > 0) {
+                String operationType = "process".equalsIgnoreCase(opType) ? "process" : "delete";
+                String operationDesc = "process".equalsIgnoreCase(opType)
+                        ? "处理了过期物品\"" + existing.getName() + "\""
+                        : "删除了物品\"" + existing.getName() + "\"";
+                String operationData = "{\"source\":\"" + operationType + "\",\"status\":\"1\"}";
+                saveOperationLog(spaceId, userId, getCurrentUserName(), operationType, existing, operationDesc, operationData);
+            }
+            return rows > 0 ? AjaxResult.success() : AjaxResult.error("删除失败");
+        });
     }
 
     @ApiOperation("空间操作日志")
     @GetMapping("/spaces/{spaceId}/logs")
     public AjaxResult logs(@PathVariable Long spaceId) {
-        Long userId = getCurrentUserId();
-        if (userId == null) {
-            return AjaxResult.error(HttpStatus.UNAUTHORIZED.value(), "请先登录");
-        }
-        if (!isMember(spaceId, userId))
-            return AjaxResult.error(HttpStatus.FORBIDDEN.value(), "无权限");
-        List<OperationLog> list = operationLogService.selectBySpaceId(spaceId);
-        return AjaxResult.success(list);
+        return withSpaceMember(spaceId, (userId, space) -> AjaxResult.success(operationLogService.selectBySpaceId(spaceId)));
+    }
+
+    private AjaxResult withSpaceMember(Long spaceId, BiFunction<Long, SharedSpace, AjaxResult> action) {
+        return withLogin(userId -> {
+            SharedSpace space = sharedSpaceService.selectById(spaceId);
+            if (space == null) {
+                return AjaxResult.error(MSG_SPACE_NOT_FOUND);
+            }
+            if (!isMember(spaceId, userId)) {
+                return AjaxResult.error(HttpStatus.FORBIDDEN.value(), MSG_FORBIDDEN);
+            }
+            return action.apply(userId, space);
+        });
     }
 }

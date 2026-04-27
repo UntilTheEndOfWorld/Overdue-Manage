@@ -43,7 +43,7 @@
           <text class="quota-title">免费额度</text>
           <view class="quota-upgrade" @click="goToMember">
             <text class="upgrade-text">升级会员</text>
-            <text class="upgrade-arrow">》</text>
+            <text class="upgrade-arrow">{{ '>' }}</text>
           </view>
         </view>
         <view class="quota-content">
@@ -76,7 +76,7 @@
             v-for="opt in paletteOptions"
             :key="opt.id"
             class="palette-dot"
-            :class="{ active: themePalette === opt.id }"
+            :class="{ active: themePalette === opt.id, white: opt.id === 'white' }"
             :style="{ background: opt.color }"
             @click.stop="selectPalette(opt.id)"
           />
@@ -85,17 +85,17 @@
       <view class="menu-item" @click="goReminderSettings">
         <text class="icon">🔔</text>
         <text class="text">到期提醒</text>
-        <text class="arrow">》</text>
+        <text class="arrow">{{ '>' }}</text>
       </view>
       <view class="menu-item" @click="goToPersonal">
         <text class="icon">📦</text>
         <text class="text">个人空间</text>
-        <text class="arrow">》</text>
+        <text class="arrow">{{ '>' }}</text>
       </view>
       <view class="menu-item" @click="goToShared">
         <text class="icon">👥</text>
         <text class="text">共享空间</text>
-        <text class="arrow">》</text>
+        <text class="arrow">{{ '>' }}</text>
       </view>
       <!-- 深浅模式切换 -->
       <view class="menu-item">
@@ -114,12 +114,12 @@
       <view class="menu-item" @click="exportData">
         <image class="menu-icon" src="/static/tabbar/download.png" mode="aspectFit"></image>
         <text class="text">导出数据</text>
-        <text class="arrow">》</text>
+        <text class="arrow">{{ '>' }}</text>
       </view>
       <view class="menu-item" @click="showAbout">
         <text class="icon">ℹ️</text>
         <text class="text">关于我们</text>
-        <text class="arrow">》</text>
+        <text class="arrow">{{ '>' }}</text>
       </view>
     </view>
 
@@ -159,7 +159,8 @@ export default {
         { id: 'mint', color: '#5A9B7C' },
         { id: 'peach', color: '#F4A261' },
         { id: 'lavender', color: '#B7A6CF' },
-        { id: 'ocean', color: '#5C9EAD' }
+        { id: 'ocean', color: '#5C9EAD' },
+        { id: 'white', color: '#FFFFFF' }
       ]
     }
   },
@@ -483,7 +484,7 @@ export default {
 .stats-section {
   display: flex;
   justify-content: space-around;
-  background: var(--card-bg-solid);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(20, 184, 166, 0.05));
   border-radius: 40rpx;
   padding: 60rpx 40rpx;
   margin-bottom: 40rpx;
@@ -603,7 +604,7 @@ export default {
 }
 
 .light-mode .quota-card {
-  background: var(--card-bg-solid);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(59, 130, 246, 0.05));
   border: 2rpx solid var(--card-border);
 }
 
@@ -674,7 +675,7 @@ export default {
 }
 
 .menu-section {
-  background: var(--card-bg-solid);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.06), rgba(16, 185, 129, 0.04));
   border-radius: 40rpx;
   overflow: hidden;
   margin-bottom: 40rpx;
@@ -797,6 +798,11 @@ export default {
   height: 36rpx;
   border-radius: 50%;
   border: 3rpx solid transparent;
+}
+
+.palette-dot.white {
+  border-color: #4b5563;
+  box-sizing: border-box;
 }
 
 .palette-dot.active {

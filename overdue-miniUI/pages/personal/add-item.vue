@@ -2,12 +2,12 @@
   <view class="container" :class="themeClass">
     <view class="form">
       <view class="form-group">
-        <text class="label">物品名称 *</text>
+        <text class="label">物品名称 <text class="required">*</text></text>
         <input class="input" v-model="form.name" placeholder="请输入物品名称" />
       </view>
 
       <view class="form-group">
-        <text class="label">分类 *</text>
+        <text class="label">分类 <text class="required">*</text></text>
         <picker mode="selector" :range="categories" :value="categoryIndex" @change="onCategoryChange">
           <view class="picker">{{ form.category || '请选择分类' }}</view>
         </picker>
@@ -21,17 +21,17 @@
       </view>
 
       <view class="form-group">
-        <text class="label">生产日期 *</text>
+        <text class="label">生产日期 <text class="required">*</text></text>
         <picker mode="date" :value="form.productionDate" @change="onProductionDateChange">
           <view class="picker">{{ form.productionDate || '请选择生产日期' }}</view>
         </picker>
       </view>
 
       <view class="form-group">
-        <text class="label">保质期 *</text>
+        <text class="label">保质期 <text class="required">*</text></text>
         <view class="shelf-life-group">
           <view class="shelf-life-input-wrap">
-            <input class="input shelf-life-input" type="number" v-model="form.shelfLife" placeholder="保质期" />
+            <input class="input shelf-life-input" type="number" :value="form.shelfLife" @input="onShelfLifeInput" placeholder="保质期" />
           </view>
           <picker mode="selector" :range="shelfLifeUnits" :value="unitIndex" @change="onUnitChange">
             <view class="picker shelf-life-unit-picker">{{ form.unit || '天' }}</view>
@@ -40,7 +40,7 @@
       </view>
 
       <view class="form-group">
-        <text class="label">过期日期 *</text>
+        <text class="label">过期日期 <text class="required">*</text></text>
         <picker mode="date" :value="form.expiryDate" @change="onExpiryDateChange">
           <view class="picker">{{ form.expiryDate || '自动计算' }}</view>
         </picker>
@@ -57,7 +57,6 @@
 <script>
 import storage from '@/common/utils/storage.js'
 import dateUtil from '@/common/utils/date.js'
-import logger from '@/common/utils/logger.js'
 import validator from '@/common/utils/validator.js'
 import themeMixin from '@/common/mixins/theme.js'
 import memberUtil from '@/common/utils/member.js'
@@ -106,17 +105,26 @@ export default {
       this.form.productionDate = e.detail.value
       this.calculateExpiryDate()
     },
+    onShelfLifeInput(e) {
+      var raw = e && e.detail ? e.detail.value : ''
+      var value = String(raw || '').replace(/[^\d]/g, '')
+      this.form.shelfLife = value
+      this.calculateExpiryDate()
+    },
     onExpiryDateChange(e) {
       this.form.expiryDate = e.detail.value
     },
     calculateExpiryDate() {
-      if (this.form.productionDate && this.form.shelfLife) {
+      var shelfLifeValue = Number(this.form.shelfLife)
+      if (this.form.productionDate && shelfLifeValue > 0) {
         const unit = this.form.unit === '天' ? 'day' : (this.form.unit === '月' ? 'month' : 'year')
         this.form.expiryDate = dateUtil.calculateExpiryDate(
           this.form.productionDate,
-          this.form.shelfLife,
+          shelfLifeValue,
           unit
         )
+      } else if (!this.form.productionDate || !this.form.shelfLife) {
+        this.form.expiryDate = ''
       }
     },
     save() {
@@ -155,13 +163,12 @@ export default {
         }
       }
 
-      var userInfo = storage.get('userInfo', {})
       var newItem = {
         name: this.form.name,
         category: this.form.category,
         purchaseDate: this.form.purchaseDate || null,
         productionDate: this.form.productionDate,
-        shelfLife: this.form.shelfLife,
+        shelfLife: Number(this.form.shelfLife) || 0,
         unit: this.form.unit,
         expiryDate: this.form.expiryDate
       }
@@ -179,6 +186,14 @@ export default {
       } else {
         // 个人物品 - 调用后端API
         api.addPersonalItem(newItem).then(function(res) {
+          // 同步缓存，避免返回列表页时因接口波动回退旧缓存导致“新增后看不到”
+          var cachedItems = storage.get('personalItems', [])
+          if (!Array.isArray(cachedItems)) {
+            cachedItems = []
+          }
+          var createdItem = (res && res.data) ? Object.assign({}, newItem, res.data) : newItem
+          cachedItems.unshift(createdItem)
+          storage.set('personalItems', cachedItems)
           uni.showToast({ title: '添加成功', icon: 'success' })
           setTimeout(function() { uni.navigateBack() }, 1500)
         }).catch(function(error) {
@@ -223,6 +238,10 @@ export default {
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 20rpx;
+}
+
+.required {
+  color: #ef4444;
 }
 
 /* 与 .picker 同高，避免原生 input 与选择器展示区域高度不一致 */
