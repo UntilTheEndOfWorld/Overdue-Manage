@@ -23,6 +23,8 @@
 import storage from '@/common/utils/storage.js'
 import themeMixin from '@/common/mixins/theme.js'
 import api from '@/common/utils/api.js'
+import memberUtil from '@/common/utils/member.js'
+import appConfig from '@/common/utils/appConfig.js'
 
 export default {
   mixins: [themeMixin],
@@ -35,10 +37,18 @@ export default {
       submitting: false
     }
   },
+  onLoad() {
+    appConfig.loadConfig(false)
+  },
   methods: {
     async create() {
       if (!this.form.name) {
         uni.showToast({ title: '请输入空间名称', icon: 'none' })
+        return
+      }
+      var spaces = storage.get('sharedSpaces', [])
+      if (!memberUtil.canCreateSharedSpace(Array.isArray(spaces) ? spaces.length : 0)) {
+        memberUtil.handleSharedSpaceQuotaExceeded()
         return
       }
       if (this.submitting) return

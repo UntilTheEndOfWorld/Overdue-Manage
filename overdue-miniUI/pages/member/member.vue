@@ -6,9 +6,9 @@
 
     <!-- 用户状态卡片 -->
     <view class="status-card" v-if="!memberUtil.isMember()">
-      <view class="status-title">免费用户</view>
+      <view class="status-title">{{ chargeEnabled ? '免费用户' : '普通用户' }}</view>
       <view class="status-desc">
-        您有 <text class="highlight">{{ FREE_QUOTA }}</text> 个物品的免费管理额度，已使用 <text class="highlight">{{ usedQuota }}</text> 个，剩余 <text class="highlight">{{ remainingQuota }}</text> 个。
+        您有 <text class="highlight">{{ freePersonalLimit }}</text> 个物品的{{ chargeEnabled ? '免费' : '' }}管理额度，已使用 <text class="highlight">{{ usedQuota }}</text> 个，剩余 <text class="highlight">{{ remainingQuota }}</text> 个。
       </view>
     </view>
 
@@ -21,7 +21,7 @@
     </view>
 
     <!-- 会员特权 -->
-    <view class="privilege-section">
+    <view class="privilege-section" v-if="chargeEnabled">
       <view class="section-title">
         <view class="title-text with-crown">
           <text>会员特权</text>
@@ -36,7 +36,7 @@
     </view>
 
     <!-- 选择套餐 -->
-    <view class="plans-section-card">
+    <view class="plans-section-card" v-if="chargeEnabled">
       <view class="section-title plans-title">
         <text class="title-text">选择套餐</text>
       </view>
@@ -66,8 +66,15 @@
       </view>
     </view>
 
+    <!-- 未开启收费时的提示 -->
+    <view class="upgrade-section" v-if="!chargeEnabled">
+      <view class="status-desc" style="text-align:center;color:var(--text-secondary);">
+        当前未开启会员收费，默认额度：个人 {{ freePersonalLimit }} 个物品，{{ freeSharedSpaceLimit }} 个共享空间，每空间 {{ freeSharedItemLimit }} 个物品。
+      </view>
+    </view>
+
     <!-- 立即升级按钮 -->
-    <view class="upgrade-section">
+    <view class="upgrade-section" v-if="chargeEnabled">
       <button class="btn-upgrade" @click="goToUpgrade">立即升级</button>
     </view>
   </view>
@@ -75,6 +82,7 @@
 
 <script>
 import memberUtil from '@/common/utils/member.js'
+import appConfig from '@/common/utils/appConfig.js'
 import storage from '@/common/utils/storage.js'
 import themeMixin from '@/common/mixins/theme.js'
 
@@ -83,7 +91,6 @@ export default {
   data() {
     return {
       memberUtil,
-      FREE_QUOTA: 5,
       usedQuota: 0,
       remainingQuota: 0,
       memberInfo: {},
@@ -92,6 +99,18 @@ export default {
     }
   },
   computed: {
+    chargeEnabled() {
+      return memberUtil.isChargeEnabled()
+    },
+    freePersonalLimit() {
+      return memberUtil.getFreePersonalItemLimit()
+    },
+    freeSharedSpaceLimit() {
+      return memberUtil.getFreeSharedSpaceLimit()
+    },
+    freeSharedItemLimit() {
+      return memberUtil.getFreeSharedItemLimit()
+    },
     formatExpireTime() {
       if (!this.memberInfo.expireTime) return ''
       const date = new Date(this.memberInfo.expireTime)
@@ -102,6 +121,7 @@ export default {
     this.loadData()
   },
   onShow() {
+    appConfig.loadConfig(false)
     this.loadData()
   },
   methods: {

@@ -1,6 +1,7 @@
 package com.overdue.miniapp.controller;
 
 import com.overdue.common.core.domain.AjaxResult;
+import com.overdue.config.OverdueAppConfigService;
 import com.overdue.manager.item.domain.entity.PersonalItem;
 import com.overdue.manager.item.service.OperationLogService;
 import com.overdue.manager.item.service.PersonalItemService;
@@ -28,6 +29,8 @@ public class PersonalItemMiniappController extends BaseMiniappController {
     private PersonalItemService personalItemService;
     @Autowired
     private OperationLogService operationLogService;
+    @Autowired
+    private OverdueAppConfigService overdueAppConfigService;
 
     @ApiOperation("我的个人物品列表")
     @GetMapping("/items")
@@ -47,6 +50,10 @@ public class PersonalItemMiniappController extends BaseMiniappController {
     @PostMapping("/items")
     public AjaxResult add(@RequestBody PersonalItem item) {
         return withLogin(userId -> {
+            String quotaError = overdueAppConfigService.checkPersonalItemQuota(userId);
+            if (quotaError != null) {
+                return AjaxResult.error(quotaError);
+            }
             int rows = personalItemService.insertPersonalItemWithLog(userId, getCurrentUserName(), item);
             return rows > 0 ? AjaxResult.success(item) : AjaxResult.error("新增失败");
         });

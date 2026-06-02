@@ -124,6 +124,8 @@ import ItemCard from '@/components/item-card/item-card.vue'
 import themeMixin from '@/common/mixins/theme.js'
 import logger from '@/common/utils/logger.js'
 import api from '@/common/utils/api.js'
+import memberUtil from '@/common/utils/member.js'
+import appConfig from '@/common/utils/appConfig.js'
 import { isLoggedIn } from '@/common/utils/auth.js'
 
 export default {
@@ -272,8 +274,12 @@ export default {
       this.filter = type
     },
     addItem() {
+      if (!memberUtil.canAddSharedItem(this.items.length)) {
+        memberUtil.handleSharedItemQuotaExceeded()
+        return
+      }
       uni.navigateTo({
-        url: `/pages/personal/add-item?spaceId=${this.spaceId}&type=shared`
+        url: `/pages/personal/add-item?spaceId=${this.spaceId}&type=shared&itemCount=${this.items.length}`
       })
     },
     editItem(item) {

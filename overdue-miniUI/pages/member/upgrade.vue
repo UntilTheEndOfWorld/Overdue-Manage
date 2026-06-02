@@ -4,15 +4,15 @@
       <text class="header-title">选择套餐</text>
     </view>
 
-    <!-- 免费额度说明（仅免费用户显示） -->
-    <view class="quota-info" v-if="!memberUtil.isMember()">
+    <!-- 免费额度说明（仅收费模式下的免费用户显示） -->
+    <view class="quota-info" v-if="chargeEnabled && !memberUtil.isMember()">
       <view class="quota-text">
-        您已用完 <text class="highlight">{{ FREE_QUOTA }}</text> 个物品的免费管理额度。请选择以下方式继续添加物品：
+        您已用完 <text class="highlight">{{ freePersonalLimit }}</text> 个物品的免费管理额度。请选择以下方式继续添加物品：
       </view>
     </view>
 
     <!-- 选项一：观看广告 -->
-    <view class="option-card ad-option">
+    <view class="option-card ad-option" v-if="chargeEnabled">
       <view class="option-header">
         <view class="option-icon ad-icon">📺</view>
         <view class="option-badge ad-badge">推荐</view>
@@ -24,7 +24,7 @@
     </view>
 
     <!-- 选项二：升级会员 -->
-    <view class="option-card member-option">
+    <view class="option-card member-option" v-if="chargeEnabled">
       <view class="option-header">
         <view class="option-icon member-icon">👑</view>
         <view class="option-badge member-badge">超值</view>
@@ -40,6 +40,7 @@
 
 <script>
 import memberUtil from '@/common/utils/member.js'
+import appConfig from '@/common/utils/appConfig.js'
 import themeMixin from '@/common/mixins/theme.js'
 
 export default {
@@ -47,12 +48,24 @@ export default {
   data() {
     return {
       memberUtil,
-      FREE_QUOTA: 5,
       plans: []
     }
   },
+  computed: {
+    chargeEnabled() {
+      return memberUtil.isChargeEnabled()
+    },
+    freePersonalLimit() {
+      return memberUtil.getFreePersonalItemLimit()
+    }
+  },
   onLoad() {
+    appConfig.loadConfig(false)
     this.plans = Object.values(memberUtil.PLANS)
+    if (!this.chargeEnabled) {
+      uni.showToast({ title: '当前未开启会员收费', icon: 'none' })
+      setTimeout(function() { uni.navigateBack() }, 1500)
+    }
   },
   methods: {
     goToAd() {

@@ -1,6 +1,7 @@
 package com.overdue.miniapp.controller;
 
 import com.overdue.common.core.domain.AjaxResult;
+import com.overdue.config.OverdueAppConfigService;
 import com.overdue.manager.item.domain.entity.OperationLog;
 import com.overdue.manager.item.domain.entity.SharedItem;
 import com.overdue.manager.item.domain.entity.SharedSpace;
@@ -40,6 +41,8 @@ public class SharedSpaceMiniappController extends BaseMiniappController {
     private SharedItemService sharedItemService;
     @Autowired
     private OperationLogService operationLogService;
+    @Autowired
+    private OverdueAppConfigService overdueAppConfigService;
 
     private boolean isMember(Long spaceId, Long userId) {
         return spaceId != null && userId != null && spaceMemberService.isMember(spaceId, userId);
@@ -72,6 +75,10 @@ public class SharedSpaceMiniappController extends BaseMiniappController {
     @PostMapping("/spaces")
     public AjaxResult createSpace(@RequestBody SharedSpace space) {
         return withLogin(userId -> {
+            String quotaError = overdueAppConfigService.checkSharedSpaceQuota(userId);
+            if (quotaError != null) {
+                return AjaxResult.error(quotaError);
+            }
             space.setCreatorId(userId);
             if (space.getStatus() == null) {
                 space.setStatus("0");
@@ -237,6 +244,10 @@ public class SharedSpaceMiniappController extends BaseMiniappController {
     @PostMapping("/spaces/{spaceId}/items")
     public AjaxResult addItem(@PathVariable Long spaceId, @RequestBody SharedItem item) {
         return withSpaceMember(spaceId, (userId, space) -> {
+            String quotaError = overdueAppConfigService.checkSharedItemQuota(spaceId);
+            if (quotaError != null) {
+                return AjaxResult.error(quotaError);
+            }
             item.setSpaceId(spaceId);
             item.setCreatorId(userId);
             if (item.getStatus() == null) {

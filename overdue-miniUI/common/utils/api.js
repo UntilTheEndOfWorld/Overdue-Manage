@@ -490,6 +490,11 @@ Api.prototype.getItemsBySpecificDate = function(date, type) {
   return this.request('/item/calendar/items', 'GET', { date: date, type: type })
 }
 
+// ==================== 应用配置 ====================
+Api.prototype.getAppConfig = function() {
+  return this.request('/no-auth/overdue/config', 'GET')
+}
+
 // ==================== 会员订单相关接口 ====================
 // 获取会员套餐列表
 Api.prototype.getMemberPlans = function() {

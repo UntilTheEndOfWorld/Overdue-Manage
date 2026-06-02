@@ -8,6 +8,7 @@
 import storage from '@/common/utils/storage.js'
 import inviteUtil from '@/common/utils/invite.js'
 import themeUtil from '@/common/utils/theme.js'
+import appConfig from '@/common/utils/appConfig.js'
 import { isLoggedIn } from '@/common/utils/auth.js'
 
 export default {
@@ -15,6 +16,8 @@ export default {
     console.log('App Launch', options)
     // 初始化主题
     themeUtil.initTheme()
+    // 加载应用配置（是否收费、免费额度）
+    appConfig.loadConfig(false)
     // 监听主题变化
     uni.$on('theme-changed', (theme) => {
       this.applyThemeToPages(theme)
@@ -24,6 +27,8 @@ export default {
   },
   onShow: function(options) {
     console.log('App Show', options)
+    // 刷新应用配置
+    appConfig.loadConfig(false)
     // 每次显示时检查登录状态
     this.checkAuth()
     // 处理邀请链接

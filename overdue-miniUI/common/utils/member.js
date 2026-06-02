@@ -3,9 +3,18 @@
  */
 import storage from './storage.js'
 
+const DEFAULT_CONFIG = {
+  chargeEnabled: false,
+  freePersonalItemLimit: 10,
+  freeSharedSpaceLimit: 1,
+  freeSharedItemLimit: 10
+}
+
 class MemberUtil {
-  // 免费额度
-  FREE_QUOTA = 5
+  _config = Object.assign({}, DEFAULT_CONFIG)
+
+  // 兼容旧代码引用
+  FREE_QUOTA = DEFAULT_CONFIG.freePersonalItemLimit
   
   // 会员套餐
   PLANS = {
@@ -40,6 +49,36 @@ class MemberUtil {
   }
 
   /**
+   * 从后端配置更新额度与收费开关
+   */
+  updateFromConfig(config) {
+    if (!config || typeof config !== 'object') {
+      return
+    }
+    this._config = Object.assign({}, DEFAULT_CONFIG, config)
+    this.FREE_QUOTA = this.getFreePersonalItemLimit()
+  }
+
+  isChargeEnabled() {
+    return !!this._config.chargeEnabled
+  }
+
+  getFreePersonalItemLimit() {
+    var limit = Number(this._config.freePersonalItemLimit)
+    return limit > 0 ? limit : DEFAULT_CONFIG.freePersonalItemLimit
+  }
+
+  getFreeSharedSpaceLimit() {
+    var limit = Number(this._config.freeSharedSpaceLimit)
+    return limit > 0 ? limit : DEFAULT_CONFIG.freeSharedSpaceLimit
+  }
+
+  getFreeSharedItemLimit() {
+    var limit = Number(this._config.freeSharedItemLimit)
+    return limit > 0 ? limit : DEFAULT_CONFIG.freeSharedItemLimit
+  }
+
+  /**
    * 获取用户会员信息
    */
   getMemberInfo() {
@@ -60,9 +99,13 @@ class MemberUtil {
   }
 
   /**
-   * 检查是否是会员
+   * 检查是否是会员（未开启收费时始终视为非会员）
    */
   isMember() {
+    if (!this.isChargeEnabled()) {
+      return false
+    }
+
     const memberInfo = this.getMemberInfo()
     if (!memberInfo.isMember) {
       return false
@@ -123,7 +166,7 @@ class MemberUtil {
    */
   getUsedQuota() {
     const items = storage.get('personalItems', [])
-    return items.length
+    return Array.isArray(items) ? items.length : 0
   }
 
   /**
@@ -133,7 +176,7 @@ class MemberUtil {
     if (this.isMember()) {
       return Infinity // 会员无限制
     }
-    return this.FREE_QUOTA
+    return this.getFreePersonalItemLimit()
   }
 
   /**
@@ -144,7 +187,7 @@ class MemberUtil {
       return Infinity
     }
     const used = this.getUsedQuota()
-    return Math.max(0, this.FREE_QUOTA - used)
+    return Math.max(0, this.getFreePersonalItemLimit() - used)
   }
 
   /**
@@ -155,7 +198,35 @@ class MemberUtil {
       return true
     }
     const used = this.getUsedQuota()
-    return used < this.FREE_QUOTA
+    return used < this.getFreePersonalItemLimit()
+  }
+
+  /**
+   * 检查是否可以创建共享空间
+   */
+  canCreateSharedSpace(currentCount) {
+    if (this.isMember()) {
+      return true
+    }
+    var count = Number(currentCount)
+    if (!Number.isFinite(count) || count < 0) {
+      count = 0
+    }
+    return count < this.getFreeSharedSpaceLimit()
+  }
+
+  /**
+   * 检查共享空间是否还能添加物品
+   */
+  canAddSharedItem(currentCount) {
+    if (this.isMember()) {
+      return true
+    }
+    var count = Number(currentCount)
+    if (!Number.isFinite(count) || count < 0) {
+      count = 0
+    }
+    return count < this.getFreeSharedItemLimit()
   }
 
   /**
@@ -187,21 +258,28 @@ class MemberUtil {
   }
 
   /**
-   * 检查是否可以添加物品（包括广告额度）
+   * 检查是否可以添加物品（包括广告额度，仅收费模式生效）
    */
   canAddItemWithAd() {
     if (this.isMember()) {
       return true
     }
     const used = this.getUsedQuota()
+    const limit = this.getFreePersonalItemLimit()
+    if (!this.isChargeEnabled()) {
+      return used < limit
+    }
     const adQuota = this.getAdQuota()
-    return used < (this.FREE_QUOTA + adQuota)
+    return used < (limit + adQuota)
   }
 
   /**
    * 使用广告额度添加物品
    */
   useAdQuota() {
+    if (!this.isChargeEnabled()) {
+      return false
+    }
     const record = this.getAdWatchRecord()
     if (record.count > 0) {
       record.count -= 1
@@ -209,6 +287,48 @@ class MemberUtil {
       return true
     }
     return false
+  }
+
+  /**
+   * 额度不足时的统一处理
+   */
+  handlePersonalQuotaExceeded() {
+    if (this.isChargeEnabled()) {
+      uni.navigateTo({
+        url: '/pages/member/upgrade'
+      })
+      return
+    }
+    uni.showToast({
+      title: '个人物品已达上限（' + this.getFreePersonalItemLimit() + '个）',
+      icon: 'none'
+    })
+  }
+
+  handleSharedSpaceQuotaExceeded() {
+    if (this.isChargeEnabled()) {
+      uni.navigateTo({
+        url: '/pages/member/member'
+      })
+      return
+    }
+    uni.showToast({
+      title: '共享空间已达上限（' + this.getFreeSharedSpaceLimit() + '个）',
+      icon: 'none'
+    })
+  }
+
+  handleSharedItemQuotaExceeded() {
+    if (this.isChargeEnabled()) {
+      uni.navigateTo({
+        url: '/pages/member/member'
+      })
+      return
+    }
+    uni.showToast({
+      title: '空间物品已达上限（' + this.getFreeSharedItemLimit() + '个）',
+      icon: 'none'
+    })
   }
 }
 

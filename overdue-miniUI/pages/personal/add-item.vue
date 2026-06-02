@@ -71,6 +71,7 @@ export default {
     return {
       spaceId: '',
       itemType: 'personal',
+      sharedItemCount: 0,
       categories: ['食品', '药品', '其他'],
       categoryIndex: 0,
       shelfLifeUnits: ['天', '月', '年'],
@@ -89,6 +90,7 @@ export default {
   onLoad(options) {
     this.spaceId = options.spaceId || ''
     this.itemType = options.type || 'personal'
+    this.sharedItemCount = Number(options.itemCount) || 0
     this.calculateExpiryDate()
   },
   methods: {
@@ -149,27 +151,30 @@ export default {
       // 检查额度（仅个人物品需要检查）
       if (this.itemType === 'personal' || !this.itemType) {
         if (!memberUtil.canAddItemWithAd()) {
-          // 额度已用完，跳转到升级页面
-          uni.showModal({
-            title: '免费额度已用完',
-            content: '您已用完免费额度，请观看广告或升级会员继续添加物品',
-            confirmText: '去升级',
-            cancelText: '取消',
-            success: (res) => {
-              if (res.confirm) {
-                uni.navigateTo({
-                  url: '/pages/member/upgrade'
-                })
+          if (memberUtil.isChargeEnabled()) {
+            uni.showModal({
+              title: '免费额度已用完',
+              content: '您已用完免费额度，请观看广告或升级会员继续添加物品',
+              confirmText: '去升级',
+              cancelText: '取消',
+              success: (res) => {
+                if (res.confirm) {
+                  uni.navigateTo({
+                    url: '/pages/member/upgrade'
+                  })
+                }
               }
-            }
-          })
+            })
+          } else {
+            memberUtil.handlePersonalQuotaExceeded()
+          }
           return
         }
         
         // 如果使用了广告额度，消耗一个广告额度
         const used = memberUtil.getUsedQuota()
-        const freeQuota = memberUtil.FREE_QUOTA
-        if (used >= freeQuota) {
+        const freeQuota = memberUtil.getFreePersonalItemLimit()
+        if (memberUtil.isChargeEnabled() && used >= freeQuota) {
           // 使用了广告额度
           memberUtil.useAdQuota()
         }
@@ -187,6 +192,10 @@ export default {
 
       var self = this
       if (this.spaceId && this.itemType === 'shared') {
+        if (!memberUtil.canAddSharedItem(this.sharedItemCount)) {
+          memberUtil.handleSharedItemQuotaExceeded()
+          return
+        }
         // 共享空间物品 - 调用后端API
         api.addSharedItem(this.spaceId, newItem).then(function(res) {
           uni.showToast({ title: '添加成功', icon: 'success' })

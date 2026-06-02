@@ -191,25 +191,29 @@ export default {
 
       // 检查额度（与 pages/personal/add-item 一致）
       if (!memberUtil.canAddItemWithAd()) {
-        uni.showModal({
-          title: '免费额度已用完',
-          content: '您已用完免费额度，请观看广告或升级会员继续添加物品',
-          confirmText: '去升级',
-          cancelText: '取消',
-          success: (res) => {
-            if (res.confirm) {
-              uni.navigateTo({
-                url: '/pages/member/upgrade'
-              })
+        if (memberUtil.isChargeEnabled()) {
+          uni.showModal({
+            title: '免费额度已用完',
+            content: '您已用完免费额度，请观看广告或升级会员继续添加物品',
+            confirmText: '去升级',
+            cancelText: '取消',
+            success: (res) => {
+              if (res.confirm) {
+                uni.navigateTo({
+                  url: '/pages/member/upgrade'
+                })
+              }
             }
-          }
-        })
+          })
+        } else {
+          memberUtil.handlePersonalQuotaExceeded()
+        }
         return
       }
 
       const used = memberUtil.getUsedQuota()
-      const freeQuota = memberUtil.FREE_QUOTA
-      if (used >= freeQuota) {
+      const freeQuota = memberUtil.getFreePersonalItemLimit()
+      if (memberUtil.isChargeEnabled() && used >= freeQuota) {
         memberUtil.useAdQuota()
       }
 

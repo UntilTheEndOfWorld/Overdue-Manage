@@ -49,6 +49,8 @@
 import storage from '@/common/utils/storage.js'
 import themeMixin from '@/common/mixins/theme.js'
 import api from '@/common/utils/api.js'
+import memberUtil from '@/common/utils/member.js'
+import appConfig from '@/common/utils/appConfig.js'
 import { isLoggedIn } from '@/common/utils/auth.js'
 
 export default {
@@ -75,6 +77,7 @@ export default {
     this.loadSpaces()
   },
   onShow() {
+    appConfig.loadConfig(false)
     this.loadSpaces()
   },
   methods: {
@@ -159,6 +162,10 @@ export default {
       // 搜索逻辑已在computed中处理
     },
     createSpace() {
+      if (!memberUtil.canCreateSharedSpace(this.spaces.length)) {
+        memberUtil.handleSharedSpaceQuotaExceeded()
+        return
+      }
       uni.navigateTo({
         url: '/pages/shared/create'
       })

@@ -2,12 +2,15 @@
   <view class="container" :class="themeClass">
 
     <!-- 免费额度显示 -->
-    <view class="quota-bar" v-if="!memberUtil.isMember()">
+    <view class="quota-bar" v-if="showQuotaBar">
       <view class="quota-info">
-        <text class="quota-text">{{ usedQuota }}/{{ FREE_QUOTA }}个免费额度</text>
+        <text class="quota-text">{{ usedQuota }}/{{ freePersonalLimit }}个{{ chargeEnabled ? '免费' : '' }}额度</text>
       </view>
-      <view class="quota-action" @click="goToUpgrade">
+      <view class="quota-action" v-if="chargeEnabled" @click="goToUpgrade">
         <text class="quota-link">免费用户 • 升级会员无限制</text>
+      </view>
+      <view class="quota-action" v-else>
+        <text class="quota-link">个人物品上限 {{ freePersonalLimit }} 个</text>
       </view>
     </view>
 
@@ -157,6 +160,7 @@ import ItemCard from '@/components/item-card/item-card.vue'
 import AddItemModal from '@/components/add-item-modal/add-item-modal.vue'
 import themeMixin from '@/common/mixins/theme.js'
 import memberUtil from '@/common/utils/member.js'
+import appConfig from '@/common/utils/appConfig.js'
 import api from '@/common/utils/api.js'
 import { isLoggedIn } from '@/common/utils/auth.js'
 
@@ -169,7 +173,6 @@ export default {
   data() {
     return {
       memberUtil: memberUtil,
-      FREE_QUOTA: 5,
       usedQuota: 0,
       userInfo: {},
       totalCount: 0,
@@ -184,10 +187,22 @@ export default {
       loading: false
     }
   },
+  computed: {
+    chargeEnabled() {
+      return memberUtil.isChargeEnabled()
+    },
+    freePersonalLimit() {
+      return memberUtil.getFreePersonalItemLimit()
+    },
+    showQuotaBar() {
+      return !memberUtil.isMember()
+    }
+  },
   onLoad() {
     this.loadData()
   },
   onShow() {
+    appConfig.loadConfig(false)
     this.loadData()
   },
   methods: {
@@ -291,10 +306,7 @@ export default {
     showAddItemModal() {
       // 检查额度
       if (!memberUtil.canAddItemWithAd()) {
-        // 额度已用完，跳转到升级页面
-        uni.navigateTo({
-          url: '/pages/member/upgrade'
-        })
+        memberUtil.handlePersonalQuotaExceeded()
         return
       }
       this.showAddModal = true
@@ -380,6 +392,10 @@ export default {
     },
     // 跳转到创建共享空间
     goToCreateSpace() {
+      if (!memberUtil.canCreateSharedSpace(this.sharedSpaces.length)) {
+        memberUtil.handleSharedSpaceQuotaExceeded()
+        return
+      }
       uni.navigateTo({
         url: '/pages/shared/create'
       })
@@ -404,7 +420,7 @@ export default {
     // 跳转到升级页面
     goToUpgrade() {
       uni.navigateTo({
-        url: '/pages/member/upgrade'
+        url: '/pages/member/member'
       })
     },
     // 处理提醒项点击
