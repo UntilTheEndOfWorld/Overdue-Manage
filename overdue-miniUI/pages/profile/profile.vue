@@ -3,9 +3,9 @@
     <view class="profile-shell">
       <!-- 头部：标题 + 装饰图标 -->
       <view class="profile-header">
-        <text class="profile-header-title">个人中心</text>
-        <view class="header-icon">
-          <text class="header-icon-text">⚙</text>
+        <view>
+          <text class="profile-header-title">个人中心</text>
+          <text class="profile-header-subtitle">资料、提醒和空间偏好</text>
         </view>
       </view>
 
@@ -52,23 +52,39 @@
       </view>
 
       <!-- 会员 / 额度：深色底 + 深描边 -->
-      <view v-if="chargeEnabled && !memberUtil.isMember()" class="member-card">
+      <view v-if="chargeEnabled && !memberUtil.isMember()" class="member-card quota-card">
         <view class="member-top">
-          <text class="member-top-left">💎 免费额度</text>
+          <view>
+            <text class="member-kicker">当前套餐</text>
+            <text class="member-top-left">免费额度</text>
+          </view>
           <view class="member-badge" @click.stop="goToMember">
             <text>升级会员 ›</text>
           </view>
         </view>
+        <view class="quota-meter">
+          <view class="quota-meter-fill" :style="{ width: quotaPercent + '%' }"></view>
+        </view>
+        <view class="quota-meta">
+          <text>已用 {{ usedQuota }}</text>
+          <text>剩余 {{ remainingQuota }}</text>
+        </view>
         <view class="member-desc">
           <text>
-            您有 <text class="h-blue">{{ freePersonalLimit }}</text> 个物品免费额度，已用 <text class="h-orange">{{ usedQuota }}</text>，剩余 <text class="h-green">{{ remainingQuota }}</text>。
+            免费可管理 <text class="h-blue">{{ freePersonalLimit }}</text> 个个人物品，升级后可获得更高额度。
           </text>
         </view>
       </view>
 
       <view v-else-if="chargeEnabled && memberUtil.isMember()" class="member-card member-card--vip">
         <view class="member-top">
-          <text class="member-top-left">💎 会员状态</text>
+          <view>
+            <text class="member-kicker">当前套餐</text>
+            <text class="member-top-left">会员状态</text>
+          </view>
+          <view class="member-badge member-badge--active">
+            <text>已开通</text>
+          </view>
         </view>
         <view class="member-desc">
           <text v-if="memberInfo && memberInfo.planType === 'lifetime'">您已开通终身会员，享受无限物品管理。</text>
@@ -76,13 +92,30 @@
         </view>
       </view>
 
-      <view v-else class="member-card">
+      <view v-else class="member-card member-card--free">
         <view class="member-top">
-          <text class="member-top-left">💎 使用额度</text>
+          <view>
+            <text class="member-kicker">免费模式</text>
+            <text class="member-top-left">使用额度</text>
+          </view>
+        </view>
+        <view class="free-limit-grid">
+          <view class="free-limit-cell">
+            <text class="free-limit-num">{{ usedQuota }}/{{ freePersonalLimit }}</text>
+            <text class="free-limit-label">个人物品</text>
+          </view>
+          <view class="free-limit-cell">
+            <text class="free-limit-num">{{ freeSharedSpaceLimit }}</text>
+            <text class="free-limit-label">共享空间</text>
+          </view>
+          <view class="free-limit-cell">
+            <text class="free-limit-num">{{ freeSharedItemLimit }}</text>
+            <text class="free-limit-label">每空间物品</text>
+          </view>
         </view>
         <view class="member-desc">
           <text>
-            个人物品 <text class="h-blue">{{ usedQuota }}/{{ freePersonalLimit }}</text>，共享空间上限 <text class="h-orange">{{ freeSharedSpaceLimit }}</text> 个，每空间物品上限 <text class="h-green">{{ freeSharedItemLimit }}</text> 个。
+            当前可免费使用个人物品和共享空间额度。
           </text>
         </view>
       </view>
@@ -173,7 +206,7 @@
       </view>
 
       <view class="footer-tip">
-        <text>· 加深边框 层次分明 ·</text>
+        <text>过期了么，让物品状态一眼清楚</text>
       </view>
 
       <view class="logout-section" v-if="isLoggedIn">
@@ -228,6 +261,15 @@ export default {
     },
     freeSharedItemLimit() {
       return memberUtil.getFreeSharedItemLimit()
+    },
+    quotaPercent() {
+      var limit = Number(this.freePersonalLimit) || 0
+      if (!limit) return 0
+      var used = Number(this.usedQuota) || 0
+      var percent = Math.round((used / limit) * 100)
+      if (percent < 0) return 0
+      if (percent > 100) return 100
+      return percent
     },
     formatExpireTime() {
       if (!this.memberInfo.expireTime) return ''
@@ -465,110 +507,85 @@ export default {
 <style lang="scss" scoped>
 @import '@/common/style/common.scss';
 
-$border-strong: #c8d6e8;
-$text-title: #1a2642;
-$page-bg-light: #f2f6fe;
-
 .container {
   min-height: 100vh;
-  padding-bottom: 200rpx;
+  padding: 38rpx 30rpx 180rpx;
   background: var(--primary-bg);
   transition: background-color 0.3s ease;
+  box-sizing: border-box;
 }
 
 .light-mode.container {
-  background: $page-bg-light;
-  padding: 48rpx 32rpx 80rpx;
+  background: linear-gradient(180deg, #f6f9ff 0%, var(--primary-bg) 45%);
 }
 
-.container:not(.light-mode) {
-  padding: 40rpx 32rpx 80rpx;
-}
-
-/* 内层白卡片（参考稿 container） */
 .profile-shell {
   width: 100%;
   max-width: 800rpx;
   margin: 0 auto;
-  background: #ffffff;
-  border-radius: 64rpx;
-  padding: 56rpx 48rpx 40rpx;
-  box-shadow: 0 24rpx 96rpx rgba(42, 75, 150, 0.08);
-  box-sizing: border-box;
 }
 
-.container:not(.light-mode) .profile-shell {
-  background: var(--card-bg-solid);
-  border: 4rpx solid var(--card-border);
-  box-shadow: 0 16rpx 48rpx var(--shadow-color);
-}
-
-/* 头部 */
 .profile-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 48rpx;
-  padding-bottom: 24rpx;
-  border-bottom: 4rpx solid $border-strong;
+  margin-bottom: 26rpx;
 }
 
-.container:not(.light-mode) .profile-header {
-  border-bottom-color: var(--card-border);
+.profile-header-title,
+.profile-header-subtitle {
+  display: block;
 }
 
 .profile-header-title {
-  font-size: 44rpx;
+  font-size: 46rpx;
   font-weight: 800;
-  color: $text-title;
-  letter-spacing: -0.6rpx;
-}
-
-.container:not(.light-mode) .profile-header-title {
   color: var(--text-primary);
+  line-height: 1.2;
 }
 
-.header-icon {
-  width: 76rpx;
-  height: 76rpx;
-  background: #eef4fe;
-  border-radius: 999rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.profile-header-subtitle {
+  margin-top: 8rpx;
+  color: var(--text-secondary);
+  font-size: 25rpx;
+  line-height: 1.4;
 }
 
-.container:not(.light-mode) .header-icon {
-  background: rgba(58, 107, 213, 0.2);
-}
-
-.header-icon-text {
-  font-size: 34rpx;
-  color: #3a6bd5;
-}
-
-.container:not(.light-mode) .header-icon-text {
-  color: #7da2ff;
-}
-
-/* 个人信息卡片 */
-.profile-card {
-  display: flex;
-  gap: 32rpx;
-  align-items: center;
-  margin-bottom: 56rpx;
-  padding: 36rpx 40rpx;
-  background: linear-gradient(145deg, #5b8df7, #3b73e6);
-  border-radius: 40rpx;
-  color: #ffffff;
-  box-shadow: 0 16rpx 48rpx rgba(59, 115, 230, 0.25);
-  border: 4rpx solid #2a5abf;
+.profile-card,
+.stats-grid,
+.member-card,
+.settings-group {
+  border-radius: 30rpx;
+  border: 2rpx solid var(--card-border);
+  box-shadow: 0 16rpx 44rpx -30rpx var(--shadow-color);
   box-sizing: border-box;
 }
 
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 26rpx;
+  padding: 34rpx;
+  margin-bottom: 24rpx;
+  color: #ffffff;
+  background: linear-gradient(135deg, #2563eb 0%, #0d9488 100%);
+  border-color: rgba(255, 255, 255, 0.22);
+  overflow: hidden;
+  position: relative;
+}
+
+.profile-card::after {
+  content: '';
+  position: absolute;
+  right: -90rpx;
+  top: -110rpx;
+  width: 260rpx;
+  height: 260rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+}
+
 .avatar {
-  width: 128rpx;
-  height: 128rpx;
+  width: 124rpx;
+  height: 124rpx;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.2);
   flex-shrink: 0;
@@ -576,7 +593,9 @@ $page-bg-light: #f2f6fe;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border: 4rpx solid rgba(255, 255, 255, 0.3);
+  border: 4rpx solid rgba(255, 255, 255, 0.38);
+  position: relative;
+  z-index: 1;
 }
 
 .avatar image {
@@ -585,136 +604,116 @@ $page-bg-light: #f2f6fe;
 }
 
 .avatar-text {
-  font-size: 56rpx;
+  font-size: 54rpx;
   color: #ffffff;
-  font-weight: 600;
+  font-weight: 800;
 }
 
 .info-group {
   flex: 1;
   min-width: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .profile-name {
+  display: block;
   font-size: 36rpx;
-  font-weight: 700;
+  font-weight: 800;
   color: #ffffff;
+  line-height: 1.25;
+  word-break: break-all;
 }
 
 .profile-info {
-  margin-top: 4rpx;
+  margin-top: 8rpx;
 }
 
 .profile-info-text {
-  font-size: 26rpx;
-  color: #dce8ff;
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.82);
   line-height: 1.5;
-  opacity: 0.95;
   word-break: break-all;
 }
 
 .profile-actions {
-  margin-top: 12rpx;
+  margin-top: 16rpx;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8rpx;
-  font-size: 24rpx;
-  font-weight: 600;
-  color: #ffffff;
-  opacity: 0.95;
+  gap: 10rpx;
 }
 
 .profile-action-link {
-  text-decoration: underline;
+  padding: 10rpx 18rpx;
+  border-radius: 999rpx;
+  color: #ffffff;
+  font-size: 23rpx;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.16);
 }
 
 .profile-action-divider {
-  opacity: 0.45;
+  display: none;
 }
 
-/* 统计四宫格 */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16rpx;
-  background: #ffffff;
-  border-radius: 40rpx;
-  padding: 24rpx 8rpx;
-  margin-bottom: 56rpx;
-  border: 4rpx solid $border-strong;
-  box-sizing: border-box;
-}
-
-.container:not(.light-mode) .stats-grid {
+  gap: 12rpx;
+  padding: 16rpx;
+  margin-bottom: 24rpx;
   background: var(--card-bg-solid);
-  border-color: var(--card-border);
 }
 
 .stat-cell {
+  min-height: 112rpx;
+  border-radius: 22rpx;
+  padding: 14rpx 4rpx;
   text-align: center;
-  border-radius: 24rpx;
-  padding: 8rpx 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 .stat-cell.bg-blue {
-  background: #dce8ff;
-  padding: 16rpx 0;
+  background: rgba(37, 99, 235, 0.11);
 }
 
 .stat-cell.bg-green {
-  background: #e5f8ef;
-  padding: 16rpx 0;
+  background: rgba(5, 150, 105, 0.12);
 }
 
 .stat-cell.bg-orange {
-  background: #fef5e5;
-  padding: 16rpx 0;
+  background: rgba(245, 158, 11, 0.13);
 }
 
 .stat-cell.bg-red {
-  background: #fde8e8;
-  padding: 16rpx 0;
-}
-
-.container:not(.light-mode) .stat-cell.bg-blue {
-  background: rgba(45, 107, 227, 0.2);
-}
-
-.container:not(.light-mode) .stat-cell.bg-green {
-  background: rgba(31, 203, 138, 0.15);
-}
-
-.container:not(.light-mode) .stat-cell.bg-orange {
-  background: rgba(244, 178, 42, 0.15);
-}
-
-.container:not(.light-mode) .stat-cell.bg-red {
-  background: rgba(239, 78, 78, 0.15);
+  background: rgba(225, 29, 72, 0.11);
 }
 
 .stat-num {
   display: block;
-  font-size: 56rpx;
+  font-size: 42rpx;
   font-weight: 800;
-  letter-spacing: -0.6rpx;
   line-height: 1.1;
 }
 
 .color-blue {
-  color: #2d6be3;
+  color: #2563eb;
 }
 
 .color-green {
-  color: #1fcb8a;
+  color: #059669;
 }
 
 .color-orange {
-  color: #f4b22a;
+  color: #d97706;
 }
 
 .color-red {
-  color: #ef4e4e;
+  color: #e11d48;
 }
 
 .container:not(.light-mode) .color-blue {
@@ -726,7 +725,7 @@ $page-bg-light: #f2f6fe;
 }
 
 .container:not(.light-mode) .color-orange {
-  color: #f4b22a;
+  color: #fbbf24;
 }
 
 .container:not(.light-mode) .color-red {
@@ -735,106 +734,166 @@ $page-bg-light: #f2f6fe;
 
 .stat-label {
   display: block;
+  margin-top: 6rpx;
+  color: var(--text-secondary);
   font-size: 20rpx;
-  color: #7d8fb3;
-  font-weight: 600;
-  margin-top: 4rpx;
+  font-weight: 700;
   line-height: 1.2;
 }
 
-.container:not(.light-mode) .stat-label {
-  color: var(--text-secondary);
+.member-card {
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+  color: #ffffff;
+  background: #172033;
+  border-color: rgba(148, 163, 184, 0.22);
 }
 
-/* 会员卡片 */
-.member-card {
-  background: #1a2642;
-  border-radius: 40rpx;
-  padding: 36rpx 40rpx;
-  margin-bottom: 56rpx;
-  color: #ffffff;
-  display: flex;
-  flex-direction: column;
-  gap: 12rpx;
-  box-shadow: 0 16rpx 48rpx rgba(26, 38, 66, 0.08);
-  border: 4rpx solid #2c3d66;
-  box-sizing: border-box;
+.quota-card {
+  background: linear-gradient(135deg, #172033, #20314f);
 }
 
 .member-card--vip {
-  border-color: rgba(244, 178, 42, 0.45);
+  background: linear-gradient(135deg, #1f2937, #3d2f12);
+  border-color: rgba(245, 158, 11, 0.36);
+}
+
+.member-card--free {
+  background: linear-gradient(135deg, #172033, #0f3f3b);
 }
 
 .member-top {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  font-weight: 600;
-  font-size: 30rpx;
+  align-items: flex-start;
+  gap: 18rpx;
+}
+
+.member-kicker,
+.member-top-left {
+  display: block;
+}
+
+.member-kicker {
+  margin-bottom: 6rpx;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 22rpx;
+  font-weight: 700;
 }
 
 .member-top-left {
   color: #ffffff;
+  font-size: 34rpx;
+  font-weight: 800;
+  line-height: 1.2;
 }
 
 .member-badge {
-  font-size: 26rpx;
-  color: #f4b22a;
-  background: rgba(244, 178, 42, 0.12);
-  padding: 4rpx 24rpx;
+  padding: 12rpx 22rpx;
   border-radius: 999rpx;
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.14);
+  font-size: 24rpx;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.member-badge--active {
+  color: #5eead4;
+  background: rgba(13, 148, 136, 0.18);
+}
+
+.quota-meter {
+  height: 18rpx;
+  margin-top: 28rpx;
+  border-radius: 999rpx;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.quota-meter-fill {
+  height: 100%;
+  border-radius: 999rpx;
+  background: linear-gradient(90deg, #5eead4, #fbbf24);
+}
+
+.quota-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12rpx;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 23rpx;
+  font-weight: 700;
 }
 
 .member-desc {
-  font-size: 26rpx;
-  color: #bcc6df;
-  line-height: 1.5;
+  margin-top: 20rpx;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 25rpx;
+  line-height: 1.55;
 }
 
-.member-desc .h-blue {
-  font-weight: 700;
-  color: #7da2ff;
-}
-
-.member-desc .h-orange {
-  font-weight: 700;
-  color: #f4b22a;
-}
-
+.member-desc .h-blue,
+.member-desc .h-orange,
 .member-desc .h-green {
-  font-weight: 700;
-  color: #41dfa5;
+  color: #ffffff;
+  font-weight: 800;
 }
 
-/* 设置列表 */
-.settings-group {
-  background: #fafcff;
-  border-radius: 40rpx;
-  padding: 12rpx 36rpx;
-  border: 4rpx solid $border-strong;
+.free-limit-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12rpx;
+  margin-top: 24rpx;
+}
+
+.free-limit-cell {
+  min-height: 104rpx;
+  padding: 16rpx 8rpx;
+  border-radius: 22rpx;
+  background: rgba(255, 255, 255, 0.12);
+  text-align: center;
   box-sizing: border-box;
-  margin-bottom: 32rpx;
 }
 
-.container:not(.light-mode) .settings-group {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: var(--card-border);
+.free-limit-num,
+.free-limit-label {
+  display: block;
+}
+
+.free-limit-num {
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.free-limit-label {
+  margin-top: 8rpx;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 20rpx;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.settings-group {
+  padding: 8rpx 28rpx;
+  margin-bottom: 26rpx;
+  background: var(--card-bg-solid);
 }
 
 .setting-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 28rpx 0;
-  border-bottom: 4rpx solid $border-strong;
-  
-  &:active {
-    opacity: 0.92;
-  }
-}
+  min-height: 96rpx;
+  padding: 14rpx 0;
+  border-bottom: 2rpx solid rgba(148, 163, 184, 0.18);
+  box-sizing: border-box;
 
-.container:not(.light-mode) .setting-item {
-  border-bottom-color: var(--card-border);
+  &:active {
+    opacity: 0.86;
+  }
 }
 
 .setting-item--last {
@@ -849,160 +908,141 @@ $page-bg-light: #f2f6fe;
 .setting-left {
   display: flex;
   align-items: center;
-  gap: 24rpx;
+  gap: 20rpx;
   flex: 1;
   min-width: 0;
 }
 
 .setting-label {
-  font-size: 30rpx;
-  font-weight: 500;
-  color: $text-title;
-}
-
-.container:not(.light-mode) .setting-label {
   color: var(--text-primary);
+  font-size: 29rpx;
+  font-weight: 700;
+  line-height: 1.25;
 }
 
-.setting-icon {
-  width: 68rpx;
-  height: 68rpx;
-  border-radius: 24rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  font-size: 34rpx;
-}
-
-.icon-theme {
-  background: #dce8ff;
-  color: #2d6be3;
-}
-
-.icon-bell {
-  background: #fef5e5;
-  color: #f4b22a;
-}
-
-.icon-box {
-  background: #e5f0ff;
-  color: #2d6be3;
-}
-
-.icon-shared {
-  background: #e8f5e9;
-  color: #1fcb8a;
-}
-
-.icon-dark {
-  background: #ede7f6;
-  color: #5c4d7a;
-}
-
-.icon-about {
-  background: #fce4ec;
-  color: #c2185b;
-}
-
+.setting-icon,
 .setting-icon-img {
-  width: 68rpx;
-  height: 68rpx;
-  border-radius: 24rpx;
+  width: 62rpx;
+  height: 62rpx;
+  border-radius: 20rpx;
   flex-shrink: 0;
-  background: #e3f2fd;
-  padding: 8rpx;
   box-sizing: border-box;
 }
 
-.setting-chevron {
-  color: #8da0c2;
-  font-size: 32rpx;
-  flex-shrink: 0;
+.setting-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 31rpx;
 }
 
-.container:not(.light-mode) .setting-chevron {
-  color: var(--text-secondary);
+.icon-theme {
+  background: rgba(37, 99, 235, 0.12);
+  color: #2563eb;
+}
+
+.icon-bell {
+  background: rgba(245, 158, 11, 0.14);
+  color: #d97706;
+}
+
+.icon-box {
+  background: rgba(13, 148, 136, 0.13);
+  color: #0d9488;
+}
+
+.icon-shared {
+  background: rgba(5, 150, 105, 0.13);
+  color: #059669;
+}
+
+.icon-dark {
+  background: rgba(124, 58, 237, 0.12);
+  color: #7c3aed;
+}
+
+.icon-about {
+  background: rgba(225, 29, 72, 0.1);
+  color: #e11d48;
+}
+
+.setting-icon-img {
+  background: rgba(37, 99, 235, 0.1);
+  padding: 12rpx;
+}
+
+.setting-chevron {
+  color: var(--text-tertiary);
+  font-size: 34rpx;
+  flex-shrink: 0;
 }
 
 .palette-dots {
   display: flex;
   align-items: center;
-  gap: 8rpx;
-  flex-wrap: wrap;
   justify-content: flex-end;
-  max-width: 360rpx;
+  gap: 12rpx;
+  flex-wrap: wrap;
+  max-width: 370rpx;
 }
 
 .palette-dot {
-  width: 44rpx;
-  height: 44rpx;
+  width: 42rpx;
+  height: 42rpx;
   border-radius: 50%;
-  border: 4rpx solid #ffffff;
-  box-shadow: 0 0 0 2rpx #bccae2;
+  border: 4rpx solid var(--card-bg-solid);
+  box-shadow: 0 0 0 2rpx rgba(148, 163, 184, 0.45);
   box-sizing: border-box;
 }
 
 .palette-dot.white {
-  box-shadow: 0 0 0 2rpx #94a3b8;
+  box-shadow: 0 0 0 2rpx rgba(100, 116, 139, 0.65);
 }
 
 .palette-dot.active {
-  border-color: #1a2642;
-  box-shadow: 0 0 0 4rpx #1a2642;
-}
-
-.container:not(.light-mode) .palette-dot.active {
-  border-color: #e2e8f0;
-  box-shadow: 0 0 0 4rpx #e2e8f0;
+  box-shadow: 0 0 0 4rpx var(--accent-blue);
 }
 
 .theme-switch {
-  transform: scale(0.92);
+  transform: scale(0.9);
   transform-origin: center right;
 }
 
 .footer-tip {
-  margin-top: 8rpx;
-  margin-bottom: 8rpx;
-  font-size: 24rpx;
-  color: #bccae2;
+  margin: 8rpx 0 0;
+  color: var(--text-tertiary);
+  font-size: 23rpx;
   text-align: center;
 }
 
-.container:not(.light-mode) .footer-tip {
-  color: var(--text-secondary);
-}
-
 .logout-section {
-  margin-top: 40rpx;
+  margin-top: 30rpx;
 }
 
 .btn-logout {
   width: 100%;
-  padding: 28rpx;
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
+  padding: 24rpx;
   border-radius: 24rpx;
-  font-size: 32rpx;
-  border: 4rpx solid rgba(239, 68, 68, 0.4);
-  transition: all 0.3s ease;
-  font-weight: 600;
-  box-shadow: 0 4rpx 16rpx rgba(239, 68, 68, 0.2);
-  
+  color: #dc2626;
+  background: rgba(239, 68, 68, 0.1);
+  border: 2rpx solid rgba(239, 68, 68, 0.22);
+  font-size: 30rpx;
+  font-weight: 800;
+  box-sizing: border-box;
+
   &:active {
-    background: rgba(239, 68, 68, 0.25);
-    box-shadow: 0 8rpx 24rpx rgba(239, 68, 68, 0.3);
+    background: rgba(239, 68, 68, 0.16);
   }
 }
 
-.light-mode .btn-logout {
-  background: #fee2e2;
-  color: #dc2626;
-  border: 4rpx solid #f87171;
-  
-  &:active {
-    background: #fecaca;
-  }
+.container:not(.light-mode) .profile-card,
+.container:not(.light-mode) .stats-grid,
+.container:not(.light-mode) .settings-group {
+  background-color: var(--card-bg-solid);
+  border-color: var(--card-border);
+}
+
+.container:not(.light-mode) .setting-item {
+  border-bottom-color: var(--card-border);
 }
 </style>

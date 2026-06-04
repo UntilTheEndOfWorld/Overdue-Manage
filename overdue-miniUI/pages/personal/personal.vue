@@ -1,16 +1,47 @@
 <template>
   <view class="container" :class="themeClass">
-    <!-- 搜索框 -->
-    <view class="search-bar">
+    <view class="page-hero">
+      <view class="hero-copy">
+        <text class="hero-title">物品管理</text>
+        <text class="hero-subtitle">关注临期和过期物品，及时处理库存</text>
+      </view>
+      <view class="hero-add" @click="addItem">
+        <text class="hero-add-icon">+</text>
+        <text>添加</text>
+      </view>
+    </view>
+
+    <view class="overview-card">
+      <view class="overview-main">
+        <text class="overview-num">{{ itemStats.total || 0 }}</text>
+        <text class="overview-label">全部物品</text>
+      </view>
+      <view class="overview-side">
+        <view class="overview-pill normal">
+          <text class="overview-pill-num">{{ itemStats.normal || 0 }}</text>
+          <text>正常</text>
+        </view>
+        <view class="overview-pill near">
+          <text class="overview-pill-num">{{ itemStats.near || 0 }}</text>
+          <text>临期</text>
+        </view>
+        <view class="overview-pill expired">
+          <text class="overview-pill-num">{{ itemStats.expired || 0 }}</text>
+          <text>过期</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="search-panel">
+      <text class="search-icon">⌕</text>
       <input 
         class="search-input" 
         v-model="searchKeyword" 
-        placeholder="🔍 搜索物品名称…"
+        placeholder="搜索物品名称"
         @input="onSearch"
       />
     </view>
 
-    <!-- 筛选胶囊 + 添加（参考清新胶囊风格） -->
     <view class="filter-group">
       <view 
         class="filter-chip" 
@@ -47,10 +78,6 @@
         <text>过期</text>
         <text v-if="itemStats && itemStats.expired > 0" class="filter-num">{{ itemStats.expired }}</text>
       </view>
-      <view class="filter-chip filter-chip-add" @click="addItem">
-        <text class="icon-plus">+</text>
-        <text>添加</text>
-      </view>
     </view>
 
     <!-- 物品列表 -->
@@ -68,7 +95,10 @@
     </view>
 
     <view class="empty-state" v-if="filteredItems.length === 0 && (!loadError || items.length > 0)">
-      <text>暂无物品</text>
+      <view class="empty-visual">📦</view>
+      <text class="empty-title">暂无匹配物品</text>
+      <text class="empty-desc">换个筛选条件，或添加一个新的物品</text>
+      <view class="empty-action" @click="addItem">添加物品</view>
     </view>
 
     <view class="error-state" v-if="loadError && items.length === 0">
@@ -245,51 +275,216 @@ export default {
 @import '@/common/style/common.scss';
 
 .container {
-  padding: 40rpx;
   min-height: 100vh;
-  padding-bottom: 200rpx;
+  padding: 36rpx 30rpx 200rpx;
   background: var(--primary-bg);
   transition: background-color 0.3s ease;
 }
 
-/* 筛选行：胶囊 + 可换行 */
-.filter-group {
+.page-hero {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 20rpx;
-  margin-bottom: 40rpx;
+  justify-content: space-between;
+  gap: 24rpx;
+  margin-bottom: 28rpx;
 }
 
-.filter-chip {
-  display: inline-flex;
+.hero-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  min-width: 0;
+}
+
+.hero-title {
+  color: var(--text-primary);
+  font-size: 46rpx;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.hero-subtitle {
+  color: var(--text-secondary);
+  font-size: 25rpx;
+  line-height: 1.35;
+}
+
+.hero-add {
+  display: flex;
   align-items: center;
   justify-content: center;
   gap: 8rpx;
-  padding: 20rpx 36rpx;
-  min-height: 64rpx;
+  min-width: 146rpx;
+  height: 70rpx;
+  padding: 0 24rpx;
   border-radius: 999rpx;
+  color: #ffffff;
   font-size: 28rpx;
-  font-weight: 500;
-  letter-spacing: 0.5rpx;
-  background: var(--card-bg-solid);
-  color: var(--text-secondary);
-  border: 2rpx solid var(--card-border);
+  font-weight: 700;
+  background: linear-gradient(135deg, #2563eb, #0d9488);
+  box-shadow: 0 14rpx 34rpx rgba(37, 99, 235, 0.22);
   box-sizing: border-box;
-  transition: background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-  
+
   &:active {
     transform: scale(0.98);
   }
-  
-  &:not(.filter-chip-add):not(.active) {
-    background: rgba(240, 244, 250, 0.35);
-    color: #94a3b8;
-    border-color: transparent;
-    box-shadow: none;
+}
+
+.hero-add-icon {
+  font-size: 34rpx;
+  line-height: 1;
+  margin-top: -2rpx;
+}
+
+.overview-card {
+  display: flex;
+  align-items: stretch;
+  gap: 22rpx;
+  padding: 28rpx;
+  margin-bottom: 24rpx;
+  border-radius: 30rpx;
+  background: var(--card-bg-solid);
+  border: 2rpx solid var(--card-border);
+  box-shadow: 0 12rpx 34rpx -20rpx var(--shadow-color);
+  box-sizing: border-box;
+}
+
+.overview-main {
+  width: 190rpx;
+  min-height: 148rpx;
+  border-radius: 24rpx;
+  background: linear-gradient(145deg, rgba(37, 99, 235, 0.14), rgba(13, 148, 136, 0.12));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.overview-num {
+  color: var(--text-primary);
+  font-size: 62rpx;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.overview-label {
+  margin-top: 8rpx;
+  color: var(--text-secondary);
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.overview-side {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.overview-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 40rpx;
+  padding: 10rpx 18rpx;
+  border-radius: 18rpx;
+  color: var(--text-secondary);
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.overview-pill-num {
+  color: var(--text-primary);
+  font-size: 28rpx;
+  font-weight: 800;
+}
+
+.overview-pill.normal {
+  background: rgba(5, 150, 105, 0.12);
+}
+
+.overview-pill.near {
+  background: rgba(245, 158, 11, 0.14);
+}
+
+.overview-pill.expired {
+  background: rgba(225, 29, 72, 0.12);
+}
+
+.search-panel {
+  display: flex;
+  align-items: center;
+  height: 84rpx;
+  padding: 0 26rpx;
+  margin-bottom: 22rpx;
+  border-radius: 24rpx;
+  background: var(--card-bg-solid);
+  border: 2rpx solid var(--card-border);
+  box-sizing: border-box;
+}
+
+.search-icon {
+  width: 44rpx;
+  color: var(--text-tertiary);
+  font-size: 34rpx;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0;
+  height: 80rpx;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 28rpx;
+  line-height: 80rpx;
+}
+
+.filter-group {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 14rpx;
+  margin-bottom: 28rpx;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.filter-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  min-width: 128rpx;
+  height: 66rpx;
+  padding: 0 24rpx;
+  border-radius: 999rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+  background: var(--card-bg-solid);
+  color: var(--text-secondary);
+  border: 2rpx solid var(--card-border);
+  flex-shrink: 0;
+  box-sizing: border-box;
+  transition: background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+
+  &:active {
+    transform: scale(0.98);
   }
-  
-  &.active:not(.filter-chip-add) {
+
+  &:not(.active) {
+    background: rgba(148, 163, 184, 0.1);
+    border-color: transparent;
+  }
+
+  &.active {
     background: #5e8cd9;
     color: #ffffff;
     border-color: transparent;
@@ -324,196 +519,58 @@ export default {
   background: #ffffff;
 }
 
-/* 渐变添加按钮，同行时靠右 */
-.filter-chip-add {
-  margin-left: auto;
-  padding: 20rpx 40rpx;
-  font-size: 30rpx;
-  font-weight: 600;
-  color: #ffffff !important;
-  border: none !important;
-  background: linear-gradient(135deg, #48c9b0, #1abc9c) !important;
-  box-shadow: 0 12rpx 36rpx rgba(26, 188, 156, 0.35);
-  
-  &:active {
-    transform: scale(0.97);
-    box-shadow: 0 8rpx 28rpx rgba(26, 188, 156, 0.4);
-  }
-}
-
-.filter-chip-add .icon-plus {
-  font-size: 36rpx;
-  font-weight: 300;
-  line-height: 1;
-}
-
-/* 深色主题：未选中胶囊略提亮，选中保持品牌蓝 */
-.container:not(.light-mode) .filter-chip:not(.filter-chip-add):not(.active) {
+.container:not(.light-mode) .filter-chip:not(.active) {
   background: rgba(255, 255, 255, 0.06);
   color: var(--text-secondary);
   border-color: var(--card-border);
 }
 
-/* 浅色主题：与参考稿一致的无边框灰底未选中 */
-.light-mode .filter-chip:not(.filter-chip-add):not(.active) {
-  background: #f0f4fa !important;
-  color: #8796b3 !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-
-.light-mode .filter-chip.active:not(.filter-chip-add) {
-  background: #5e8cd9 !important;
-  color: #ffffff !important;
-  border: none !important;
-  box-shadow: 0 12rpx 32rpx rgba(94, 140, 217, 0.3) !important;
-}
-
-.light-mode .filter-chip-add {
-  background: linear-gradient(135deg, #48c9b0, #1abc9c) !important;
-  box-shadow: 0 12rpx 36rpx rgba(26, 188, 156, 0.35) !important;
-}
-
 .item-list {
   display: flex;
   flex-direction: column;
-  gap: 30rpx;
-}
-
-.item-card {
-  background: white;
-  border-radius: 24rpx;
-  padding: 36rpx;
-  margin-bottom: 30rpx;
-  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.05);
-  border-left: 10rpx solid #6a89cc;
-}
-
-.item-card.expired {
-  border-left-color: #ff7979;
-}
-
-.item-card.near-expiry {
-  border-left-color: #ffbe76;
-}
-
-.item-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20rpx;
-}
-
-.item-name {
-  font-weight: 600;
-  font-size: 36rpx;
-  color: #2c3e50;
-}
-
-.edit-btn {
-  background-color: transparent;
-  border: none;
-  color: #6a89cc;
-  font-size: 28rpx;
-  padding: 10rpx 20rpx;
-  border-radius: 10rpx;
-}
-
-.item-date {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 16rpx;
-  font-size: 26rpx;
-}
-
-.date-item {
-  display: flex;
-  flex-direction: column;
-}
-
-.date-label {
-  color: #7f8c8d;
-  font-size: 24rpx;
-  margin-bottom: 8rpx;
-}
-
-.date-value {
-  font-weight: 500;
-  color: #2c3e50;
-  font-size: 26rpx;
-}
-
-.expiry-status {
-  display: inline-block;
-  padding: 6rpx 20rpx;
-  border-radius: 40rpx;
-  font-size: 24rpx;
-  font-weight: 500;
-  margin-top: 16rpx;
-}
-
-.status-normal {
-  background-color: #d1f7c4;
-  color: #2e7d32;
-}
-
-.status-near {
-  background-color: #fff4c6;
-  color: #f39c12;
-}
-
-.status-expired {
-  background-color: #ffeaea;
-  color: #e74c3c;
-}
-
-.search-bar {
-  margin-bottom: 30rpx;
-}
-
-.search-input {
-  width: 100%;
-  height: 80rpx;
-  padding: 0 30rpx;
-  background: var(--card-bg-solid);
-  border-radius: 40rpx;
-  font-size: 28rpx;
-  border: 2rpx solid var(--card-border);
-  color: var(--text-primary);
-  transition: all 0.3s ease;
-  box-sizing: border-box;
-  margin: 0;
-  line-height: 80rpx;
-}
-
-.search-input:focus {
-  border-color: var(--accent-blue);
-  background: var(--hover-bg);
-}
-
-/* 浅色模式搜索框：与参考稿一致的浅底 + 柔和描边 */
-.light-mode .search-input {
-  background: #fafcff !important;
-  border: 3rpx solid #e7edf4 !important;
-  color: #1e2a44 !important;
-  box-shadow: none !important;
-}
-
-.light-mode .search-input::placeholder {
-  color: #b7c4db !important;
-}
-
-.light-mode .search-input:focus {
-  border-color: #7ea3e0 !important;
-  background: #ffffff !important;
-  box-shadow: 0 0 0 8rpx rgba(126, 163, 224, 0.12) !important;
+  gap: 22rpx;
 }
 
 .empty-state {
-  text-align: center;
-  padding: 100rpx 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 90rpx 36rpx;
+  margin-top: 18rpx;
+  border-radius: 30rpx;
+  background: var(--card-bg-solid);
+  border: 2rpx dashed var(--card-border);
   color: var(--text-secondary);
-  font-size: 32rpx;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.empty-visual {
+  font-size: 58rpx;
+  margin-bottom: 18rpx;
+}
+
+.empty-title {
+  color: var(--text-primary);
+  font-size: 31rpx;
+  font-weight: 800;
+  margin-bottom: 10rpx;
+}
+
+.empty-desc {
+  color: var(--text-secondary);
+  font-size: 25rpx;
+  line-height: 1.5;
+}
+
+.empty-action {
+  margin-top: 28rpx;
+  padding: 18rpx 34rpx;
+  border-radius: 999rpx;
+  color: #ffffff;
+  font-size: 26rpx;
+  font-weight: 700;
+  background: linear-gradient(135deg, #2563eb, #0d9488);
 }
 
 .filter-num {
@@ -522,7 +579,7 @@ export default {
   opacity: 0.9;
 }
 
-.light-mode .filter-chip.active:not(.filter-chip-add) .filter-num {
+.light-mode .filter-chip.active .filter-num {
   opacity: 0.95;
   color: rgba(255, 255, 255, 0.92);
 }
@@ -541,5 +598,29 @@ export default {
 
 .retry-btn {
   margin-top: 8rpx;
+}
+
+.light-mode.container {
+  background: linear-gradient(180deg, #f6f9ff 0%, var(--primary-bg) 42%);
+}
+
+.light-mode .overview-card,
+.light-mode .search-panel,
+.light-mode .empty-state {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(148, 163, 184, 0.18);
+  box-shadow: 0 18rpx 48rpx -34rpx rgba(15, 23, 42, 0.35);
+}
+
+.light-mode .filter-chip:not(.active) {
+  background: rgba(226, 232, 240, 0.72) !important;
+  color: #64748b !important;
+  border-color: transparent !important;
+}
+
+.light-mode .filter-chip.active {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  box-shadow: 0 12rpx 28rpx rgba(37, 99, 235, 0.24) !important;
 }
 </style>

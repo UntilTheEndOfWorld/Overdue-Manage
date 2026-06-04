@@ -5,7 +5,7 @@
     @click="handleClick"
   >
     <view class="item-header">
-      <view>
+      <view class="item-title-group">
         <text class="item-name">{{ item.name }}</text>
         <view class="expiry-status" :class="statusClass">
           {{ statusText }}
@@ -15,32 +15,48 @@
         <image class="edit-icon" src="/static/tabbar/edit.png" mode="aspectFit"></image>
       </view>
     </view>
-    <view class="item-date" v-if="showDates">
+    <view class="date-grid" v-if="showDates">
       <view class="date-item">
-        <text class="date-label">📅 生产日期</text>
-        <text class="date-value">{{ formatDate(item.productionDate) }}</text>
+        <view class="date-icon">产</view>
+        <view class="date-copy">
+          <text class="date-label">生产日期</text>
+          <text class="date-value">{{ formatDate(item.productionDate) }}</text>
+        </view>
       </view>
-      <view class="date-item">
-        <text class="date-label">⏰ 过期日期</text>
-        <text class="date-value">{{ formatDate(item.expiryDate) }}</text>
+      <view class="date-item expiry-date">
+        <view class="date-icon">期</view>
+        <view class="date-copy">
+          <text class="date-label">过期日期</text>
+          <text class="date-value">{{ formatDate(item.expiryDate) }}</text>
+        </view>
       </view>
       <view class="date-item" v-if="item.purchaseDate">
-        <text class="date-label">🛒 购买日期</text>
-        <text class="date-value">{{ formatDate(item.purchaseDate) }}</text>
+        <view class="date-icon">购</view>
+        <view class="date-copy">
+          <text class="date-label">购买日期</text>
+          <text class="date-value">{{ formatDate(item.purchaseDate) }}</text>
+        </view>
       </view>
     </view>
     <view class="item-info" v-else>
-      <text>过期日期：{{ formatDate(item.expiryDate) }}</text>
-      <text v-if="item.creatorName">添加者：{{ item.creatorName }}</text>
+      <view class="info-line">
+        <text class="info-label">过期日期</text>
+        <text class="date-value">{{ formatDate(item.expiryDate) }}</text>
+      </view>
+      <view class="info-line" v-if="item.creatorName">
+        <text class="info-label">添加者</text>
+        <text class="date-value">{{ item.creatorName }}</text>
+      </view>
     </view>
-    <!-- 操作日志按钮 -->
-    <view class="log-btn" @click.stop="handleLog">
-      <text class="log-icon">📋</text>
-      <text class="log-text">操作日志</text>
-    </view>
-    <view class="dispose-btn" v-if="showProcess && statusClass === 'status-expired'" @click.stop="handleProcess">
-      <text class="dispose-icon">♻️</text>
-      <text class="dispose-text">处理（移入删除列表）</text>
+
+    <view class="action-row">
+      <view class="log-btn" @click.stop="handleLog">
+        <text class="log-icon">≡</text>
+        <text class="log-text">日志</text>
+      </view>
+      <view class="dispose-btn" v-if="showProcess && statusClass === 'status-expired'" @click.stop="handleProcess">
+        <text class="dispose-text">处理过期</text>
+      </view>
     </view>
   </view>
 </template>
@@ -116,15 +132,17 @@ export default {
 @import '@/common/style/common.scss';
 
 .item-card {
-  @extend .glass-card;
-  padding: 40rpx;
-  margin-bottom: 24rpx;
+  padding: 34rpx;
+  margin-bottom: 0;
   background: var(--card-bg);
   position: relative;
   overflow: hidden;
   cursor: pointer;
-  
-  /* 左侧渐变装饰条 - 高级样式 */
+  border-radius: 30rpx;
+  border: 2rpx solid var(--card-border);
+  box-shadow: 0 14rpx 38rpx -24rpx var(--shadow-color);
+  box-sizing: border-box;
+
   &::before {
     content: '';
     position: absolute;
@@ -136,97 +154,88 @@ export default {
     border-radius: 32rpx 0 0 32rpx;
     transition: width 0.3s ease;
   }
-  
-  /* 微妙的光泽效果 */
+
   &::after {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1rpx;
-    background: linear-gradient(90deg, 
-      transparent, 
-      rgba(255, 255, 255, 0.1), 
-      transparent
-    );
+    top: -90rpx;
+    right: -90rpx;
+    width: 210rpx;
+    height: 210rpx;
+    border-radius: 50%;
+    background: rgba(37, 99, 235, 0.08);
     pointer-events: none;
   }
-  
+
   &:active {
     transform: translateY(2rpx);
-    border-color: var(--accent-blue);
-    box-shadow: 
-      0 4rpx 16rpx -4rpx var(--glow-blue),
-      0 2rpx 8rpx -2rpx var(--shadow-color);
-    
+
     &::before {
       width: 12rpx;
     }
   }
 }
 
-/* 浅色模式下的卡片样式 - 高级样式 */
 .item-card.light-mode {
-  background: rgba(255, 255, 255, 0.9) !important;
-  border: 2rpx solid rgba(37, 99, 235, 0.15) !important;
-  box-shadow: 
-    0 8rpx 32rpx -8rpx rgba(0, 0, 0, 0.08),
-    0 0 0 1rpx rgba(255, 255, 255, 0.8) inset !important;
-  
-  &::after {
-    background: linear-gradient(90deg, 
-      transparent, 
-      rgba(0, 0, 0, 0.03), 
-      transparent
-    ) !important;
-  }
-  
-  &:active {
-    border-color: var(--accent-blue) !important;
-    box-shadow: 
-      0 4rpx 16rpx -4rpx rgba(37, 99, 235, 0.2),
-      0 2rpx 8rpx -2rpx rgba(0, 0, 0, 0.1) !important;
-  }
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+  box-shadow: 0 18rpx 48rpx -34rpx rgba(15, 23, 42, 0.45) !important;
 }
 
-/* 正常状态 - 蓝色渐变 */
 .item-card:not(.expired):not(.near-expiry)::before {
   background: linear-gradient(180deg, var(--accent-blue), var(--accent-teal));
 }
 
-/* 过期状态 - 玫瑰红渐变 */
 .item-card.expired::before {
   background: linear-gradient(180deg, var(--accent-rose), #f87171);
 }
 
-/* 即将过期状态 - 琥珀色渐变 */
 .item-card.near-expiry::before {
   background: linear-gradient(180deg, var(--accent-amber), #fbbf24);
+}
+
+.item-card.near-expiry::after {
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.item-card.expired::after {
+  background: rgba(225, 29, 72, 0.09);
 }
 
 .item-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 30rpx;
+  gap: 20rpx;
+  margin-bottom: 26rpx;
+  position: relative;
+  z-index: 1;
+}
+
+.item-title-group {
+  flex: 1;
+  min-width: 0;
 }
 
 .item-name {
-  font-weight: 600;
-  font-size: 48rpx;
+  display: block;
+  font-weight: 800;
+  font-size: 38rpx;
   color: var(--text-primary);
-  margin-bottom: 10rpx;
+  line-height: 1.25;
+  word-break: break-all;
 }
 
 .edit-btn {
   background-color: var(--hover-bg);
   border: 2rpx solid var(--card-border);
-  padding: 16rpx;
-  border-radius: 20rpx;
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 22rpx;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   
   &:active {
@@ -235,67 +244,114 @@ export default {
   }
 }
 
-/* 浅色模式下的编辑按钮 */
 .light-mode .edit-btn {
-  background-color: rgba(245, 158, 11, 0.1) !important;
-  border-color: rgba(245, 158, 11, 0.2) !important;
-  
-  &:active {
-    background-color: rgba(245, 158, 11, 0.15) !important;
-  }
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
 }
 
 .edit-icon {
-  width: 32rpx;
-  height: 32rpx;
+  width: 30rpx;
+  height: 30rpx;
 }
 
-.item-date {
+.date-grid {
   display: flex;
   flex-direction: column;
-  gap: 16rpx;
-  margin-top: 20rpx;
-  font-size: 28rpx;
+  gap: 14rpx;
+  position: relative;
+  z-index: 1;
 }
 
 .date-item {
   display: flex;
   align-items: center;
-  gap: 16rpx;
-  color: var(--text-secondary);
+  gap: 18rpx;
+  padding: 18rpx 20rpx;
+  border-radius: 22rpx;
+  background: rgba(148, 163, 184, 0.1);
+  box-sizing: border-box;
+}
+
+.date-icon {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #ffffff;
+  font-size: 22rpx;
+  font-weight: 800;
+  background: #64748b;
+}
+
+.expiry-date .date-icon {
+  background: var(--accent-blue);
+}
+
+.near-expiry .expiry-date .date-icon {
+  background: var(--accent-amber);
+}
+
+.expired .expiry-date .date-icon {
+  background: var(--accent-rose);
+}
+
+.date-copy {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+  flex: 1;
+  min-width: 0;
 }
 
 .date-label {
   color: var(--text-secondary);
-  font-size: 26rpx;
-  min-width: 160rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+  flex-shrink: 0;
 }
 
 .date-value {
-  font-weight: 500;
+  font-weight: 800;
   color: var(--text-primary);
-  font-size: 28rpx;
+  font-size: 27rpx;
+  text-align: right;
 }
 
 .item-info {
   display: flex;
   flex-direction: column;
-  gap: 16rpx;
-  font-size: 28rpx;
+  gap: 12rpx;
+  position: relative;
+  z-index: 1;
+}
+
+.info-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 20rpx;
+  padding: 18rpx 20rpx;
+  border-radius: 22rpx;
+  background: rgba(148, 163, 184, 0.1);
+}
+
+.info-label {
   color: var(--text-secondary);
-  margin-top: 20rpx;
+  font-size: 24rpx;
+  font-weight: 600;
 }
 
 .expiry-status {
   display: inline-flex;
   align-items: center;
-  padding: 10rpx 24rpx;
+  padding: 8rpx 20rpx;
   border-radius: 40rpx;
-  font-size: 24rpx;
-  font-weight: 600;
-  letter-spacing: 1rpx;
+  font-size: 23rpx;
+  font-weight: 800;
   margin-top: 12rpx;
-  backdrop-filter: blur(10rpx);
   border: 1rpx solid transparent;
   transition: all 0.3s ease;
 }
@@ -318,18 +374,27 @@ export default {
   border-color: rgba(225, 29, 72, 0.25);
 }
 
-/* 操作日志按钮 */
+.action-row {
+  display: flex;
+  gap: 14rpx;
+  margin-top: 22rpx;
+  position: relative;
+  z-index: 1;
+}
+
 .log-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8rpx;
-  padding: 16rpx 24rpx;
-  margin-top: 24rpx;
+  height: 64rpx;
+  padding: 0 26rpx;
   background: var(--hover-bg);
   border: 2rpx solid var(--card-border);
-  border-radius: 20rpx;
+  border-radius: 22rpx;
   transition: all 0.3s ease;
+  flex: 1;
+  box-sizing: border-box;
   
   &:active {
     background: var(--active-bg);
@@ -341,13 +406,14 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8rpx;
-  padding: 16rpx 24rpx;
-  margin-top: 16rpx;
+  height: 64rpx;
+  padding: 0 26rpx;
   background: rgba(239, 68, 68, 0.12);
   border: 2rpx solid rgba(239, 68, 68, 0.35);
-  border-radius: 20rpx;
+  border-radius: 22rpx;
   transition: all 0.3s ease;
+  flex: 1.2;
+  box-sizing: border-box;
   
   &:active {
     background: rgba(239, 68, 68, 0.2);
@@ -355,76 +421,37 @@ export default {
   }
 }
 
-.dispose-icon {
-  font-size: 26rpx;
-}
-
 .dispose-text {
   font-size: 26rpx;
   color: #ef4444;
-  font-weight: 600;
+  font-weight: 800;
 }
 
 .log-icon {
-  font-size: 28rpx;
+  font-size: 30rpx;
+  color: var(--text-secondary);
+  line-height: 1;
 }
 
 .log-text {
   font-size: 26rpx;
   color: var(--text-secondary);
-  font-weight: 500;
+  font-weight: 800;
 }
 
-/* 浅色模式下的日志按钮 - 增强对比度 */
 .item-card.light-mode .log-btn {
-  background: #ffffff !important;
-  border: 2rpx solid rgba(59, 130, 246, 0.5) !important;
-  box-shadow: 0 2rpx 8rpx rgba(59, 130, 246, 0.2) !important;
-  
-  .log-icon {
-    filter: brightness(0.9);
-  }
-  
-  .log-text {
-    color: #3b82f6 !important;
-    font-weight: 600 !important;
-  }
-  
-  &:active {
-    background: rgba(59, 130, 246, 0.1) !important;
-    border-color: rgba(59, 130, 246, 0.7) !important;
-  }
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: none !important;
 }
 
-/* 浅色模式下即将过期卡片的日志按钮 - 使用更深的背景色 */
-.item-card.light-mode.near-expiry .log-btn {
-  background: #ffffff !important;
-  border: 2rpx solid rgba(245, 158, 11, 0.5) !important;
-  box-shadow: 0 2rpx 8rpx rgba(245, 158, 11, 0.2) !important;
-  
-  .log-text {
-    color: #f59e0b !important;
-  }
-  
-  &:active {
-    background: rgba(245, 158, 11, 0.1) !important;
-    border-color: rgba(245, 158, 11, 0.7) !important;
-  }
+.item-card.light-mode .date-item,
+.item-card.light-mode .info-line {
+  background: #f8fafc !important;
 }
 
-/* 浅色模式下已过期卡片的日志按钮 */
-.item-card.light-mode.expired .log-btn {
-  background: #ffffff !important;
-  border: 2rpx solid rgba(239, 68, 68, 0.5) !important;
-  box-shadow: 0 2rpx 8rpx rgba(239, 68, 68, 0.2) !important;
-  
-  .log-text {
-    color: #ef4444 !important;
-  }
-  
-  &:active {
-    background: rgba(239, 68, 68, 0.1) !important;
-    border-color: rgba(239, 68, 68, 0.7) !important;
-  }
+.item-card.light-mode .log-text,
+.item-card.light-mode .log-icon {
+  color: #475569 !important;
 }
 </style>
